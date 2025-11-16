@@ -65,9 +65,11 @@ public class EmailService {
     }
 
     @Async("emailTaskExecutor")
-    public void sendDocumentRequestEmail(String to, String requesterName, String documentType, String message, String requestId) {
+    public void sendDocumentRequestEmail(String to, String requesterName, String documentType, String message,
+            String requestId) {
         String subject = "Document Request from " + requesterName;
-        EmailLog emailLog = new EmailLog(to, "DOCUMENT_REQUEST", subject, EmailLog.EmailStatus.SUCCESS, requestId, "DocumentRequest");
+        EmailLog emailLog = new EmailLog(to, "DOCUMENT_REQUEST", subject, EmailLog.EmailStatus.SUCCESS, requestId,
+                "DocumentRequest");
 
         try {
             String htmlContent = buildDocumentRequestEmail(to, requesterName, documentType, message);
@@ -88,9 +90,11 @@ public class EmailService {
     }
 
     @Async("emailTaskExecutor")
-    public void sendDocumentUploadedEmail(String to, String uploaderName, String uploaderEmail, String documentType, String documentId) {
+    public void sendDocumentUploadedEmail(String to, String uploaderName, String uploaderEmail, String documentType,
+            String documentId) {
         String subject = "Document Uploaded by " + uploaderName;
-        EmailLog emailLog = new EmailLog(to, "DOCUMENT_UPLOADED", subject, EmailLog.EmailStatus.SUCCESS, documentId, "Document");
+        EmailLog emailLog = new EmailLog(to, "DOCUMENT_UPLOADED", subject, EmailLog.EmailStatus.SUCCESS, documentId,
+                "Document");
 
         try {
             String htmlContent = buildDocumentUploadedEmail(to, uploaderName, uploaderEmail, documentType);
@@ -113,7 +117,8 @@ public class EmailService {
     @Async("emailTaskExecutor")
     public void sendAssignmentChangeEmail(String to, String changeType, String details, String employeeId) {
         String subject = "HRMS - " + changeType;
-        EmailLog emailLog = new EmailLog(to, "ASSIGNMENT_CHANGE", subject, EmailLog.EmailStatus.SUCCESS, employeeId, "Employee");
+        EmailLog emailLog = new EmailLog(to, "ASSIGNMENT_CHANGE", subject, EmailLog.EmailStatus.SUCCESS, employeeId,
+                "Employee");
 
         try {
             String htmlContent = buildAssignmentChangeEmail(to, changeType, details);
@@ -142,228 +147,236 @@ public class EmailService {
 
     private String buildEmployeeCreationEmail(String email, String temporaryPassword) {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-                    .credentials { background: white; padding: 15px; border-left: 4px solid #0a0d54; margin: 20px 0; }
-                    .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Welcome to Enterprise HRMS</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello,</p>
-                        <p>Your HRMS account has been successfully created. Please find your login credentials below:</p>
-
-                        <div class="credentials">
-                            <p><strong>Email:</strong> """ + email + """
-            </p>
-                            <p><strong>Temporary Password:</strong> """ + temporaryPassword + """
-            </p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .credentials { background: white; padding: 15px; border-left: 4px solid #0a0d54; margin: 20px 0; }
+                        .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Welcome to Enterprise HRMS</h1>
                         </div>
+                        <div class="content">
+                            <p>Hello,</p>
+                            <p>Your HRMS account has been successfully created. Please find your login credentials below:</p>
 
-                        <p><strong>Important:</strong> For security reasons, please log in and change your password immediately.</p>
+                            <div class="credentials">
+                                <p><strong>Email:</strong> """
+                + email + """
+                        </p>
+                                        <p><strong>Temporary Password:</strong> """ + temporaryPassword
+                + """
+                        </p>
+                                    </div>
 
-                        <p>If you have any questions or need assistance, please contact your HR administrator.</p>
+                                    <p><strong>Important:</strong> For security reasons, please log in and change your password immediately.</p>
 
-                        <p>Best regards,<br>HRMS Team</p>
-                    </div>
-                    <div class="footer">
-                        <p>This is an automated message. Please do not reply to this email.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                                    <p>If you have any questions or need assistance, please contact your HR administrator.</p>
+
+                                    <p>Best regards,<br>HRMS Team</p>
+                                </div>
+                                <div class="footer">
+                                    <p>This is an automated message. Please do not reply to this email.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        """;
     }
 
     private String buildPasswordResetEmail(String email, String token) {
         String resetUrl = "https://frontend/reset-password/" + token;
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-                    .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                    .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Password Reset Request</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello,</p>
-                        <p>You have requested to reset your HRMS password. Click the button below to proceed:</p>
-
-                        <a href=\"""" + resetUrl + """
-            \" class="button">Reset Password</a>
-
-                        <div class="warning">
-                            <p><strong>Important:</strong></p>
-                            <ul>
-                                <li>This link will expire in 30 minutes</li>
-                                <li>If you did not request this reset, please ignore this email</li>
-                                <li>For security reasons, do not share this link with anyone</li>
-                            </ul>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Password Reset Request</h1>
                         </div>
+                        <div class="content">
+                            <p>Hello,</p>
+                            <p>You have requested to reset your HRMS password. Click the button below to proceed:</p>
 
-                        <p>Best regards,<br>HRMS Team</p>
-                    </div>
-                    <div class="footer">
-                        <p>This is an automated message. Please do not reply to this email.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                            <a href=\""""
+                + resetUrl + """
+                        \" class="button">Reset Password</a>
+
+                                    <div class="warning">
+                                        <p><strong>Important:</strong></p>
+                                        <ul>
+                                            <li>This link will expire in 30 minutes</li>
+                                            <li>If you did not request this reset, please ignore this email</li>
+                                            <li>For security reasons, do not share this link with anyone</li>
+                                        </ul>
+                                    </div>
+
+                                    <p>Best regards,<br>HRMS Team</p>
+                                </div>
+                                <div class="footer">
+                                    <p>This is an automated message. Please do not reply to this email.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        """;
     }
 
-    private String buildDocumentRequestEmail(String recipientEmail, String requesterName, String documentType, String message) {
+    private String buildDocumentRequestEmail(String recipientEmail, String requesterName, String documentType,
+            String message) {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-                    .request-box { background: white; padding: 20px; border-left: 4px solid #0a0d54; margin: 20px 0; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Document Request</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello,</p>
-                        <p><strong>""" + requesterName + """
-            </strong> has requested a document from you.</p>
-
-                        <div class="request-box">
-                            <p><strong>Document Type:</strong> """ + documentType + """
-            </p>
-                            <p><strong>Message:</strong></p>
-                            <p>""" + (message != null && !message.isEmpty() ? message : "No additional message provided") + """
-            </p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .request-box { background: white; padding: 20px; border-left: 4px solid #0a0d54; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Document Request</h1>
                         </div>
+                        <div class="content">
+                            <p>Hello,</p>
+                            <p><strong>"""
+                + requesterName + """
+                        </strong> has requested a document from you.</p>
 
-                        <p>Please log in to the HRMS portal to upload the requested document.</p>
+                                    <div class="request-box">
+                                        <p><strong>Document Type:</strong> """ + documentType + """
+                        </p>
+                                        <p><strong>Message:</strong></p>
+                                        <p>"""
+                + (message != null && !message.isEmpty() ? message : "No additional message provided") + """
+                        </p>
+                                    </div>
 
-                        <p>Best regards,<br>HRMS Team</p>
-                    </div>
-                    <div class="footer">
-                        <p>This is an automated message. Please do not reply to this email.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                                    <p>Please log in to the HRMS portal to upload the requested document.</p>
+
+                                    <p>Best regards,<br>HRMS Team</p>
+                                </div>
+                                <div class="footer">
+                                    <p>This is an automated message. Please do not reply to this email.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        """;
     }
 
-    private String buildDocumentUploadedEmail(String recipientEmail, String uploaderName, String uploaderEmail, String documentType) {
+    private String buildDocumentUploadedEmail(String recipientEmail, String uploaderName, String uploaderEmail,
+            String documentType) {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-                    .upload-box { background: white; padding: 20px; border-left: 4px solid #52c41a; margin: 20px 0; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Document Uploaded</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello,</p>
-                        <p>A document you requested has been uploaded.</p>
-
-                        <div class="upload-box">
-                            <p><strong>Uploaded by:</strong> """ + uploaderName + """ (""" + uploaderEmail + """
-            )</p>
-                            <p><strong>Document Type:</strong> """ + documentType + """
-            </p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .upload-box { background: white; padding: 20px; border-left: 4px solid #52c41a; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Document Uploaded</h1>
                         </div>
+                        <div class="content">
+                            <p>Hello,</p>
+                            <p>A document you requested has been uploaded.</p>
 
-                        <p>Please log in to the HRMS portal to review the uploaded document.</p>
+                            <div class="upload-box">
+                                <p><strong>Uploaded by:</strong> """
+                + uploaderName + " (" + uploaderEmail + ")</p>\n"
+                + "<p><strong>Document Type:</strong> " + documentType + "</p>\n"
+                + """
+                                    </div>
 
-                        <p>Best regards,<br>HRMS Team</p>
-                    </div>
-                    <div class="footer">
-                        <p>This is an automated message. Please do not reply to this email.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                                    <p>Please log in to the HRMS portal to review the uploaded document.</p>
+
+                                    <p>Best regards,<br>HRMS Team</p>
+                                </div>
+                                <div class="footer">
+                                    <p>This is an automated message. Please do not reply to this email.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        """;
     }
 
     private String buildAssignmentChangeEmail(String recipientEmail, String changeType, String details) {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-                    .change-box { background: white; padding: 20px; border-left: 4px solid #1890ff; margin: 20px 0; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>""" + changeType + """
-            </h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello,</p>
-                        <p>Your employee information has been updated.</p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .change-box { background: white; padding: 20px; border-left: 4px solid #1890ff; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>"""
+                + changeType + """
+                        </h1>
+                                </div>
+                                <div class="content">
+                                    <p>Hello,</p>
+                                    <p>Your employee information has been updated.</p>
 
-                        <div class="change-box">
-                            <p><strong>Change Details:</strong></p>
-                            <p>""" + details + """
-            </p>
-                        </div>
+                                    <div class="change-box">
+                                        <p><strong>Change Details:</strong></p>
+                                        <p>""" + details + """
+                        </p>
+                                    </div>
 
-                        <p>Please log in to the HRMS portal to view your updated information.</p>
+                                    <p>Please log in to the HRMS portal to view your updated information.</p>
 
-                        <p>If you have any questions, please contact your HR administrator.</p>
+                                    <p>If you have any questions, please contact your HR administrator.</p>
 
-                        <p>Best regards,<br>HRMS Team</p>
-                    </div>
-                    <div class="footer">
-                        <p>This is an automated message. Please do not reply to this email.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                                    <p>Best regards,<br>HRMS Team</p>
+                                </div>
+                                <div class="footer">
+                                    <p>This is an automated message. Please do not reply to this email.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        """;
     }
 }
