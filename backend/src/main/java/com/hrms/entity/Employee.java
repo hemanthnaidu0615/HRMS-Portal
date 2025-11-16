@@ -3,6 +3,7 @@ package com.hrms.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -34,34 +35,33 @@ public class Employee {
     @JoinColumn(name = "reports_to")
     private Employee reportsTo;
 
-    @Column(name = "employment_type", nullable = false)
-    private String employmentType = "internal";
+    // Employment details
+    @Column(name = "employment_type", nullable = false, length = 50)
+    private String employmentType = "internal";  // internal, contract, client
 
-    @Column(name = "client_id")
-    private UUID clientId;
+    @Column(name = "client_name", length = 255)
+    private String clientName;  // For client employees
 
-    @Column(name = "project_id")
-    private UUID projectId;
+    @Column(name = "project_id", length = 100)
+    private String projectId;   // For contract/project employees
 
     @Column(name = "contract_end_date")
-    private LocalDate contractEndDate;
+    private LocalDate contractEndDate;  // For contract employees
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "employee_permission_groups",
-        joinColumns = @JoinColumn(name = "employee_id"),
-        inverseJoinColumns = @JoinColumn(name = "group_id")
-    )
-    private Set<PermissionGroup> permissionGroups = new HashSet<>();
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     public Employee() {
+        this.createdAt = LocalDateTime.now();
     }
 
     public Employee(User user, Organization organization) {
+        this();
         this.user = user;
         this.organization = organization;
     }
 
+    // Getters and setters
     public UUID getId() {
         return id;
     }
@@ -118,19 +118,19 @@ public class Employee {
         this.employmentType = employmentType;
     }
 
-    public UUID getClientId() {
-        return clientId;
+    public String getClientName() {
+        return clientName;
     }
 
-    public void setClientId(UUID clientId) {
-        this.clientId = clientId;
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
-    public UUID getProjectId() {
+    public String getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(UUID projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 
@@ -142,11 +142,24 @@ public class Employee {
         this.contractEndDate = contractEndDate;
     }
 
-    public Set<PermissionGroup> getPermissionGroups() {
-        return permissionGroups;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setPermissionGroups(Set<PermissionGroup> permissionGroups) {
-        this.permissionGroups = permissionGroups;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Employee)) return false;
+        Employee employee = (Employee) o;
+        return id != null && id.equals(employee.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

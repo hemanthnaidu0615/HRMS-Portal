@@ -1,7 +1,11 @@
-CREATE TABLE roles (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
+-- =====================================================
+-- HRMS PORTAL - COMPLETE DATABASE SCHEMA
+-- Multi-tenant SaaS with flexible role-based permissions
+-- =====================================================
+
+-- =====================================================
+-- CORE TABLES
+-- =====================================================
 
 CREATE TABLE organizations (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
@@ -19,23 +23,6 @@ CREATE TABLE users (
     FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
 
-CREATE TABLE user_roles (
-    user_id UNIQUEIDENTIFIER NOT NULL,
-    role_id INT NOT NULL,
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
-);
-
-IF NOT EXISTS (SELECT 1 FROM roles WHERE name='superadmin')
-INSERT INTO roles (name) VALUES ('superadmin');
-
-IF NOT EXISTS (SELECT 1 FROM roles WHERE name='orgadmin')
-INSERT INTO roles (name) VALUES ('orgadmin');
-
-IF NOT EXISTS (SELECT 1 FROM roles WHERE name='employee')
-INSERT INTO roles (name) VALUES ('employee');
-
 CREATE TABLE password_reset_tokens (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     user_id UNIQUEIDENTIFIER NOT NULL,
@@ -45,10 +32,62 @@ CREATE TABLE password_reset_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- =====================================================
+-- FLEXIBLE ROLE & PERMISSION SYSTEM
+-- =====================================================
+
+-- Roles can be system-level (superadmin) or org-specific (custom roles)
+CREATE TABLE roles (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    organization_id UNIQUEIDENTIFIER NULL,
+    is_system_role BIT NOT NULL DEFAULT 0,
+    description VARCHAR(500) NULL,
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    CONSTRAINT unique_role_per_org UNIQUE (name, organization_id)
+);
+
+-- Resource:Action:Scope permission model
+-- Examples: employees:view:team, leaves:approve:department, payroll:run:organization
+CREATE TABLE permissions (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    resource VARCHAR(100) NOT NULL,           -- employees, documents, leaves, timesheets, payroll
+    action VARCHAR(100) NOT NULL,             -- view, edit, create, delete, approve, submit, run
+    scope VARCHAR(50) NOT NULL,               -- own, team, department, organization
+    organization_id UNIQUEIDENTIFIER NULL,    -- NULL = system permission, else custom org permission
+    description VARCHAR(500) NULL,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    CONSTRAINT unique_permission UNIQUE (resource, action, scope, organization_id)
+);
+
+-- Many-to-many: Roles have multiple permissions
+CREATE TABLE role_permissions (
+    role_id INT NOT NULL,
+    permission_id UNIQUEIDENTIFIER NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+);
+
+-- Many-to-many: Users have multiple roles
+CREATE TABLE user_roles (
+    user_id UNIQUEIDENTIFIER NOT NULL,
+    role_id INT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
+
+-- =====================================================
+-- ORGANIZATION STRUCTURE
+-- =====================================================
+
 CREATE TABLE departments (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     organization_id UNIQUEIDENTIFIER NOT NULL,
     name VARCHAR(255) NOT NULL,
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
 
@@ -57,6 +96,7 @@ CREATE TABLE positions (
     organization_id UNIQUEIDENTIFIER NOT NULL,
     name VARCHAR(255) NOT NULL,
     seniority_level INT NOT NULL,
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
 
@@ -67,10 +107,15 @@ CREATE TABLE employees (
     department_id UNIQUEIDENTIFIER NULL,
     position_id UNIQUEIDENTIFIER NULL,
     reports_to UNIQUEIDENTIFIER NULL,
-    employment_type VARCHAR(50) NOT NULL DEFAULT 'internal',
-    client_id UNIQUEIDENTIFIER NULL,
-    project_id UNIQUEIDENTIFIER NULL,
-    contract_end_date DATE NULL,
+
+    -- Employment details
+    employment_type VARCHAR(50) NOT NULL DEFAULT 'internal',  -- internal, contract, client
+    client_name VARCHAR(255) NULL,                            -- for client employees
+    project_id VARCHAR(100) NULL,                             -- for contract/project employees
+    contract_end_date DATE NULL,                              -- for contract employees
+
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (organization_id) REFERENCES organizations(id),
     FOREIGN KEY (department_id) REFERENCES departments(id),
@@ -90,6 +135,10 @@ CREATE TABLE employee_history (
     FOREIGN KEY (changed_by) REFERENCES users(id)
 );
 
+-- =====================================================
+-- DOCUMENT MANAGEMENT
+-- =====================================================
+
 CREATE TABLE documents (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     employee_id UNIQUEIDENTIFIER NOT NULL,
@@ -97,6 +146,7 @@ CREATE TABLE documents (
     file_name VARCHAR(255) NOT NULL,
     file_path VARCHAR(500) NOT NULL,
     file_type VARCHAR(100) NULL,
+    file_size BIGINT NULL,
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     FOREIGN KEY (employee_id) REFERENCES employees(id),
     FOREIGN KEY (uploaded_by) REFERENCES users(id)
@@ -116,30 +166,153 @@ CREATE TABLE document_requests (
     FOREIGN KEY (fulfilled_document_id) REFERENCES documents(id)
 );
 
-CREATE TABLE permissions (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    code VARCHAR(255) NOT NULL UNIQUE,
-    description VARCHAR(500) NULL
-);
+-- =====================================================
+-- SEED DATA - SYSTEM ROLES
+-- =====================================================
 
-CREATE TABLE permission_groups (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    name VARCHAR(255) NOT NULL UNIQUE,
-    description VARCHAR(500) NULL
-);
+-- SuperAdmin role (platform administrator)
+IF NOT EXISTS (SELECT 1 FROM roles WHERE name='superadmin' AND is_system_role=1)
+INSERT INTO roles (name, organization_id, is_system_role, description)
+VALUES ('superadmin', NULL, 1, 'Platform administrator - manages organizations only');
 
-CREATE TABLE group_permissions (
-    group_id UNIQUEIDENTIFIER NOT NULL,
-    permission_id UNIQUEIDENTIFIER NOT NULL,
-    PRIMARY KEY (group_id, permission_id),
-    FOREIGN KEY (group_id) REFERENCES permission_groups(id),
-    FOREIGN KEY (permission_id) REFERENCES permissions(id)
-);
+-- Default org roles (created for each new organization)
+IF NOT EXISTS (SELECT 1 FROM roles WHERE name='orgadmin' AND is_system_role=1)
+INSERT INTO roles (name, organization_id, is_system_role, description)
+VALUES ('orgadmin', NULL, 1, 'Organization administrator - full access to organization');
 
-CREATE TABLE employee_permission_groups (
-    employee_id UNIQUEIDENTIFIER NOT NULL,
-    group_id UNIQUEIDENTIFIER NOT NULL,
-    PRIMARY KEY (employee_id, group_id),
-    FOREIGN KEY (employee_id) REFERENCES employees(id),
-    FOREIGN KEY (group_id) REFERENCES permission_groups(id)
-);
+IF NOT EXISTS (SELECT 1 FROM roles WHERE name='employee' AND is_system_role=1)
+INSERT INTO roles (name, organization_id, is_system_role, description)
+VALUES ('employee', NULL, 1, 'Basic employee - limited access');
+
+-- =====================================================
+-- SEED DATA - SYSTEM PERMISSIONS
+-- =====================================================
+
+-- EMPLOYEES permissions
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('employees', 'view', 'own', NULL, 'View own employee profile'),
+('employees', 'view', 'team', NULL, 'View direct reports'),
+('employees', 'view', 'department', NULL, 'View department employees'),
+('employees', 'view', 'organization', NULL, 'View all employees in organization'),
+
+('employees', 'edit', 'own', NULL, 'Edit own employee profile'),
+('employees', 'edit', 'team', NULL, 'Edit direct reports'),
+('employees', 'edit', 'department', NULL, 'Edit department employees'),
+('employees', 'edit', 'organization', NULL, 'Edit all employees'),
+
+('employees', 'create', 'organization', NULL, 'Create new employees'),
+('employees', 'delete', 'organization', NULL, 'Delete employees');
+
+-- DOCUMENTS permissions
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('documents', 'view', 'own', NULL, 'View own documents'),
+('documents', 'view', 'team', NULL, 'View team documents'),
+('documents', 'view', 'department', NULL, 'View department documents'),
+('documents', 'view', 'organization', NULL, 'View all organization documents'),
+
+('documents', 'upload', 'own', NULL, 'Upload own documents'),
+('documents', 'upload', 'team', NULL, 'Upload documents for team members'),
+('documents', 'upload', 'organization', NULL, 'Upload documents for any employee'),
+
+('documents', 'delete', 'own', NULL, 'Delete own documents'),
+('documents', 'delete', 'organization', NULL, 'Delete any documents'),
+
+('documents', 'request', 'organization', NULL, 'Request documents from others');
+
+-- DEPARTMENTS & POSITIONS permissions
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('departments', 'view', 'organization', NULL, 'View all departments'),
+('departments', 'create', 'organization', NULL, 'Create departments'),
+('departments', 'edit', 'organization', NULL, 'Edit departments'),
+('departments', 'delete', 'organization', NULL, 'Delete departments'),
+
+('positions', 'view', 'organization', NULL, 'View all positions'),
+('positions', 'create', 'organization', NULL, 'Create positions'),
+('positions', 'edit', 'organization', NULL, 'Edit positions'),
+('positions', 'delete', 'organization', NULL, 'Delete positions');
+
+-- ROLES & PERMISSIONS management
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('roles', 'view', 'organization', NULL, 'View organization roles'),
+('roles', 'create', 'organization', NULL, 'Create custom roles'),
+('roles', 'edit', 'organization', NULL, 'Edit roles'),
+('roles', 'delete', 'organization', NULL, 'Delete roles'),
+('roles', 'assign', 'organization', NULL, 'Assign roles to employees');
+
+-- FUTURE: Leave management permissions
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('leaves', 'create', 'own', NULL, 'Request own leave'),
+('leaves', 'view', 'own', NULL, 'View own leave requests'),
+('leaves', 'view', 'team', NULL, 'View team leave requests'),
+('leaves', 'view', 'department', NULL, 'View department leave requests'),
+('leaves', 'view', 'organization', NULL, 'View all leave requests'),
+('leaves', 'approve', 'team', NULL, 'Approve team leave requests'),
+('leaves', 'approve', 'department', NULL, 'Approve department leave requests'),
+('leaves', 'approve', 'organization', NULL, 'Approve all leave requests'),
+('leaves', 'cancel', 'own', NULL, 'Cancel own leave requests');
+
+-- FUTURE: Timesheet permissions
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('timesheets', 'submit', 'own', NULL, 'Submit own timesheet'),
+('timesheets', 'view', 'own', NULL, 'View own timesheets'),
+('timesheets', 'view', 'team', NULL, 'View team timesheets'),
+('timesheets', 'view', 'department', NULL, 'View department timesheets'),
+('timesheets', 'view', 'organization', NULL, 'View all timesheets'),
+('timesheets', 'approve', 'team', NULL, 'Approve team timesheets'),
+('timesheets', 'approve', 'department', NULL, 'Approve department timesheets');
+
+-- FUTURE: Payroll permissions
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('payroll', 'view', 'own', NULL, 'View own payroll information'),
+('payroll', 'view', 'team', NULL, 'View team payroll'),
+('payroll', 'view', 'organization', NULL, 'View all payroll'),
+('payroll', 'run', 'organization', NULL, 'Run payroll processing'),
+('payroll', 'approve', 'organization', NULL, 'Approve payroll runs');
+
+-- =====================================================
+-- ASSIGN PERMISSIONS TO SYSTEM ROLES
+-- =====================================================
+
+-- Get role IDs (will be 1, 2, 3 due to IDENTITY)
+DECLARE @SuperAdminRoleId INT = (SELECT id FROM roles WHERE name='superadmin' AND is_system_role=1);
+DECLARE @OrgAdminRoleId INT = (SELECT id FROM roles WHERE name='orgadmin' AND is_system_role=1);
+DECLARE @EmployeeRoleId INT = (SELECT id FROM roles WHERE name='employee' AND is_system_role=1);
+
+-- SuperAdmin: NO permissions (only manages orgs via separate controller)
+
+-- OrgAdmin: Full organization access
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT @OrgAdminRoleId, id FROM permissions
+WHERE scope = 'organization' AND organization_id IS NULL;
+
+-- Employee: Basic own access
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT @EmployeeRoleId, id FROM permissions
+WHERE scope = 'own' AND organization_id IS NULL
+AND resource IN ('employees', 'documents', 'leaves', 'timesheets', 'payroll');
+
+-- Employee: Can request documents
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT @EmployeeRoleId, id FROM permissions
+WHERE resource = 'documents' AND action = 'request';
+
+-- =====================================================
+-- INDEXES FOR PERFORMANCE
+-- =====================================================
+
+CREATE INDEX idx_users_org ON users(organization_id);
+CREATE INDEX idx_users_email ON users(email);
+
+CREATE INDEX idx_employees_org ON employees(organization_id);
+CREATE INDEX idx_employees_dept ON employees(department_id);
+CREATE INDEX idx_employees_reports_to ON employees(reports_to);
+CREATE INDEX idx_employees_user ON employees(user_id);
+
+CREATE INDEX idx_documents_employee ON documents(employee_id);
+CREATE INDEX idx_documents_created ON documents(created_at DESC);
+
+CREATE INDEX idx_permissions_resource ON permissions(resource, action, scope);
+CREATE INDEX idx_roles_org ON roles(organization_id);
+
+CREATE INDEX idx_employee_history_employee ON employee_history(employee_id);
+CREATE INDEX idx_employee_history_date ON employee_history(changed_at DESC);

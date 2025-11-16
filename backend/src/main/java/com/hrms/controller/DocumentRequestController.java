@@ -104,7 +104,7 @@ public class DocumentRequestController {
     }
 
     @GetMapping("/org")
-    @PreAuthorize("hasAnyRole('ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasRole('ORGADMIN')")
     public ResponseEntity<?> getOrganizationRequests(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)
@@ -151,7 +151,7 @@ public class DocumentRequestController {
     }
 
     @PatchMapping("/{requestId}/status")
-    @PreAuthorize("hasAnyRole('ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasRole('ORGADMIN')")
     public ResponseEntity<?> updateRequestStatus(@PathVariable UUID requestId,
                                                  @Valid @RequestBody DocumentRequestStatusUpdateRequest request,
                                                  Authentication authentication) {

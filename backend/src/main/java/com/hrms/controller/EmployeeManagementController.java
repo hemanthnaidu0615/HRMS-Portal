@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/orgadmin/employees")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ORGADMIN','SUPERADMIN')")
+@PreAuthorize("hasRole('ORGADMIN')")
 public class EmployeeManagementController {
 
     private final EmployeeService employeeService;
