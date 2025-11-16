@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import { Tag } from 'primereact/tag';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Descriptions } from 'antd';
+import { ArrowLeftOutlined, SafetyOutlined } from '@ant-design/icons';
 import { getPermissionGroup, PermissionGroupResponse, PermissionResponse } from '../../../api/permissionsApi';
+
+const { Title } = Typography;
 
 export const PermissionGroupDetailPage = () => {
   const { groupId } = useParams<{ groupId: string }>();
@@ -34,75 +32,129 @@ export const PermissionGroupDetailPage = () => {
     }
   };
 
-  const codeTemplate = (rowData: PermissionResponse) => {
-    return <Tag value={rowData.code} severity="info" />;
-  };
-
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto p-4 space-y-4">
-        <Card>
-          <Skeleton height="200px" />
-        </Card>
-        <Card>
-          <Skeleton height="400px" />
-        </Card>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <Card
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            }}
+          >
+            <Skeleton active paragraph={{ rows: 4 }} />
+          </Card>
+          <Card
+            style={{
+              borderRadius: 12,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            }}
+          >
+            <Skeleton active paragraph={{ rows: 8 }} />
+          </Card>
+        </Space>
       </div>
     );
   }
 
   if (error || !group) {
     return (
-      <div className="max-w-5xl mx-auto p-4 space-y-4">
-        <Card>
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error || 'Permission group not found'}
-          </div>
-          <div className="mt-4">
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Alert message={error || 'Permission group not found'} type="error" showIcon />
             <Button
-              label="Back to Groups"
-              icon="pi pi-arrow-left"
+              icon={<ArrowLeftOutlined />}
               onClick={() => navigate('/admin/permissions/groups')}
-            />
-          </div>
+              style={{ borderRadius: 8 }}
+            >
+              Back to Groups
+            </Button>
+          </Space>
         </Card>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-5xl mx-auto p-4 space-y-4">
-      <Card>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">{group.name}</h2>
-          <Button
-            label="Back"
-            icon="pi pi-arrow-left"
-            severity="secondary"
-            onClick={() => navigate('/admin/permissions/groups')}
-          />
-        </div>
-        <div className="space-y-2">
-          <div>
-            <span className="font-semibold">Description:</span> {group.description || '—'}
-          </div>
-          <div>
-            <Tag value={`${group.permissions.length} permissions`} severity="success" />
-          </div>
-        </div>
-      </Card>
+  const columns = [
+    {
+      title: 'Permission Code',
+      dataIndex: 'code',
+      key: 'code',
+      render: (text: string) => (
+        <Space>
+          <SafetyOutlined />
+          <Tag color="blue" style={{ borderRadius: 6 }}>{text}</Tag>
+        </Space>
+      ),
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (text: string) => text || '—',
+    },
+  ];
 
-      <Card>
-        <h3 className="text-lg font-semibold mb-4">Permissions</h3>
-        <DataTable
-          value={group.permissions}
-          emptyMessage="No permissions assigned to this group"
-          className="p-datatable-sm"
+  return (
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
         >
-          <Column field="code" header="Permission Code" body={codeTemplate} />
-          <Column field="description" header="Description" />
-        </DataTable>
-      </Card>
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Title level={3} style={{ margin: 0 }}>{group.name}</Title>
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate('/admin/permissions/groups')}
+                style={{ borderRadius: 8 }}
+              >
+                Back
+              </Button>
+            </div>
+
+            <Descriptions bordered column={1}>
+              <Descriptions.Item label="Description">{group.description || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Permission Count">
+                <Tag color="green" style={{ borderRadius: 6 }}>
+                  {group.permissions.length} permissions
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+          </Space>
+        </Card>
+
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Title level={4}>Permissions</Title>
+            <Table
+              columns={columns}
+              dataSource={group.permissions}
+              rowKey="code"
+              locale={{ emptyText: 'No permissions assigned to this group' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} permissions`,
+              }}
+            />
+          </Space>
+        </Card>
+      </Space>
     </div>
   );
 };

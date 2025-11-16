@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton } from 'antd';
+import { PlusOutlined, ApartmentOutlined } from '@ant-design/icons';
 import { getDepartments, DepartmentResponse } from '../../../api/structureApi';
+
+const { Title } = Typography;
 
 export const DepartmentsPage = () => {
   const navigate = useNavigate();
@@ -30,36 +29,66 @@ export const DepartmentsPage = () => {
     }
   };
 
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Departments</h2>
-      <Button
-        label="Create Department"
-        icon="pi pi-plus"
-        onClick={() => navigate('/admin/structure/departments/new')}
-      />
-    </div>
-  );
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a: DepartmentResponse, b: DepartmentResponse) => a.name.localeCompare(b.name),
+      render: (text: string) => (
+        <Space>
+          <ApartmentOutlined />
+          {text}
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Card header={header}>
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={3} style={{ margin: 0 }}>Departments</Title>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/admin/structure/departments/new')}
+              style={{
+                background: '#0a0d54',
+                borderColor: '#0a0d54',
+                borderRadius: 8
+              }}
+            >
+              Create Department
+            </Button>
           </div>
-        )}
-        {loading ? (
-          <Skeleton height="200px" />
-        ) : (
-          <DataTable
-            value={departments}
-            emptyMessage="No departments found"
-            className="p-datatable-sm"
-          >
-            <Column field="name" header="Name" sortable />
-          </DataTable>
-        )}
+
+          {error && (
+            <Alert message={error} type="error" showIcon closable />
+          )}
+
+          {loading ? (
+            <Skeleton active paragraph={{ rows: 4 }} />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={departments}
+              rowKey="id"
+              locale={{ emptyText: 'No departments found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} departments`,
+              }}
+            />
+          )}
+        </Space>
       </Card>
     </div>
   );

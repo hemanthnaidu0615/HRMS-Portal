@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Card, Table, Button, Alert, Typography, Space } from 'antd';
+import { FileOutlined, UploadOutlined } from '@ant-design/icons';
 import { getOrganizationDocuments } from '../../api/documentsApi';
+
+const { Title } = Typography;
 
 interface Document {
   id: string;
@@ -36,45 +37,95 @@ export const OrgDocumentsPage = () => {
     }
   };
 
-  const actionBodyTemplate = (rowData: Document) => {
-    return (
-      <Button
-        label="Upload for Employee"
-        size="small"
-        onClick={() => navigate(`/documents/employee/${rowData.employeeId}/upload`)}
-      />
-    );
-  };
+  const columns = [
+    {
+      title: 'Employee ID',
+      dataIndex: 'employeeId',
+      key: 'employeeId',
+      sorter: (a: Document, b: Document) => a.employeeId.localeCompare(b.employeeId),
+    },
+    {
+      title: 'File Name',
+      dataIndex: 'fileName',
+      key: 'fileName',
+      sorter: (a: Document, b: Document) => a.fileName.localeCompare(b.fileName),
+      render: (text: string) => (
+        <Space>
+          <FileOutlined />
+          {text}
+        </Space>
+      ),
+    },
+    {
+      title: 'File Type',
+      dataIndex: 'fileType',
+      key: 'fileType',
+    },
+    {
+      title: 'File Path',
+      dataIndex: 'filePath',
+      key: 'filePath',
+      ellipsis: true,
+    },
+    {
+      title: 'Created Date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      sorter: (a: Document, b: Document) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (date: string) => new Date(date).toLocaleString(),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (record: Document) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<UploadOutlined />}
+          onClick={() => navigate(`/documents/employee/${record.employeeId}/upload`)}
+          style={{
+            background: '#0a0d54',
+            borderColor: '#0a0d54',
+            borderRadius: 6
+          }}
+        >
+          Upload for Employee
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Organization Documents</h1>
-
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
-        <DataTable
-          value={documents}
-          loading={loading}
-          emptyMessage="No documents found"
-          className="p-datatable-sm"
+    <div style={{ padding: 24 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
         >
-          <Column field="employeeId" header="Employee ID" sortable />
-          <Column field="fileName" header="File Name" sortable />
-          <Column field="fileType" header="File Type" />
-          <Column field="filePath" header="File Path" />
-          <Column
-            field="createdAt"
-            header="Created Date"
-            sortable
-            body={(rowData) => new Date(rowData.createdAt).toLocaleString()}
-          />
-          <Column header="Actions" body={actionBodyTemplate} />
-        </DataTable>
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Title level={3}>Organization Documents</Title>
+
+            {error && (
+              <Alert message={error} type="error" showIcon closable />
+            )}
+
+            <Table
+              columns={columns}
+              dataSource={documents}
+              loading={loading}
+              rowKey="id"
+              locale={{ emptyText: 'No documents found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} documents`,
+              }}
+            />
+          </Space>
+        </Card>
       </div>
     </div>
   );

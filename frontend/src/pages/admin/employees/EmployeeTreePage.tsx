@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Card } from 'primereact/card';
-import { Tree, TreeNode } from 'primereact/tree';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Tree, Skeleton, Alert, Typography, Space, Descriptions } from 'antd';
+import type { DataNode } from 'antd/es/tree';
+import { ApartmentOutlined } from '@ant-design/icons';
 import { getEmployeeTree, EmployeeTreeNodeResponse } from '../../../api/employeeManagementApi';
 
+const { Title, Text } = Typography;
+
 export const EmployeeTreePage = () => {
-  const [treeData, setTreeData] = useState<TreeNode[]>([]);
+  const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedNode, setSelectedNode] = useState<EmployeeTreeNodeResponse | null>(null);
@@ -28,72 +30,82 @@ export const EmployeeTreePage = () => {
     }
   };
 
-  const toTreeNode = (node: EmployeeTreeNodeResponse): TreeNode => {
-    const label = (
-      <div>
-        <div className="font-semibold">{node.email}</div>
-        <div className="text-xs text-gray-500">
-          {node.positionName && <span className="mr-2">{node.positionName}</span>}
-          {node.departmentName && <span>{node.departmentName}</span>}
-        </div>
-      </div>
-    );
-
+  const toTreeNode = (node: EmployeeTreeNodeResponse): DataNode => {
     return {
       key: node.employeeId,
-      label,
+      title: (
+        <div>
+          <div style={{ fontWeight: 600 }}>{node.email}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>
+            {node.positionName && <span style={{ marginRight: 8 }}>{node.positionName}</span>}
+            {node.departmentName && <span>{node.departmentName}</span>}
+          </div>
+        </div>
+      ),
       data: node,
-      children: (node.reports || []).map(toTreeNode)
-    };
+      children: (node.reports || []).map(toTreeNode),
+      icon: <ApartmentOutlined />
+    } as DataNode & { data: EmployeeTreeNodeResponse };
   };
 
-  const handleNodeSelect = (e: any) => {
-    if (e.node && e.node.data) {
-      setSelectedNode(e.node.data);
+  const handleNodeSelect = (selectedKeys: React.Key[], info: any) => {
+    if (info.node && info.node.data) {
+      setSelectedNode(info.node.data);
     }
   };
 
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Employee Reporting Tree</h2>
-    </div>
-  );
-
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Card header={header}>
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={3} style={{ margin: 0 }}>Employee Reporting Tree</Title>
           </div>
-        )}
-        {loading ? (
-          <Skeleton height="400px" />
-        ) : (
-          <div className="space-y-4">
-            <Tree
-              value={treeData}
-              selectionMode="single"
-              onSelect={handleNodeSelect}
-              className="w-full"
-            />
-            {selectedNode && (
-              <Card title="Selected Employee" className="mt-4">
-                <div className="space-y-2">
-                  <div>
-                    <span className="font-semibold">Email:</span> {selectedNode.email}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Position:</span> {selectedNode.positionName || '—'}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Department:</span> {selectedNode.departmentName || '—'}
-                  </div>
-                </div>
-              </Card>
-            )}
-          </div>
-        )}
+
+          {error && (
+            <Alert message={error} type="error" showIcon closable />
+          )}
+
+          {loading ? (
+            <Skeleton active paragraph={{ rows: 8 }} />
+          ) : (
+            <div>
+              <Tree
+                showLine
+                showIcon
+                treeData={treeData}
+                defaultExpandAll
+                onSelect={handleNodeSelect}
+                style={{
+                  background: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 8
+                }}
+              />
+              {selectedNode && (
+                <Card
+                  title="Selected Employee"
+                  style={{
+                    marginTop: 24,
+                    borderRadius: 8,
+                    background: '#f9f9f9'
+                  }}
+                >
+                  <Descriptions bordered column={1}>
+                    <Descriptions.Item label="Email">{selectedNode.email}</Descriptions.Item>
+                    <Descriptions.Item label="Position">{selectedNode.positionName || '—'}</Descriptions.Item>
+                    <Descriptions.Item label="Department">{selectedNode.departmentName || '—'}</Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              )}
+            </div>
+          )}
+        </Space>
       </Card>
     </div>
   );

@@ -1,94 +1,141 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from 'primereact/button';
-import { uploadMyDocument } from '../../api/documentsApi';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Card, Upload, Button, Typography, Alert, Space, Progress, message as antdMessage } from 'antd';
+import { UploadOutlined, InboxOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd';
+import { uploadMyDocument, uploadMyDocumentForRequest } from '../../api/documentsApi';
 
-export const UploadMyDocumentPage = () => {
+const { Title, Text } = Typography;
+const { Dragger } = Upload;
+
+export const UploadMyDocumentPage: React.FC = () => {
   const navigate = useNavigate();
-  const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const requestId = searchParams.get('requestId');
+
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) {
-      setError('Please select a file');
+  const handleUpload = async () => {
+    if (fileList.length === 0) {
+      setError('Please select a file to upload');
       return;
     }
 
+    const file = fileList[0].originFileObj;
+    if (!file) return;
+
     setError('');
-    setLoading(true);
+    setUploading(true);
+    setUploadProgress(0);
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => Math.min(prev + 10, 90));
+    }, 200);
 
     try {
-      await uploadMyDocument(file);
+      if (requestId) {
+        await uploadMyDocumentForRequest(requestId, file);
+        antdMessage.success('Document uploaded and request fulfilled!');
+      } else {
+        await uploadMyDocument(file);
+        antdMessage.success('Document uploaded successfully!');
+      }
+      setUploadProgress(100);
       setSuccess(true);
+      clearInterval(progressInterval);
+
       setTimeout(() => {
-        navigate('/documents/me');
+        navigate(requestId ? '/document-requests/me' : '/documents/me');
       }, 1500);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload document');
+      clearInterval(progressInterval);
+      const errorMsg = err.response?.data?.error || 'Failed to upload document';
+      setError(errorMsg);
+      antdMessage.error(errorMsg);
+      setUploadProgress(0);
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Upload Document</h1>
+    <div style={{ padding: 0 }}>
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 12,
+          maxWidth: 600,
+          margin: '0 auto',
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)',
+        }}
+      >
+        <div style={{ marginBottom: 24 }}>
+          <Title level={3} style={{ margin: 0, marginBottom: 4 }}>
+            <UploadOutlined /> Upload Document
+          </Title>
+          <Text type="secondary">
+            {requestId
+              ? 'Upload a document to fulfill the request'
+              : 'Upload a document to your personal collection'}
+          </Text>
+        </div>
+
+        {requestId && (
+          <Alert
+            message="Document Request"
+            description="This upload will fulfill a document request and automatically mark it as completed."
+            type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        )}
+
+        {error && (
+          <Alert message="Error" description={error} type="error" showIcon closable onClose={() => setError('')} style={{ marginBottom: 16 }} />
+        )}
 
         {success ? (
-          <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            Document uploaded successfully! Redirecting...
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
+            <Title level={4} style={{ color: '#52c41a', marginBottom: 8 }}>
+              Upload Successful!
+            </Title>
+            <Text type="secondary">Redirecting...</Text>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error}
-              </div>
-            )}
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <Dragger
+              fileList={fileList}
+              onChange={({ fileList: newFileList }) => setFileList(newFileList)}
+              beforeUpload={() => false}
+              maxCount={1}
+              accept="*/*"
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined style={{ fontSize: 48, color: '#0a0d54' }} />
+              </p>
+              <p className="ant-upload-text">Click or drag file to this area to upload</p>
+              <p className="ant-upload-hint">Support for a single file upload. PDF, images, and documents are supported.</p>
+            </Dragger>
 
-            <div>
-              <label htmlFor="file" className="block text-sm font-medium mb-2">
-                Select File
-              </label>
-              <input
-                type="file"
-                id="file"
-                onChange={handleFileChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-              {file && (
-                <p className="mt-2 text-sm text-gray-600">Selected: {file.name}</p>
-              )}
-            </div>
+            {uploading && <Progress percent={uploadProgress} status="active" />}
 
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                label="Upload"
-                loading={loading}
-                disabled={loading}
-              />
-              <Button
-                type="button"
-                label="Cancel"
-                severity="secondary"
-                onClick={() => navigate('/documents/me')}
-              />
-            </div>
-          </form>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => navigate(requestId ? '/document-requests/me' : '/documents/me')} disabled={uploading}>
+                Cancel
+              </Button>
+              <Button type="primary" icon={<UploadOutlined />} onClick={handleUpload} loading={uploading} disabled={fileList.length === 0}>
+                {uploading ? 'Uploading...' : 'Upload Document'}
+              </Button>
+            </Space>
+          </Space>
         )}
-      </div>
+      </Card>
     </div>
   );
 };
