@@ -30,17 +30,17 @@ export async function uploadEmployeeDocumentForRequest(employeeId: string, reque
 
 export async function getMyDocuments() {
   const res = await http.get('/api/documents/me');
-  return res.data;
+  return res.data.content || [];
 }
 
 export async function getEmployeeDocuments(employeeId: string) {
   const res = await http.get(`/api/documents/employee/${employeeId}`);
-  return res.data;
+  return res.data.content || [];
 }
 
 export async function getOrganizationDocuments() {
   const res = await http.get('/api/documents/org');
-  return res.data;
+  return res.data.content || [];
 }
 
 export async function downloadDocument(documentId: string) {
