@@ -7,10 +7,13 @@ import com.hrms.entity.Employee;
 import com.hrms.entity.User;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.service.DocumentService;
+import com.hrms.service.EmailService;
 import com.hrms.service.EmployeeService;
 import com.hrms.service.FileStorageService;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,12 +37,15 @@ import java.time.LocalDateTime;
 @RequestMapping("/api/documents")
 public class DocumentController {
 
+    private static final Logger logger = LoggerFactory.getLogger(DocumentController.class);
+
     private final DocumentService documentService;
     private final FileStorageService fileStorageService;
     private final UserService userService;
     private final EmployeeRepository employeeRepository;
     private final EmployeeService employeeService;
     private final PermissionService permissionService;
+    private final EmailService emailService;
     private final com.hrms.repository.DocumentRepository documentRepository;
     private final com.hrms.repository.DocumentRequestRepository documentRequestRepository;
 
@@ -49,6 +55,7 @@ public class DocumentController {
                              EmployeeRepository employeeRepository,
                              EmployeeService employeeService,
                              PermissionService permissionService,
+                             EmailService emailService,
                              com.hrms.repository.DocumentRepository documentRepository,
                              com.hrms.repository.DocumentRequestRepository documentRequestRepository) {
         this.documentService = documentService;
@@ -57,6 +64,7 @@ public class DocumentController {
         this.employeeRepository = employeeRepository;
         this.employeeService = employeeService;
         this.permissionService = permissionService;
+        this.emailService = emailService;
         this.documentRepository = documentRepository;
         this.documentRequestRepository = documentRequestRepository;
     }
@@ -92,6 +100,21 @@ public class DocumentController {
                     req.setStatus("COMPLETED");
                     req.setCompletedAt(LocalDateTime.now());
                     documentRequestRepository.save(req);
+
+                    // Send email notification to requester
+                    try {
+                        String uploaderName = user.getEmail().split("@")[0];
+                        String requesterEmail = req.getRequester().getEmail();
+                        emailService.sendDocumentUploadedEmail(
+                            requesterEmail,
+                            uploaderName,
+                            user.getEmail(),
+                            document.getFileType() != null ? document.getFileType() : "Document",
+                            document.getId().toString()
+                        );
+                    } catch (Exception e) {
+                        logger.error("Failed to send document uploaded email to {}: {}", req.getRequester().getEmail(), e.getMessage(), e);
+                    }
                 }
             });
         }
@@ -139,6 +162,21 @@ public class DocumentController {
                     req.setStatus("COMPLETED");
                     req.setCompletedAt(LocalDateTime.now());
                     documentRequestRepository.save(req);
+
+                    // Send email notification to requester
+                    try {
+                        String uploaderName = employee.getUser().getEmail().split("@")[0];
+                        String requesterEmail = req.getRequester().getEmail();
+                        emailService.sendDocumentUploadedEmail(
+                            requesterEmail,
+                            uploaderName,
+                            employee.getUser().getEmail(),
+                            document.getFileType() != null ? document.getFileType() : "Document",
+                            document.getId().toString()
+                        );
+                    } catch (Exception e) {
+                        logger.error("Failed to send document uploaded email to {}: {}", req.getRequester().getEmail(), e.getMessage(), e);
+                    }
                 }
             });
         }

@@ -183,6 +183,22 @@ CREATE TABLE document_requests (
 );
 
 -- =====================================================
+-- EMAIL AUDIT LOGGING
+-- =====================================================
+
+CREATE TABLE email_logs (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    recipient_email VARCHAR(255) NOT NULL,
+    email_type VARCHAR(100) NOT NULL,
+    subject VARCHAR(500) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    error_message VARCHAR(MAX) NULL,
+    related_entity_id VARCHAR(255) NULL,
+    related_entity_type VARCHAR(100) NULL,
+    sent_at DATETIME2 DEFAULT SYSUTCDATETIME()
+);
+
+-- =====================================================
 -- SEED DATA - SYSTEM ROLES
 -- =====================================================
 
@@ -398,3 +414,8 @@ CREATE INDEX idx_permission_groups_name ON permission_groups(name);
 
 CREATE INDEX idx_employee_history_employee ON employee_history(employee_id);
 CREATE INDEX idx_employee_history_date ON employee_history(changed_at DESC);
+
+CREATE INDEX idx_email_logs_recipient ON email_logs(recipient_email);
+CREATE INDEX idx_email_logs_type ON email_logs(email_type);
+CREATE INDEX idx_email_logs_sent_at ON email_logs(sent_at DESC);
+CREATE INDEX idx_email_logs_related_entity ON email_logs(related_entity_id, related_entity_type);
