@@ -13,8 +13,7 @@ import { OrganizationsPage } from './pages/superadmin/OrganizationsPage';
 import { CreateOrganizationPage } from './pages/superadmin/CreateOrganizationPage';
 import { CreateOrgAdminPage } from './pages/superadmin/CreateOrgAdminPage';
 
-// OrgAdmin Pages
-import { EmployeesPage } from './pages/orgadmin/EmployeesPage';
+// OrgAdmin Pages (Legacy - being phased out)
 import { CreateEmployeePage } from './pages/orgadmin/CreateEmployeePage';
 import { EmployeePermissionsPage } from './pages/orgadmin/EmployeePermissionsPage';
 
@@ -113,27 +112,9 @@ function App() {
           }
         />
 
-        {/* OrgAdmin Routes */}
-        <Route
-          path="/orgadmin/employees"
-          element={
-            <ProtectedRoute requiredRole="orgadmin">
-              <LayoutWrapper>
-                <EmployeesPage />
-              </LayoutWrapper>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/orgadmin/create-employee"
-          element={
-            <ProtectedRoute requiredRole="orgadmin">
-              <LayoutWrapper>
-                <CreateEmployeePage />
-              </LayoutWrapper>
-            </ProtectedRoute>
-          }
-        />
+        {/* OrgAdmin Routes (Legacy - redirecting to new admin routes) */}
+        <Route path="/orgadmin/employees" element={<Navigate to="/admin/employees" replace />} />
+        <Route path="/orgadmin/create-employee" element={<Navigate to="/admin/employees/create" replace />} />
         <Route
           path="/orgadmin/employees/:employeeId/permissions"
           element={
@@ -285,6 +266,26 @@ function App() {
           }
         />
         <Route
+          path="/admin/employees/create"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <CreateEmployeePage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/employees/tree"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <EmployeeTreePage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/employees/:employeeId"
           element={
             <ProtectedRoute requiredRole="orgadmin">
@@ -310,16 +311,6 @@ function App() {
             <ProtectedRoute requiredRole="orgadmin">
               <LayoutWrapper>
                 <EmployeeHistoryPage />
-              </LayoutWrapper>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/employees/tree"
-          element={
-            <ProtectedRoute requiredRole="orgadmin">
-              <LayoutWrapper>
-                <EmployeeTreePage />
               </LayoutWrapper>
             </ProtectedRoute>
           }
