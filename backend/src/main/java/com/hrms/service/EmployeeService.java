@@ -6,6 +6,8 @@ import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PermissionGroupRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -200,6 +202,10 @@ public class EmployeeService {
 
     public List<Employee> getEmployeesForOrganization(Organization organization) {
         return employeeRepository.findByOrganization(organization);
+    }
+
+    public Page<Employee> getEmployeesForOrganization(Organization organization, Pageable pageable) {
+        return employeeRepository.findByOrganization(organization, pageable);
     }
 
     public Optional<Employee> getById(UUID employeeId) {
