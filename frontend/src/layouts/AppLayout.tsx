@@ -68,6 +68,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
     return path;
   };
 
+  // Handle menu click navigation
+  const handleMenuClick = (e: { key: string }) => {
+    navigate(e.key);
+  };
+
   // Desktop sidebar
   const DesktopSidebar = (
     <Sider
@@ -155,6 +160,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
         mode="inline"
         selectedKeys={[getSelectedKey()]}
         items={menuItems}
+        onClick={handleMenuClick}
         style={{
           border: 'none',
           padding: '12px 8px',
@@ -213,7 +219,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
         mode="inline"
         selectedKeys={[getSelectedKey()]}
         items={menuItems}
-        onClick={() => setMobileDrawerOpen(false)}
+        onClick={(e) => {
+          handleMenuClick(e);
+          setMobileDrawerOpen(false);
+        }}
         style={{
           border: 'none',
           padding: '12px 8px',
