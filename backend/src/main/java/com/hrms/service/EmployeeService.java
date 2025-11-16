@@ -4,14 +4,13 @@ import com.hrms.entity.*;
 import com.hrms.repository.EmployeeHistoryRepository;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PermissionGroupRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class EmployeeService {
@@ -49,6 +48,7 @@ public class EmployeeService {
     }
 
     @Transactional
+    @CacheEvict(value = "reportingTrees", allEntries = true)
     public Employee updateReporting(Employee employee, Employee reportsTo, User changedBy) {
         String oldValue = employee.getReportsTo() != null ? employee.getReportsTo().getId().toString() : null;
         String newValue = reportsTo != null ? reportsTo.getId().toString() : null;
@@ -132,10 +132,47 @@ public class EmployeeService {
         return updated;
     }
 
+    /**
+     * Check if assigning newManagerId as manager would create a circular reporting structure
+     */
+    public boolean wouldCreateCycle(UUID newManagerId, UUID employeeId) {
+        if (newManagerId.equals(employeeId)) {
+            return true; // Self-reference
+        }
+
+        Set<UUID> visited = new HashSet<>();
+        UUID current = newManagerId;
+
+        while (current != null) {
+            if (current.equals(employeeId)) {
+                return true; // Cycle detected: employee would be in their own management chain
+            }
+
+            if (!visited.add(current)) {
+                // We've seen this ID before, there's a loop but it doesn't involve our employee
+                return false;
+            }
+
+            Optional<Employee> manager = employeeRepository.findById(current);
+            current = manager
+                .flatMap(m -> Optional.ofNullable(m.getReportsTo()))
+                .map(Employee::getId)
+                .orElse(null);
+        }
+
+        return false;
+    }
+
+    @Cacheable(value = "reportingTrees", key = "#employeeId")
     public List<Employee> getReportingTree(UUID employeeId) {
-        List<Employee> tree = new ArrayList<>();
-        collectReports(employeeId, tree);
-        return tree;
+        Employee manager = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        // Optimized: Load all employees in organization once (single query)
+        List<Employee> allEmployees = employeeRepository.findByOrganization(manager.getOrganization());
+
+        // Build tree in memory instead of recursive DB queries
+        return collectReportsInMemory(employeeId, allEmployees);
     }
 
     private void collectReports(UUID managerId, List<Employee> tree) {
@@ -144,6 +181,21 @@ public class EmployeeService {
             tree.add(report);
             collectReports(report.getId(), tree);
         }
+    }
+
+    private List<Employee> collectReportsInMemory(UUID managerId, List<Employee> allEmployees) {
+        List<Employee> tree = new ArrayList<>();
+
+        // Find direct reports in memory
+        for (Employee emp : allEmployees) {
+            if (emp.getReportsTo() != null && emp.getReportsTo().getId().equals(managerId)) {
+                tree.add(emp);
+                // Recursively collect their reports
+                tree.addAll(collectReportsInMemory(emp.getId(), allEmployees));
+            }
+        }
+
+        return tree;
     }
 
     public List<Employee> getEmployeesForOrganization(Organization organization) {

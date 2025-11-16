@@ -114,6 +114,12 @@ public class EmployeeManagementController {
             if (request.getReportsToEmployeeId().equals(employeeId)) {
                 throw new RuntimeException("Employee cannot report to themselves");
             }
+
+            // Check for circular reporting structure
+            if (employeeService.wouldCreateCycle(request.getReportsToEmployeeId(), employeeId)) {
+                throw new RuntimeException("This assignment would create a circular reporting structure");
+            }
+
             Employee manager = employeeService.getById(request.getReportsToEmployeeId())
                     .orElseThrow(() -> new RuntimeException("Manager not found"));
             if (!manager.getOrganization().getId().equals(organization.getId())) {
