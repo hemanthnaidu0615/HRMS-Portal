@@ -153,6 +153,15 @@ CREATE TABLE employee_history (
     FOREIGN KEY (changed_by) REFERENCES users(id)
 );
 
+-- Many-to-many: Employees can be assigned permission groups
+CREATE TABLE employee_permission_groups (
+    employee_id UNIQUEIDENTIFIER NOT NULL,
+    group_id UNIQUEIDENTIFIER NOT NULL,
+    PRIMARY KEY (employee_id, group_id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES permission_groups(id) ON DELETE CASCADE
+);
+
 -- =====================================================
 -- DOCUMENT MANAGEMENT
 -- =====================================================
@@ -441,6 +450,9 @@ CREATE INDEX idx_permissions_resource ON permissions(resource, action, scope);
 CREATE INDEX idx_roles_org ON roles(organization_id);
 
 CREATE INDEX idx_permission_groups_name ON permission_groups(name);
+
+CREATE INDEX idx_employee_permission_groups_employee ON employee_permission_groups(employee_id);
+CREATE INDEX idx_employee_permission_groups_group ON employee_permission_groups(group_id);
 
 CREATE INDEX idx_employee_history_employee ON employee_history(employee_id);
 CREATE INDEX idx_employee_history_date ON employee_history(changed_at DESC);
