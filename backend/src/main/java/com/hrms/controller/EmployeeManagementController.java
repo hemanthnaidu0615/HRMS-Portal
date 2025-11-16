@@ -372,6 +372,96 @@ public class EmployeeManagementController {
         return ResponseEntity.ok(Map.of("message", "Roles updated successfully"));
     }
 
+    @DeleteMapping("/{employeeId}")
+    public ResponseEntity<?> deactivateEmployee(@PathVariable UUID employeeId,
+                                                Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        Employee employee = employeeService.getById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        if (!employee.getOrganization().getId().equals(organization.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        if (employee.isDeleted()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Employee is already deactivated"));
+        }
+
+        employee.setDeletedAt(java.time.LocalDateTime.now());
+        employeeRepository.save(employee);
+
+        return ResponseEntity.ok(Map.of("message", "Employee deactivated successfully"));
+    }
+
+    @PostMapping("/{employeeId}/reactivate")
+    public ResponseEntity<?> reactivateEmployee(@PathVariable UUID employeeId,
+                                                Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        Employee employee = employeeService.getById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        if (!employee.getOrganization().getId().equals(organization.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        if (!employee.isDeleted()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Employee is not deactivated"));
+        }
+
+        employee.setDeletedAt(null);
+        employeeRepository.save(employee);
+
+        return ResponseEntity.ok(Map.of("message", "Employee reactivated successfully"));
+    }
+
+    @PostMapping("/{employeeId}/reset-password")
+    public ResponseEntity<?> adminResetPassword(@PathVariable UUID employeeId,
+                                               Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        Employee employee = employeeService.getById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        if (!employee.getOrganization().getId().equals(organization.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        // Generate temporary password
+        String temporaryPassword = java.util.UUID.randomUUID().toString().substring(0, 12);
+
+        // Reset password
+        User targetUser = employee.getUser();
+        userService.setNewPassword(targetUser, temporaryPassword);
+        targetUser.setMustChangePassword(true);
+        userService.save(targetUser);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Password reset successfully");
+        response.put("temporaryPassword", temporaryPassword);
+
+        return ResponseEntity.ok(response);
+    }
+
     private EmployeeSummaryResponse mapToSummary(Employee employee) {
         return new EmployeeSummaryResponse(
                 employee.getId(),

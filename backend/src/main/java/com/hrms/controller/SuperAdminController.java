@@ -103,4 +103,34 @@ public class SuperAdminController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/organizations/{orgId}")
+    public ResponseEntity<?> deactivateOrganization(@PathVariable UUID orgId) {
+        Organization organization = organizationRepository.findById(orgId)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        if (organization.isDeleted()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Organization is already deactivated"));
+        }
+
+        organization.setDeletedAt(java.time.LocalDateTime.now());
+        organizationRepository.save(organization);
+
+        return ResponseEntity.ok(Map.of("message", "Organization deactivated successfully"));
+    }
+
+    @PostMapping("/organizations/{orgId}/reactivate")
+    public ResponseEntity<?> reactivateOrganization(@PathVariable UUID orgId) {
+        Organization organization = organizationRepository.findById(orgId)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        if (!organization.isDeleted()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Organization is not deactivated"));
+        }
+
+        organization.setDeletedAt(null);
+        organizationRepository.save(organization);
+
+        return ResponseEntity.ok(Map.of("message", "Organization reactivated successfully"));
+    }
 }

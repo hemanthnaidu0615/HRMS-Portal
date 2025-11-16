@@ -10,7 +10,8 @@
 CREATE TABLE organizations (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     name VARCHAR(255) NOT NULL,
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME()
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    deleted_at DATETIME2 NULL
 );
 
 CREATE TABLE users (
@@ -131,6 +132,7 @@ CREATE TABLE employees (
     contract_end_date DATE NULL,                              -- for contract employees
 
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    deleted_at DATETIME2 NULL,
 
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (organization_id) REFERENCES organizations(id),
