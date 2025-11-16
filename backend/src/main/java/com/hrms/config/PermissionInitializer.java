@@ -38,30 +38,38 @@ public class PermissionInitializer implements CommandLineRunner {
     }
 
     private void initializePermissions() {
+        // Format: resource, action, scope, description
         List<String[]> permissions = Arrays.asList(
-            new String[]{"VIEW_OWN_DOCS", "View own documents"},
-            new String[]{"UPLOAD_OWN_DOCS", "Upload own documents"},
-            new String[]{"REQUEST_DOCS", "Request documents from others"},
-            new String[]{"VIEW_ORG_DOCS", "View organization documents"},
-            new String[]{"UPLOAD_FOR_OTHERS", "Upload documents for others"},
-            new String[]{"VIEW_DEPT_DOCS", "View department documents"}
+            new String[]{"documents", "view", "own", "View own documents"},
+            new String[]{"documents", "upload", "own", "Upload own documents"},
+            new String[]{"documents", "request", "own", "Request documents from others"},
+            new String[]{"documents", "view", "organization", "View organization documents"},
+            new String[]{"documents", "upload", "team", "Upload documents for others"},
+            new String[]{"documents", "view", "department", "View department documents"}
         );
 
         for (String[] perm : permissions) {
-            if (permissionRepository.findByCode(perm[0]).isEmpty()) {
-                Permission permission = new Permission(perm[0], perm[1]);
+            if (permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                    perm[0], perm[1], perm[2]).isEmpty()) {
+                Permission permission = new Permission(perm[0], perm[1], perm[2], perm[3]);
                 permissionRepository.save(permission);
             }
         }
     }
 
     private void initializeGroups() {
-        Permission viewOwn = permissionRepository.findByCode("VIEW_OWN_DOCS").orElseThrow();
-        Permission uploadOwn = permissionRepository.findByCode("UPLOAD_OWN_DOCS").orElseThrow();
-        Permission requestDocs = permissionRepository.findByCode("REQUEST_DOCS").orElseThrow();
-        Permission viewOrg = permissionRepository.findByCode("VIEW_ORG_DOCS").orElseThrow();
-        Permission uploadForOthers = permissionRepository.findByCode("UPLOAD_FOR_OTHERS").orElseThrow();
-        Permission viewDept = permissionRepository.findByCode("VIEW_DEPT_DOCS").orElseThrow();
+        Permission viewOwn = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "documents", "view", "own").orElseThrow();
+        Permission uploadOwn = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "documents", "upload", "own").orElseThrow();
+        Permission requestDocs = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "documents", "request", "own").orElseThrow();
+        Permission viewOrg = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "documents", "view", "organization").orElseThrow();
+        Permission uploadForOthers = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "documents", "upload", "team").orElseThrow();
+        Permission viewDept = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "documents", "view", "department").orElseThrow();
 
         if (permissionGroupRepository.findByName("EMPLOYEE_BASIC").isEmpty()) {
             PermissionGroup employeeBasic = new PermissionGroup("EMPLOYEE_BASIC", "Basic employee permissions");
