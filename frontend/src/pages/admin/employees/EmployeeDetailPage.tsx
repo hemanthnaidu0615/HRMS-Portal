@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Button, Tag, Skeleton, Alert, Typography, Space, Descriptions } from 'antd';
-import { EditOutlined, HistoryOutlined, ShieldOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { EditOutlined, HistoryOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { SafetyCertificateOutlined } from '@ant-design/icons';
 import { getEmployeeDetails, EmployeeDetailResponse } from '../../../api/employeeManagementApi';
 
 const { Title } = Typography;
@@ -96,7 +97,7 @@ export const EmployeeDetailPage = () => {
                 View History
               </Button>
               <Button
-                icon={<ShieldOutlined />}
+                icon={<SafetyCertificateOutlined />}
                 onClick={() => navigate(`/orgadmin/employees/${employeeId}/permissions`)}
                 style={{ borderRadius: 8 }}
               >
