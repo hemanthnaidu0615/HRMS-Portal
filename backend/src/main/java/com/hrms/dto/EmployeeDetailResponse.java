@@ -25,7 +25,7 @@ public class EmployeeDetailResponse {
     private String reportsToEmail;
 
     private String employmentType;
-    private UUID clientId;
-    private UUID projectId;
+    private String clientName;  // For client employees
+    private String projectId;   // For contract/project employees
     private LocalDate contractEndDate;
 }
