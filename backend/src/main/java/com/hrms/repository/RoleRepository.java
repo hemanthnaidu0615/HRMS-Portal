@@ -14,6 +14,13 @@ import java.util.Optional;
 public interface RoleRepository extends JpaRepository<Role, Integer> {
 
     /**
+     * Find role by name (searches system roles only for backward compatibility)
+     */
+    default Optional<Role> findByName(String name) {
+        return findByNameAndSystemRoleTrue(name);
+    }
+
+    /**
      * Find system role by name (organization_id = NULL)
      */
     Optional<Role> findByNameAndSystemRoleTrue(String name);

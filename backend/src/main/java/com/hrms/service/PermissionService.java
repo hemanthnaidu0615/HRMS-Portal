@@ -289,4 +289,85 @@ public class PermissionService {
     public boolean isOrgAdmin(User user) {
         return hasRole(user, "orgadmin");
     }
+
+    /**
+     * Get effective permissions for an employee (from permission groups)
+     * Returns permission codes in new format: "resource:action:scope"
+     */
+    public Set<String> getEffectivePermissions(Employee employee) {
+        if (employee == null) {
+            return Collections.emptySet();
+        }
+
+        Set<String> permissionCodes = new HashSet<>();
+
+        for (PermissionGroup group : employee.getPermissionGroups()) {
+            for (Permission permission : group.getPermissions()) {
+                permissionCodes.add(permission.getCode());
+            }
+        }
+
+        return permissionCodes;
+    }
+
+    /**
+     * Check if employee has a specific permission (supports both old and new codes)
+     * @param employee The employee to check
+     * @param permissionCode Permission code (old format like "REQUEST_DOCS" or new format like "documents:request:own")
+     * @return true if employee has the permission
+     */
+    public boolean has(Employee employee, String permissionCode) {
+        if (employee == null) {
+            return false;
+        }
+
+        // Map old permission codes to new format
+        String newCode = mapOldCodeToNew(permissionCode);
+
+        Set<String> effectivePermissions = getEffectivePermissions(employee);
+
+        // Check if employee has the exact permission
+        if (effectivePermissions.contains(newCode)) {
+            return true;
+        }
+
+        // Also check if employee has the permission through their user's roles
+        if (employee.getUser() != null) {
+            Set<String> userPermissions = getAllPermissionCodes(employee.getUser());
+            if (userPermissions.contains(newCode)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Map old permission codes to new resource:action:scope format
+     */
+    private String mapOldCodeToNew(String oldCode) {
+        // If it already contains ":", it's in new format
+        if (oldCode.contains(":")) {
+            return oldCode;
+        }
+
+        // Map old codes to new format
+        switch (oldCode) {
+            case "VIEW_OWN_DOCS":
+                return "documents:view:own";
+            case "UPLOAD_OWN_DOCS":
+                return "documents:upload:own";
+            case "REQUEST_DOCS":
+                return "documents:request:own";
+            case "VIEW_ORG_DOCS":
+                return "documents:view:organization";
+            case "UPLOAD_FOR_OTHERS":
+                return "documents:upload:team";
+            case "VIEW_DEPT_DOCS":
+                return "documents:view:department";
+            default:
+                // If no mapping found, return as-is
+                return oldCode;
+        }
+    }
 }

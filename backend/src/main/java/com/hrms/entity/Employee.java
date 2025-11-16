@@ -48,6 +48,14 @@ public class Employee {
     @Column(name = "contract_end_date")
     private LocalDate contractEndDate;  // For contract employees
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "employee_permission_groups",
+        joinColumns = @JoinColumn(name = "employee_id"),
+        inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    private Set<PermissionGroup> permissionGroups = new HashSet<>();
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -148,6 +156,18 @@ public class Employee {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Set<PermissionGroup> getPermissionGroups() {
+        return permissionGroups;
+    }
+
+    public void setPermissionGroups(Set<PermissionGroup> permissionGroups) {
+        this.permissionGroups = permissionGroups;
+    }
+
+    public String getClientId() {
+        return clientName;
     }
 
     @Override
