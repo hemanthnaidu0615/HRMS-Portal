@@ -5,6 +5,8 @@ import com.hrms.entity.Employee;
 import com.hrms.entity.Organization;
 import com.hrms.entity.User;
 import com.hrms.repository.DocumentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,5 +33,9 @@ public class DocumentService {
 
     public List<Document> getDocumentsForOrganization(Organization organization) {
         return documentRepository.findByEmployeeOrganizationId(organization.getId());
+    }
+
+    public Page<Document> getDocumentsForOrganization(Organization organization, Pageable pageable) {
+        return documentRepository.findByEmployeeOrganizationId(organization.getId(), pageable);
     }
 }

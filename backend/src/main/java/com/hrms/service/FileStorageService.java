@@ -2,7 +2,6 @@ package com.hrms.service;
 
 import com.azure.storage.blob.*;
 import com.azure.storage.blob.models.BlobHttpHeaders;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,14 +14,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class FileStorageService {
+
+    private final FileValidationService fileValidationService;
 
     @Value("${storage.azure.connection-string}")
     private String connectionString;
 
     @Value("${storage.azure.container}")
     private String containerName;
+
+    public FileStorageService(FileValidationService fileValidationService) {
+        this.fileValidationService = fileValidationService;
+    }
 
     private BlobContainerClient getContainer() {
         BlobContainerClient containerClient =
@@ -37,6 +41,9 @@ public class FileStorageService {
 
     public String store(MultipartFile file, UUID employeeId, UUID organizationId) {
         try {
+            // Validate file before storing
+            fileValidationService.validateFile(file);
+
             if (file.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file");
             }

@@ -8,6 +8,8 @@ import com.hrms.service.EmailService;
 import com.hrms.service.PasswordResetService;
 import com.hrms.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 public class PasswordResetController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PasswordResetController.class);
 
     private final UserService userService;
     private final PasswordResetService passwordResetService;
@@ -42,8 +46,8 @@ public class PasswordResetController {
             try {
                 emailService.sendPasswordResetEmail(user.getEmail(), token);
             } catch (Exception e) {
-                // Log error but don't fail the request
-                System.err.println("Failed to send password reset email: " + e.getMessage());
+                // Log error but don't fail the request or reveal email existence
+                logger.error("Failed to send password reset email to {}: {}", user.getEmail(), e.getMessage(), e);
             }
         }
 

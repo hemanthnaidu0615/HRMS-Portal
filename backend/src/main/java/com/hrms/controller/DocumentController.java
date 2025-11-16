@@ -11,6 +11,9 @@ import com.hrms.service.EmployeeService;
 import com.hrms.service.FileStorageService;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -201,7 +204,10 @@ public class DocumentController {
 
     @GetMapping("/org")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getOrganizationDocuments(Authentication authentication) {
+    public ResponseEntity<?> getOrganizationDocuments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -212,32 +218,36 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "User has no organization"));
         }
 
-        List<Document> documents;
+        // Limit max page size to 100 to prevent performance issues
+        int effectiveSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, effectiveSize);
 
         // Check if user has full org access or only team access
         boolean hasFullOrgAccess = permissionService.has(currentEmployee, "VIEW_ORG_DOCS");
         boolean hasTeamAccess = permissionService.has(currentEmployee, "VIEW_DEPT_DOCS");
 
         if (hasFullOrgAccess) {
-            // Full org access (e.g., org admin)
-            documents = documentService.getDocumentsForOrganization(currentEmployee.getOrganization());
+            // Full org access (e.g., org admin) - use database pagination
+            Page<Document> documents = documentService.getDocumentsForOrganization(currentEmployee.getOrganization(), pageable);
+            Page<DocumentResponse> responses = documents.map(this::toDocumentResponse);
+            return ResponseEntity.ok(responses);
         } else if (hasTeamAccess) {
-            // Team/subtree access only
+            // Team/subtree access only - in-memory pagination (acceptable for team size)
             List<Employee> teamMembers = employeeService.getReportingTree(currentEmployee.getId());
             teamMembers.add(currentEmployee); // Include self
 
-            documents = teamMembers.stream()
+            List<Document> documents = teamMembers.stream()
                     .flatMap(emp -> documentService.getDocumentsForEmployee(emp).stream())
                     .collect(Collectors.toList());
+
+            List<DocumentResponse> responses = documents.stream()
+                    .map(this::toDocumentResponse)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(responses);
         } else {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
         }
-
-        List<DocumentResponse> responses = documents.stream()
-                .map(this::toDocumentResponse)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{documentId}/download")
@@ -251,6 +261,12 @@ public class DocumentController {
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
         Employee currentEmployee = getOrCreateEmployee(user);
+
+        // Organization boundary check: Prevent cross-organization document access
+        if (user.getOrganization() != null &&
+                !document.getEmployee().getOrganization().getId().equals(currentEmployee.getOrganization().getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
 
         boolean allowed = false;
 

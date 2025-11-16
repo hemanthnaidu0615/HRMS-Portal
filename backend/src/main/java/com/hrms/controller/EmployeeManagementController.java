@@ -11,6 +11,9 @@ import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -34,7 +37,10 @@ public class EmployeeManagementController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<EmployeeSummaryResponse>> getEmployees(Authentication authentication) {
+    public ResponseEntity<Page<EmployeeSummaryResponse>> getEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            Authentication authentication) {
         User currentUser = userService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -43,11 +49,13 @@ public class EmployeeManagementController {
             throw new RuntimeException("User has no organization");
         }
 
-        List<Employee> employees = employeeService.getEmployeesForOrganization(organization);
+        // Limit max page size to 100 to prevent performance issues
+        int effectiveSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, effectiveSize);
 
-        List<EmployeeSummaryResponse> response = employees.stream()
-                .map(this::mapToSummary)
-                .collect(Collectors.toList());
+        Page<Employee> employees = employeeService.getEmployeesForOrganization(organization, pageable);
+
+        Page<EmployeeSummaryResponse> response = employees.map(this::mapToSummary);
 
         return ResponseEntity.ok(response);
     }
@@ -114,6 +122,12 @@ public class EmployeeManagementController {
             if (request.getReportsToEmployeeId().equals(employeeId)) {
                 throw new RuntimeException("Employee cannot report to themselves");
             }
+
+            // Check for circular reporting structure
+            if (employeeService.wouldCreateCycle(request.getReportsToEmployeeId(), employeeId)) {
+                throw new RuntimeException("This assignment would create a circular reporting structure");
+            }
+
             Employee manager = employeeService.getById(request.getReportsToEmployeeId())
                     .orElseThrow(() -> new RuntimeException("Manager not found"));
             if (!manager.getOrganization().getId().equals(organization.getId())) {

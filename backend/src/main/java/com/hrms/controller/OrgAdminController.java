@@ -7,6 +7,9 @@ import com.hrms.service.EmailService;
 import com.hrms.service.EmployeeService;
 import com.hrms.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,6 +23,8 @@ import java.util.Map;
 @RequestMapping("/api/orgadmin")
 @PreAuthorize("hasRole('ORGADMIN')")
 public class OrgAdminController {
+
+    private static final Logger logger = LoggerFactory.getLogger(OrgAdminController.class);
 
     private final UserService userService;
     private final UserRepository userRepository;
@@ -56,19 +61,23 @@ public class OrgAdminController {
 
         employeeService.createEmployee(employee, orgAdmin.getOrganization());
 
-        // Send email with temporary password
-        try {
-            emailService.sendTemporaryPasswordEmail(request.getEmail(), request.getTemporaryPassword());
-        } catch (Exception e) {
-            // Log error but don't fail the request
-            System.err.println("Failed to send email: " + e.getMessage());
-        }
-
         Map<String, Object> response = new HashMap<>();
         response.put("id", employee.getId());
         response.put("email", employee.getEmail());
         response.put("organizationId", employee.getOrganization().getId());
         response.put("mustChangePassword", employee.isMustChangePassword());
+
+        // Send email with temporary password
+        try {
+            emailService.sendTemporaryPasswordEmail(request.getEmail(), request.getTemporaryPassword());
+            response.put("emailStatus", "sent");
+        } catch (Exception e) {
+            // Log error but don't fail the request - employee was created successfully
+            logger.error("Failed to send temporary password email to {}: {}", request.getEmail(), e.getMessage(), e);
+            response.put("emailStatus", "failed");
+            response.put("warning", "Employee created successfully but email delivery failed. Please provide credentials manually.");
+            return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(response);
+        }
 
         return ResponseEntity.ok(response);
     }
