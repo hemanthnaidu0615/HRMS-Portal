@@ -56,8 +56,8 @@ export interface EmployeeTreeNodeResponse {
 }
 
 export async function getEmployees() {
-  const response = await http.get<EmployeeSummaryResponse[]>("/api/orgadmin/employees");
-  return response.data;
+  const response = await http.get<{ content: EmployeeSummaryResponse[] }>("/api/orgadmin/employees");
+  return response.data.content || [];
 }
 
 export async function getEmployeeDetails(employeeId: string) {
