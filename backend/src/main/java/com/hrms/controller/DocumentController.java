@@ -200,7 +200,7 @@ public class DocumentController {
     }
 
     @GetMapping("/org")
-    @PreAuthorize("hasAnyRole('ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getOrganizationDocuments(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)

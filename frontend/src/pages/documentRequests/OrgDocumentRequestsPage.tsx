@@ -36,7 +36,7 @@ export const OrgDocumentRequestsPage = () => {
     try {
       setLoading(true);
       const response = await getOrgDocumentRequests();
-      setRequests(response.data);
+      setRequests(response);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load requests');
     } finally {

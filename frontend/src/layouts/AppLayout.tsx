@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Typography, Space, Button, Drawer } from 'antd';
-import type { MenuProps } from 'antd';
+import React, { useState } from "react";
+import {
+  Layout,
+  Menu,
+  Avatar,
+  Dropdown,
+  Typography,
+  Space,
+  Button,
+  Drawer,
+} from "antd";
+import type { MenuProps } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -9,23 +18,26 @@ import {
   SettingOutlined,
   BellOutlined,
   MenuOutlined,
-} from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../auth/useAuth';
+} from "@ant-design/icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/useAuth";
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  menuItems: MenuProps['items'];
+  menuItems: MenuProps["items"];
 }
 
 /**
  * Premium App Layout Component
  * Modern sidebar + header layout with responsive design
  */
-export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => {
+export const AppLayout: React.FC<AppLayoutProps> = ({
+  children,
+  menuItems,
+}) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const navigate = useNavigate();
@@ -33,30 +45,30 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
   const { user, logout } = useAuth();
 
   // User dropdown menu
-  const userMenuItems: MenuProps['items'] = [
+  const userMenuItems: MenuProps["items"] = [
     {
-      key: 'profile',
+      key: "profile",
       icon: <UserOutlined />,
-      label: 'My Profile',
-      onClick: () => navigate('/profile'),
+      label: "My Profile",
+      onClick: () => navigate("/profile"),
     },
     {
-      key: 'settings',
+      key: "settings",
       icon: <SettingOutlined />,
-      label: 'Settings',
-      onClick: () => navigate('/settings'),
+      label: "Settings",
+      onClick: () => navigate("/settings"),
     },
     {
-      type: 'divider',
+      type: "divider",
     },
     {
-      key: 'logout',
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: "Logout",
       danger: true,
       onClick: () => {
         logout();
-        navigate('/login');
+        navigate("/login");
       },
     },
   ];
@@ -68,6 +80,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
     return path;
   };
 
+  const handleMenuClick = (e: { key: string }) => {
+  navigate(e.key);
+};
+
   // Desktop sidebar
   const DesktopSidebar = (
     <Sider
@@ -77,15 +93,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
       width={256}
       collapsedWidth={80}
       style={{
-        overflow: 'auto',
-        height: '100vh',
-        position: 'fixed',
+        overflow: "auto",
+        height: "100vh",
+        position: "fixed",
         left: 0,
         top: 0,
         bottom: 0,
-        background: '#ffffff',
-        borderRight: '1px solid #e8edf2',
-        boxShadow: '1px 0 4px rgba(0, 0, 0, 0.02)',
+        background: "#ffffff",
+        borderRight: "1px solid #e8edf2",
+        boxShadow: "1px 0 4px rgba(0, 0, 0, 0.02)",
       }}
       className="hide-on-mobile"
     >
@@ -93,12 +109,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
       <div
         style={{
           height: 64,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'flex-start',
-          padding: collapsed ? '0' : '0 24px',
-          borderBottom: '1px solid #e8edf2',
-          transition: 'all 0.2s',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: collapsed ? "center" : "flex-start",
+          padding: collapsed ? "0" : "0 24px",
+          borderBottom: "1px solid #e8edf2",
+          transition: "all 0.2s",
         }}
       >
         {collapsed ? (
@@ -107,11 +123,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: 'linear-gradient(135deg, #0a0d54 0%, #15195c 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
+              background: "linear-gradient(135deg, #0a0d54 0%, #15195c 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff",
               fontWeight: 600,
               fontSize: 16,
             }}
@@ -125,11 +141,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
                 width: 32,
                 height: 32,
                 borderRadius: 8,
-                background: 'linear-gradient(135deg, #0a0d54 0%, #15195c 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
+                background: "linear-gradient(135deg, #0a0d54 0%, #15195c 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#ffffff",
                 fontWeight: 600,
                 fontSize: 14,
               }}
@@ -140,8 +156,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
               strong
               style={{
                 fontSize: 16,
-                color: '#111111',
-                letterSpacing: '-0.02em',
+                color: "#111111",
+                letterSpacing: "-0.02em",
               }}
             >
               HRMS Portal
@@ -155,9 +171,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
         mode="inline"
         selectedKeys={[getSelectedKey()]}
         items={menuItems}
+        onClick={handleMenuClick}
         style={{
-          border: 'none',
-          padding: '12px 8px',
+          border: "none",
+          padding: "12px 8px",
         }}
       />
     </Sider>
@@ -172,17 +189,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
       width={280}
       styles={{
         body: { padding: 0 },
-        header: { display: 'none' },
+        header: { display: "none" },
       }}
     >
       {/* Logo */}
       <div
         style={{
           height: 64,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-          borderBottom: '1px solid #e8edf2',
+          display: "flex",
+          alignItems: "center",
+          padding: "0 24px",
+          borderBottom: "1px solid #e8edf2",
         }}
       >
         <Space>
@@ -191,18 +208,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: 'linear-gradient(135deg, #0a0d54 0%, #15195c 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
+              background: "linear-gradient(135deg, #0a0d54 0%, #15195c 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff",
               fontWeight: 600,
               fontSize: 14,
             }}
           >
             HR
           </div>
-          <Text strong style={{ fontSize: 16, color: '#111111' }}>
+          <Text strong style={{ fontSize: 16, color: "#111111" }}>
             HRMS Portal
           </Text>
         </Space>
@@ -213,17 +230,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
         mode="inline"
         selectedKeys={[getSelectedKey()]}
         items={menuItems}
-        onClick={() => setMobileDrawerOpen(false)}
+        onClick={(e) => {
+          handleMenuClick(e); 
+          setMobileDrawerOpen(false);
+        }}
         style={{
-          border: 'none',
-          padding: '12px 8px',
+          border: "none",
+          padding: "12px 8px",
         }}
       />
     </Drawer>
   );
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: "100vh" }}>
       {/* Desktop Sidebar */}
       {DesktopSidebar}
 
@@ -234,22 +254,22 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
       <Layout
         style={{
           marginLeft: window.innerWidth < 768 ? 0 : collapsed ? 80 : 256,
-          transition: 'margin-left 0.2s',
+          transition: "margin-left 0.2s",
         }}
       >
         {/* Header */}
         <Header
           style={{
-            padding: '0 24px',
-            background: '#ffffff',
-            borderBottom: '1px solid #e8edf2',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            position: 'sticky',
+            padding: "0 24px",
+            background: "#ffffff",
+            borderBottom: "1px solid #e8edf2",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "sticky",
             top: 0,
             zIndex: 100,
-            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.02)',
+            boxShadow: "0 1px 4px rgba(0, 0, 0, 0.02)",
           }}
         >
           {/* Left: Trigger Button */}
@@ -295,40 +315,48 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
             />
 
             {/* User Menu */}
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              arrow
+            >
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
+                  display: "flex",
+                  alignItems: "center",
                   gap: 12,
-                  cursor: 'pointer',
-                  padding: '4px 12px',
+                  cursor: "pointer",
+                  padding: "4px 12px",
                   borderRadius: 8,
-                  transition: 'background 0.2s',
+                  transition: "background 0.2s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f8fafc';
+                  e.currentTarget.style.background = "#f8fafc";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.background = "transparent";
                 }}
               >
                 <Avatar
                   size={36}
                   style={{
-                    background: 'linear-gradient(135deg, #0a0d54 0%, #15195c 100%)',
+                    background:
+                      "linear-gradient(135deg, #0a0d54 0%, #15195c 100%)",
                     fontSize: 14,
                     fontWeight: 600,
                   }}
                 >
-                  {user?.email?.[0]?.toUpperCase() || 'U'}
+                  {user?.email?.[0]?.toUpperCase() || "U"}
                 </Avatar>
                 <div className="hide-on-mobile">
-                  <Text strong style={{ display: 'block', fontSize: 14, color: '#111111' }}>
-                    {user?.email?.split('@')[0] || 'User'}
+                  <Text
+                    strong
+                    style={{ display: "block", fontSize: 14, color: "#111111" }}
+                  >
+                    {user?.email?.split("@")[0] || "User"}
                   </Text>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    {user?.roles?.[0] || 'Employee'}
+                    {user?.roles?.[0] || "Employee"}
                   </Text>
                 </div>
               </div>
@@ -339,9 +367,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, menuItems }) => 
         {/* Content */}
         <Content
           style={{
-            margin: '24px',
+            margin: "24px",
             padding: 0,
-            minHeight: 'calc(100vh - 112px)',
+            minHeight: "calc(100vh - 112px)",
           }}
         >
           {children}

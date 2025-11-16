@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Spin, Alert, Button, Space, Typography, Descriptions } from 'antd';
 import { DownloadOutlined, EyeOutlined, FileOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getDownloadUrl } from '../api/documentsApi';
+import { downloadDocument } from '../api/documentsApi';
 
 const { Text } = Typography;
 
@@ -38,6 +38,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     if (visible && document) {
       loadDocumentUrl();
     } else {
+      if (documentUrl) {
+        URL.revokeObjectURL(documentUrl);
+      }
       setDocumentUrl(null);
       setError(null);
     }
@@ -49,8 +52,15 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const url = await getDownloadUrl(document.id);
-      setDocumentUrl(url);
+      const res = await downloadDocument(document.id);
+      const contentType = (res as any)?.headers?.['content-type'] || (res as any)?.headers?.get?.('content-type') || undefined;
+      const blob = new Blob([res.data], contentType ? { type: contentType } : undefined);
+      // Revoke existing URL if present
+      if (documentUrl) {
+        URL.revokeObjectURL(documentUrl);
+      }
+      const blobUrl = window.URL.createObjectURL(blob);
+      setDocumentUrl(blobUrl);
     } catch (err: any) {
       setError('Failed to load document preview');
     } finally {
