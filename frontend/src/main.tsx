@@ -1,35 +1,26 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { ConfigProvider } from 'antd'
-import App from './App.tsx'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { ConfigProvider, App as AntApp } from 'antd';
+import App from './App.tsx';
+import theme from './theme';
+import './index.css';
 
-const theme = {
-  token: {
-    colorPrimary: '#0a0d54',
-    colorBgBase: '#dde4eb',
-    borderRadius: 4,
-    fontSize: 14,
-  },
-  components: {
-    Layout: {
-      headerBg: '#0a0d54',
-      bodyBg: '#dde4eb',
-    },
-    Menu: {
-      darkItemBg: '#0a0d54',
-      darkItemSelectedBg: '#15195c',
-    },
-  },
-};
-
+/**
+ * HRMS Application Entry Point
+ * Premium Ant Design v5 configuration with custom theme
+ */
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ConfigProvider theme={theme}>
-        <App />
-      </ConfigProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+    <ConfigProvider
+      theme={theme}
+      componentSize="middle"
+    >
+      <AntApp>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AntApp>
+    </ConfigProvider>
+  </React.StrictMode>
+);
