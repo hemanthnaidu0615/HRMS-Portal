@@ -49,6 +49,11 @@ import { EmployeeTreePage } from './pages/admin/employees/EmployeeTreePage';
 import { PermissionGroupsPage } from './pages/admin/permissions/PermissionGroupsPage';
 import { PermissionGroupDetailPage } from './pages/admin/permissions/PermissionGroupDetailPage';
 
+// Admin Pages - Roles
+import { RolesPage } from './pages/admin/roles/RolesPage';
+import { CreateRolePage } from './pages/admin/roles/CreateRolePage';
+import { EditRolePage } from './pages/admin/roles/EditRolePage';
+
 /**
  * Layout Wrapper Component
  * Wraps authenticated routes with AppLayout and role-based navigation
@@ -337,6 +342,38 @@ function App() {
             <ProtectedRoute requiredRole="orgadmin">
               <LayoutWrapper>
                 <PermissionGroupDetailPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Role Management Routes */}
+        <Route
+          path="/admin/roles"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <RolesPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/roles/create"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <CreateRolePage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/roles/:roleId/edit"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <EditRolePage />
               </LayoutWrapper>
             </ProtectedRoute>
           }

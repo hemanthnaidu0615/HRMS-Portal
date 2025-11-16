@@ -41,9 +41,37 @@ export const useAuth = () => {
 
   const hasRole = (role: string): boolean => roles.includes(role);
 
+  /**
+   * Check if user has a specific permission
+   * Supports both old format (VIEW_OWN_DOCS) and new format (employees:view:own)
+   */
   const hasPermission = (perm: string): boolean => {
-    if (roles.includes('superadmin')) return true;
+    // SuperAdmin should NOT have org permissions in new system
+    if (roles.includes('superadmin') && !perm.includes(':')) {
+      // Old format permissions for backward compatibility
+      return false;
+    }
     return permissions.includes(perm);
+  };
+
+  /**
+   * Check if user has permission for a resource:action with ANY of the specified scopes
+   * Example: hasPermissionWithAnyScope('employees', 'view', ['team', 'department', 'organization'])
+   */
+  const hasPermissionWithAnyScope = (resource: string, action: string, scopes: string[]): boolean => {
+    return scopes.some(scope => hasPermission(`${resource}:${action}:${scope}`));
+  };
+
+  /**
+   * Get the highest scope level for a resource:action
+   * Returns: 'organization' | 'department' | 'team' | 'own' | null
+   */
+  const getHighestScope = (resource: string, action: string): string | null => {
+    if (hasPermission(`${resource}:${action}:organization`)) return 'organization';
+    if (hasPermission(`${resource}:${action}:department`)) return 'department';
+    if (hasPermission(`${resource}:${action}:team`)) return 'team';
+    if (hasPermission(`${resource}:${action}:own`)) return 'own';
+    return null;
   };
 
   const logout = () => {
@@ -60,36 +88,49 @@ export const useAuth = () => {
     isAuthenticated,
     hasRole,
     hasPermission,
+    hasPermissionWithAnyScope,
+    getHighestScope,
     permissions,
     logout,
   };
 };
 
 /**
- * Fallback permissions based on roles
+ * Fallback permissions based on roles (new format)
  * Used only when backend API is unavailable
  */
 function getFallbackPermissions(roles: string[]): string[] {
   const rolePermissions: Record<string, string[]> = {
-    superadmin: [
-      'VIEW_OWN_DOCS',
-      'VIEW_ORG_DOCS',
-      'VIEW_DEPT_DOCS',
-      'UPLOAD_FOR_OTHERS',
-      'UPLOAD_OWN_DOCS',
-      'REQUEST_DOCS',
-    ],
+    superadmin: [],  // SuperAdmin has NO org permissions
     orgadmin: [
-      'VIEW_OWN_DOCS',
-      'VIEW_ORG_DOCS',
-      'UPLOAD_FOR_OTHERS',
-      'UPLOAD_OWN_DOCS',
-      'REQUEST_DOCS',
+      // Full organization access
+      'employees:view:organization',
+      'employees:edit:organization',
+      'employees:create:organization',
+      'documents:view:organization',
+      'documents:upload:organization',
+      'documents:request:organization',
+      'departments:view:organization',
+      'departments:create:organization',
+      'positions:view:organization',
+      'positions:create:organization',
+      'roles:view:organization',
+      'roles:create:organization',
+      'roles:edit:organization',
+      'roles:assign:organization',
     ],
     employee: [
-      'VIEW_OWN_DOCS',
-      'UPLOAD_OWN_DOCS',
-      'REQUEST_DOCS',
+      // Basic own access
+      'employees:view:own',
+      'employees:edit:own',
+      'documents:view:own',
+      'documents:upload:own',
+      'documents:request:organization',
+      'leaves:create:own',
+      'leaves:view:own',
+      'timesheets:submit:own',
+      'timesheets:view:own',
+      'payroll:view:own',
     ],
   };
 

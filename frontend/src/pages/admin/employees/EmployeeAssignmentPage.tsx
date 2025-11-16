@@ -24,7 +24,7 @@ export const EmployeeAssignmentPage = () => {
   const [positionId, setPositionId] = useState<string | null>(null);
   const [reportsToEmployeeId, setReportsToEmployeeId] = useState<string | null>(null);
   const [employmentType, setEmploymentType] = useState<string | null>(null);
-  const [clientId, setClientId] = useState<string>('');
+  const [clientName, setClientName] = useState<string>('');
   const [projectId, setProjectId] = useState<string>('');
   const [contractEndDate, setContractEndDate] = useState<dayjs.Dayjs | null>(null);
 
@@ -60,7 +60,7 @@ export const EmployeeAssignmentPage = () => {
       setPositionId(empData.positionId);
       setReportsToEmployeeId(empData.reportsToEmployeeId);
       setEmploymentType(empData.employmentType);
-      setClientId(empData.clientId || '');
+      setClientName(empData.clientName || '');
       setProjectId(empData.projectId || '');
       setContractEndDate(empData.contractEndDate ? dayjs(empData.contractEndDate) : null);
 
@@ -82,7 +82,7 @@ export const EmployeeAssignmentPage = () => {
         positionId: positionId || null,
         reportsToEmployeeId: reportsToEmployeeId || null,
         employmentType: employmentType || null,
-        clientId: clientId || null,
+        clientName: clientName || null,
         projectId: projectId || null,
         contractEndDate: contractEndDate ? contractEndDate.format('YYYY-MM-DD') : null
       });
@@ -251,14 +251,15 @@ export const EmployeeAssignmentPage = () => {
                       marginBottom: 8,
                       fontWeight: 500
                     }}>
-                      Client ID
+                      Client Name
                     </label>
                     <Input
-                      value={clientId}
-                      onChange={(e) => setClientId(e.target.value)}
-                      placeholder="Enter client ID"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      placeholder="Enter client company name"
                       size="large"
                       style={{ borderRadius: 8 }}
+                      disabled={employmentType !== 'client'}
                     />
                   </div>
                   <div>
@@ -272,9 +273,10 @@ export const EmployeeAssignmentPage = () => {
                     <Input
                       value={projectId}
                       onChange={(e) => setProjectId(e.target.value)}
-                      placeholder="Enter project ID"
+                      placeholder="Enter project identifier"
                       size="large"
                       style={{ borderRadius: 8 }}
+                      disabled={employmentType !== 'contract'}
                     />
                   </div>
                   <div>
