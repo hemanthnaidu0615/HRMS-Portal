@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -67,7 +68,7 @@ public class OrganizationStructureController {
     }
 
     @PutMapping("/departments/{departmentId}")
-    public ResponseEntity<DepartmentResponse> updateDepartment(@PathVariable Long departmentId,
+    public ResponseEntity<DepartmentResponse> updateDepartment(@PathVariable UUID departmentId,
                                                                @Valid @RequestBody DepartmentRequest request,
                                                                Authentication authentication) {
         User currentUser = userService.findByEmail(authentication.getName())
@@ -93,7 +94,7 @@ public class OrganizationStructureController {
     }
 
     @DeleteMapping("/departments/{departmentId}")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long departmentId,
+    public ResponseEntity<Void> deleteDepartment(@PathVariable UUID departmentId,
                                                   Authentication authentication) {
         User currentUser = userService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -151,7 +152,7 @@ public class OrganizationStructureController {
     }
 
     @PutMapping("/positions/{positionId}")
-    public ResponseEntity<PositionResponse> updatePosition(@PathVariable Long positionId,
+    public ResponseEntity<PositionResponse> updatePosition(@PathVariable UUID positionId,
                                                            @Valid @RequestBody PositionRequest request,
                                                            Authentication authentication) {
         User currentUser = userService.findByEmail(authentication.getName())
@@ -178,7 +179,7 @@ public class OrganizationStructureController {
     }
 
     @DeleteMapping("/positions/{positionId}")
-    public ResponseEntity<Void> deletePosition(@PathVariable Long positionId,
+    public ResponseEntity<Void> deletePosition(@PathVariable UUID positionId,
                                                 Authentication authentication) {
         User currentUser = userService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));

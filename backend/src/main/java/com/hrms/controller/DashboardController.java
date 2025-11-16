@@ -89,13 +89,13 @@ public class DashboardController {
         Map<String, Object> stats = new HashMap<>();
 
         // Employee stats
-        long totalEmployees = employeeRepository.findByOrganizationId(organization.getId()).stream()
+        long totalEmployees = employeeRepository.findByOrganization(organization).stream()
                 .filter(emp -> emp.getDeletedAt() == null)
                 .count();
-        long activeEmployees = employeeRepository.findByOrganizationId(organization.getId()).stream()
+        long activeEmployees = employeeRepository.findByOrganization(organization).stream()
                 .filter(emp -> emp.getDeletedAt() == null)
                 .count();
-        long inactiveEmployees = employeeRepository.findByOrganizationId(organization.getId()).stream()
+        long inactiveEmployees = employeeRepository.findByOrganization(organization).stream()
                 .filter(emp -> emp.getDeletedAt() != null)
                 .count();
 
@@ -104,7 +104,7 @@ public class DashboardController {
         stats.put("inactiveEmployees", inactiveEmployees);
 
         // Document stats
-        long totalDocuments = documentRepository.findByEmployee_OrganizationId(organization.getId()).size();
+        long totalDocuments = documentRepository.findByEmployeeOrganizationId(organization.getId()).size();
         stats.put("totalDocuments", totalDocuments);
 
         // Document request stats
@@ -120,7 +120,7 @@ public class DashboardController {
 
         // Recent activity (last 30 days)
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        long newEmployeesLast30Days = employeeRepository.findByOrganizationId(organization.getId()).stream()
+        long newEmployeesLast30Days = employeeRepository.findByOrganization(organization).stream()
                 .filter(emp -> emp.getCreatedAt().isAfter(thirtyDaysAgo))
                 .count();
 
