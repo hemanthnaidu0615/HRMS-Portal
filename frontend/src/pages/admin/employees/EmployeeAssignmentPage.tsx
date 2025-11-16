@@ -1,19 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
-import { InputText } from 'primereact/inputtext';
-import { Calendar } from 'primereact/calendar';
-import { Toast } from 'primereact/toast';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Button, Select, Input, DatePicker, Typography, Space, Skeleton, Alert, message, Divider } from 'antd';
+import { CheckOutlined, CloseOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { getEmployeeDetails, updateEmployeeAssignment, getEmployees, EmployeeDetailResponse, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
 import { getDepartments, getPositions, DepartmentResponse, PositionResponse } from '../../../api/structureApi';
+
+const { Title } = Typography;
 
 export const EmployeeAssignmentPage = () => {
   const { employeeId } = useParams<{ employeeId: string }>();
   const navigate = useNavigate();
-  const toast = useRef<Toast>(null);
 
   const [employee, setEmployee] = useState<EmployeeDetailResponse | null>(null);
   const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
@@ -29,7 +26,7 @@ export const EmployeeAssignmentPage = () => {
   const [employmentType, setEmploymentType] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string>('');
   const [projectId, setProjectId] = useState<string>('');
-  const [contractEndDate, setContractEndDate] = useState<Date | null>(null);
+  const [contractEndDate, setContractEndDate] = useState<dayjs.Dayjs | null>(null);
 
   const employmentTypeOptions = [
     { label: 'Internal', value: 'internal' },
@@ -65,7 +62,7 @@ export const EmployeeAssignmentPage = () => {
       setEmploymentType(empData.employmentType);
       setClientId(empData.clientId || '');
       setProjectId(empData.projectId || '');
-      setContractEndDate(empData.contractEndDate ? new Date(empData.contractEndDate) : null);
+      setContractEndDate(empData.contractEndDate ? dayjs(empData.contractEndDate) : null);
 
       setError('');
     } catch (err: any) {
@@ -87,36 +84,28 @@ export const EmployeeAssignmentPage = () => {
         employmentType: employmentType || null,
         clientId: clientId || null,
         projectId: projectId || null,
-        contractEndDate: contractEndDate ? contractEndDate.toISOString().split('T')[0] : null
+        contractEndDate: contractEndDate ? contractEndDate.format('YYYY-MM-DD') : null
       });
 
-      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Assignment updated' });
+      message.success('Assignment updated');
       setTimeout(() => navigate(`/admin/employees/${employeeId}`), 1000);
     } catch (err: any) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to update assignment' });
+      message.error('Failed to update assignment');
     } finally {
       setSaving(false);
     }
   };
 
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Edit Employee Assignment</h2>
-      <Button
-        label="Back"
-        icon="pi pi-arrow-left"
-        severity="secondary"
-        onClick={() => navigate(`/admin/employees/${employeeId}`)}
-      />
-    </div>
-  );
-
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-4 space-y-4">
-        <Toast ref={toast} />
-        <Card header={header}>
-          <Skeleton height="500px" />
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Skeleton active paragraph={{ rows: 10 }} />
         </Card>
       </div>
     );
@@ -124,150 +113,215 @@ export const EmployeeAssignmentPage = () => {
 
   if (error || !employee) {
     return (
-      <div className="max-w-6xl mx-auto p-4 space-y-4">
-        <Toast ref={toast} />
-        <Card header={header}>
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error || 'Employee not found'}
-          </div>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Alert message={error || 'Employee not found'} type="error" showIcon />
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Toast ref={toast} />
-      <Card header={header}>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Reporting</h3>
-            <div>
-              <label htmlFor="reportsTo" className="block text-sm font-medium mb-2">
-                Reports To
-              </label>
-              <Dropdown
-                id="reportsTo"
-                value={reportsToEmployeeId}
-                onChange={(e) => setReportsToEmployeeId(e.value)}
-                options={employees}
-                optionLabel={(emp) => `${emp.email} ${emp.positionName ? `(${emp.positionName})` : ''}`}
-                optionValue="employeeId"
-                placeholder="Select manager"
-                className="w-full"
-                showClear
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Structure</h3>
-            <div>
-              <label htmlFor="department" className="block text-sm font-medium mb-2">
-                Department
-              </label>
-              <Dropdown
-                id="department"
-                value={departmentId}
-                onChange={(e) => setDepartmentId(e.value)}
-                options={departments}
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Select department"
-                className="w-full"
-                showClear
-              />
-            </div>
-            <div>
-              <label htmlFor="position" className="block text-sm font-medium mb-2">
-                Position
-              </label>
-              <Dropdown
-                id="position"
-                value={positionId}
-                onChange={(e) => setPositionId(e.value)}
-                options={positions}
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Select position"
-                className="w-full"
-                showClear
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Employment</h3>
-            <div>
-              <label htmlFor="employmentType" className="block text-sm font-medium mb-2">
-                Employment Type
-              </label>
-              <Dropdown
-                id="employmentType"
-                value={employmentType}
-                onChange={(e) => setEmploymentType(e.value)}
-                options={employmentTypeOptions}
-                placeholder="Select employment type"
-                className="w-full"
-                showClear
-              />
-            </div>
-            <div>
-              <label htmlFor="clientId" className="block text-sm font-medium mb-2">
-                Client ID
-              </label>
-              <InputText
-                id="clientId"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                className="w-full"
-                placeholder="Enter client ID"
-              />
-            </div>
-            <div>
-              <label htmlFor="projectId" className="block text-sm font-medium mb-2">
-                Project ID
-              </label>
-              <InputText
-                id="projectId"
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className="w-full"
-                placeholder="Enter project ID"
-              />
-            </div>
-            <div>
-              <label htmlFor="contractEndDate" className="block text-sm font-medium mb-2">
-                Contract End Date
-              </label>
-              <Calendar
-                id="contractEndDate"
-                value={contractEndDate}
-                onChange={(e) => setContractEndDate(e.value as Date)}
-                className="w-full"
-                placeholder="Select date"
-                showIcon
-                dateFormat="yy-mm-dd"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4">
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={3} style={{ margin: 0 }}>Edit Employee Assignment</Title>
             <Button
-              label="Save"
-              icon="pi pi-check"
-              type="submit"
-              loading={saving}
-            />
-            <Button
-              label="Cancel"
-              icon="pi pi-times"
-              severity="secondary"
-              type="button"
+              icon={<ArrowLeftOutlined />}
               onClick={() => navigate(`/admin/employees/${employeeId}`)}
-            />
+              style={{ borderRadius: 8 }}
+            >
+              Back
+            </Button>
           </div>
-        </form>
+
+          <form onSubmit={handleSubmit}>
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <div>
+                <Title level={5}>Reporting</Title>
+                <Divider style={{ margin: '12px 0' }} />
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: 8,
+                    fontWeight: 500
+                  }}>
+                    Reports To
+                  </label>
+                  <Select
+                    value={reportsToEmployeeId}
+                    onChange={setReportsToEmployeeId}
+                    options={employees.map(emp => ({
+                      label: `${emp.email}${emp.positionName ? ` (${emp.positionName})` : ''}`,
+                      value: emp.employeeId
+                    }))}
+                    placeholder="Select manager"
+                    allowClear
+                    size="large"
+                    style={{ width: '100%', borderRadius: 8 }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Title level={5}>Structure</Title>
+                <Divider style={{ margin: '12px 0' }} />
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Department
+                    </label>
+                    <Select
+                      value={departmentId}
+                      onChange={setDepartmentId}
+                      options={departments.map(dept => ({
+                        label: dept.name,
+                        value: dept.id
+                      }))}
+                      placeholder="Select department"
+                      allowClear
+                      size="large"
+                      style={{ width: '100%', borderRadius: 8 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Position
+                    </label>
+                    <Select
+                      value={positionId}
+                      onChange={setPositionId}
+                      options={positions.map(pos => ({
+                        label: pos.name,
+                        value: pos.id
+                      }))}
+                      placeholder="Select position"
+                      allowClear
+                      size="large"
+                      style={{ width: '100%', borderRadius: 8 }}
+                    />
+                  </div>
+                </Space>
+              </div>
+
+              <div>
+                <Title level={5}>Employment</Title>
+                <Divider style={{ margin: '12px 0' }} />
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Employment Type
+                    </label>
+                    <Select
+                      value={employmentType}
+                      onChange={setEmploymentType}
+                      options={employmentTypeOptions}
+                      placeholder="Select employment type"
+                      allowClear
+                      size="large"
+                      style={{ width: '100%', borderRadius: 8 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Client ID
+                    </label>
+                    <Input
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
+                      placeholder="Enter client ID"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Project ID
+                    </label>
+                    <Input
+                      value={projectId}
+                      onChange={(e) => setProjectId(e.target.value)}
+                      placeholder="Enter project ID"
+                      size="large"
+                      style={{ borderRadius: 8 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Contract End Date
+                    </label>
+                    <DatePicker
+                      value={contractEndDate}
+                      onChange={setContractEndDate}
+                      placeholder="Select date"
+                      size="large"
+                      format="YYYY-MM-DD"
+                      style={{ width: '100%', borderRadius: 8 }}
+                    />
+                  </div>
+                </Space>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<CheckOutlined />}
+                  loading={saving}
+                  style={{
+                    background: '#0a0d54',
+                    borderColor: '#0a0d54',
+                    borderRadius: 8
+                  }}
+                >
+                  Save
+                </Button>
+                <Button
+                  icon={<CloseOutlined />}
+                  onClick={() => navigate(`/admin/employees/${employeeId}`)}
+                  style={{ borderRadius: 8 }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Space>
+          </form>
+        </Space>
       </Card>
     </div>
   );

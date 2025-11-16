@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Card, Table, Button, Alert, Typography, Space } from 'antd';
+import { PlusOutlined, UserOutlined } from '@ant-design/icons';
 import { orgadminApi, Employee } from '../../api/orgadminApi';
+
+const { Title } = Typography;
 
 export const EmployeesPage = () => {
   const navigate = useNavigate();
@@ -27,31 +28,64 @@ export const EmployeesPage = () => {
     }
   };
 
+  const columns = [
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      sorter: (a: Employee, b: Employee) => a.email.localeCompare(b.email),
+      render: (text: string) => (
+        <Space>
+          <UserOutlined />
+          {text}
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Employees</h1>
-        <Button
-          label="Create Employee"
-          icon="pi pi-plus"
-          onClick={() => navigate('/orgadmin/create-employee')}
-        />
-      </div>
-
-      {error && (
-        <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      <DataTable
-        value={employees}
-        loading={loading}
-        emptyMessage="No employees found"
-        className="p-datatable-sm"
+    <div style={{ padding: 24 }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
       >
-        <Column field="email" header="Email" sortable />
-      </DataTable>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={3} style={{ margin: 0 }}>Employees</Title>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/orgadmin/create-employee')}
+              style={{
+                background: '#0a0d54',
+                borderColor: '#0a0d54',
+                borderRadius: 8
+              }}
+            >
+              Create Employee
+            </Button>
+          </div>
+
+          {error && (
+            <Alert message={error} type="error" showIcon closable />
+          )}
+
+          <Table
+            columns={columns}
+            dataSource={employees}
+            loading={loading}
+            rowKey="id"
+            locale={{ emptyText: 'No employees found' }}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} employees`,
+            }}
+          />
+        </Space>
+      </Card>
     </div>
   );
 };

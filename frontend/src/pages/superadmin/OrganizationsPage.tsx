@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Table, Button, Card, Space, Typography, message, Alert, Empty, Tooltip } from 'antd';
+import { BankOutlined, PlusOutlined, UserAddOutlined, ReloadOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 import { superadminApi, Organization } from '../../api/superadminApi';
 
-export const OrganizationsPage = () => {
+const { Title, Text } = Typography;
+
+export const OrganizationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,58 +21,120 @@ export const OrganizationsPage = () => {
   const loadOrganizations = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await superadminApi.getOrganizations();
       setOrganizations(data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load organizations');
+      const errorMsg = err.response?.data?.error || 'Failed to load organizations';
+      setError(errorMsg);
+      message.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  const actionBodyTemplate = (rowData: Organization) => {
-    return (
-      <Button
-        label="Add Org Admin"
-        icon="pi pi-user-plus"
-        size="small"
-        onClick={() => navigate(`/superadmin/orgadmin/${rowData.id}`)}
-      />
-    );
-  };
+  const columns: ColumnsType<Organization> = [
+    {
+      title: 'Organization Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (name) => (
+        <Space>
+          <BankOutlined style={{ color: '#0a0d54' }} />
+          <Text strong>{name}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Created Date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 200,
+      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (date) => <Text type="secondary">{dayjs(date).format('MMM DD, YYYY HH:mm')}</Text>,
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 160,
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<UserAddOutlined />}
+          onClick={() => navigate(`/superadmin/orgadmin/${record.id}`)}
+        >
+          Add Admin
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Organizations</h1>
-        <Button
-          label="Create Organization"
-          icon="pi pi-plus"
-          onClick={() => navigate('/superadmin/create-organization')}
-        />
-      </div>
-
-      {error && (
-        <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      <DataTable
-        value={organizations}
-        loading={loading}
-        emptyMessage="No organizations found"
-        className="p-datatable-sm"
+    <div style={{ padding: 0 }}>
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)',
+        }}
       >
-        <Column field="name" header="Organization Name" sortable />
-        <Column
-          field="createdAt"
-          header="Created At"
-          sortable
-          body={(rowData) => new Date(rowData.createdAt).toLocaleString()}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <Title level={3} style={{ margin: 0, marginBottom: 4 }}>
+                <BankOutlined /> Organizations
+              </Title>
+              <Text type="secondary">Manage all organizations in the system</Text>
+            </div>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={loadOrganizations}>
+                Refresh
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={<PlusOutlined />}
+                onClick={() => navigate('/superadmin/create-organization')}
+              >
+                Create Organization
+              </Button>
+            </Space>
+          </div>
+        </div>
+
+        {error && (
+          <Alert message="Error" description={error} type="error" showIcon closable onClose={() => setError('')} style={{ marginBottom: 16 }} />
+        )}
+
+        <Table
+          columns={columns}
+          dataSource={organizations}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} organizations`,
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <Space direction="vertical" size={8}>
+                    <Text type="secondary">No organizations found</Text>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/superadmin/create-organization')}>
+                      Create First Organization
+                    </Button>
+                  </Space>
+                }
+              />
+            ),
+          }}
         />
-        <Column header="Actions" body={actionBodyTemplate} />
-      </DataTable>
+      </Card>
     </div>
   );
 };

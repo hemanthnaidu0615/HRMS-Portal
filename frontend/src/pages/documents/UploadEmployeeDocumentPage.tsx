@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from 'primereact/button';
+import { Card, Button, Alert, Typography, Space, Upload } from 'antd';
+import { UploadOutlined, FileOutlined } from '@ant-design/icons';
+import type { UploadFile } from 'antd/es/upload/interface';
 import { uploadEmployeeDocument } from '../../api/documentsApi';
+
+const { Title, Text } = Typography;
 
 export const UploadEmployeeDocumentPage = () => {
   const navigate = useNavigate();
@@ -11,9 +15,9 @@ export const UploadEmployeeDocumentPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  const handleFileChange = (info: any) => {
+    if (info.file) {
+      setFile(info.file);
     }
   };
 
@@ -46,55 +50,100 @@ export const UploadEmployeeDocumentPage = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Upload Employee Document</h1>
-        <p className="mb-4 text-gray-600">Employee ID: {employeeId}</p>
-
-        {success ? (
-          <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            Document uploaded successfully! Redirecting...
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error}
-              </div>
-            )}
-
+    <div style={{ padding: 24 }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
-              <label htmlFor="file" className="block text-sm font-medium mb-2">
-                Select File
-              </label>
-              <input
-                type="file"
-                id="file"
-                onChange={handleFileChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-              {file && (
-                <p className="mt-2 text-sm text-gray-600">Selected: {file.name}</p>
-              )}
+              <Title level={3}>Upload Employee Document</Title>
+              <Text type="secondary">Employee ID: {employeeId}</Text>
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                label="Upload"
-                loading={loading}
-                disabled={loading}
+            {success ? (
+              <Alert
+                message="Document Uploaded"
+                description="Document uploaded successfully! Redirecting..."
+                type="success"
+                showIcon
               />
-              <Button
-                type="button"
-                label="Cancel"
-                severity="secondary"
-                onClick={() => navigate('/documents/org')}
-              />
-            </div>
-          </form>
-        )}
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  {error && (
+                    <Alert message={error} type="error" showIcon closable />
+                  )}
+
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Select File
+                    </label>
+                    <Upload
+                      beforeUpload={(file) => {
+                        setFile(file);
+                        return false; // Prevent auto upload
+                      }}
+                      maxCount={1}
+                      onRemove={() => setFile(null)}
+                    >
+                      <Button
+                        icon={<UploadOutlined />}
+                        size="large"
+                        style={{ borderRadius: 8 }}
+                      >
+                        Choose File
+                      </Button>
+                    </Upload>
+                    {file && (
+                      <div style={{
+                        marginTop: 12,
+                        padding: 12,
+                        background: '#f5f5f5',
+                        borderRadius: 8,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
+                      }}>
+                        <FileOutlined />
+                        <Text>Selected: {file.name}</Text>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={loading}
+                      disabled={loading}
+                      style={{
+                        background: '#0a0d54',
+                        borderColor: '#0a0d54',
+                        borderRadius: 8
+                      }}
+                    >
+                      Upload
+                    </Button>
+                    <Button
+                      onClick={() => navigate('/documents/org')}
+                      style={{ borderRadius: 8 }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </Space>
+              </form>
+            )}
+          </Space>
+        </Card>
       </div>
     </div>
   );

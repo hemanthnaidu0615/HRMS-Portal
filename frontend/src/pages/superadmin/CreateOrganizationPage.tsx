@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
+import { Card, Input, Button, Alert, Typography, Space } from 'antd';
+import { BankOutlined } from '@ant-design/icons';
 import { superadminApi } from '../../api/superadminApi';
+
+const { Title } = Typography;
 
 export const CreateOrganizationPage = () => {
   const navigate = useNavigate();
@@ -26,46 +28,68 @@ export const CreateOrganizationPage = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Create Organization</h1>
+    <div style={{ padding: 24 }}>
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        <Card
+          style={{
+            borderRadius: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Title level={3}>Create Organization</Title>
 
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
+            {error && (
+              <Alert message={error} type="error" showIcon closable />
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-2">
-              Organization Name
-            </label>
-            <InputText
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter organization name"
-              className="w-full"
-              required
-            />
-          </div>
+            <form onSubmit={handleSubmit}>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <div>
+                  <label htmlFor="name" style={{
+                    display: 'block',
+                    marginBottom: 8,
+                    fontWeight: 500
+                  }}>
+                    Organization Name
+                  </label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter organization name"
+                    prefix={<BankOutlined />}
+                    size="large"
+                    required
+                    style={{ borderRadius: 8 }}
+                  />
+                </div>
 
-          <div className="flex gap-2">
-            <Button
-              type="submit"
-              label="Create"
-              loading={loading}
-              disabled={loading}
-            />
-            <Button
-              type="button"
-              label="Cancel"
-              severity="secondary"
-              onClick={() => navigate('/superadmin/organizations')}
-            />
-          </div>
-        </form>
+                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    disabled={loading}
+                    style={{
+                      background: '#0a0d54',
+                      borderColor: '#0a0d54',
+                      borderRadius: 8
+                    }}
+                  >
+                    Create
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/superadmin/organizations')}
+                    style={{ borderRadius: 8 }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </Space>
+            </form>
+          </Space>
+        </Card>
       </div>
     </div>
   );

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import { Tag } from 'primereact/tag';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag } from 'antd';
+import { PlusOutlined, TeamOutlined } from '@ant-design/icons';
 import { getPositions, PositionResponse } from '../../../api/structureApi';
+
+const { Title } = Typography;
 
 export const PositionsPage = () => {
   const navigate = useNavigate();
@@ -31,41 +29,77 @@ export const PositionsPage = () => {
     }
   };
 
-  const seniorityTemplate = (rowData: PositionResponse) => {
-    return <Tag value={`Level ${rowData.seniorityLevel}`} severity="info" />;
-  };
-
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Positions</h2>
-      <Button
-        label="Create Position"
-        icon="pi pi-plus"
-        onClick={() => navigate('/admin/structure/positions/new')}
-      />
-    </div>
-  );
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a: PositionResponse, b: PositionResponse) => a.name.localeCompare(b.name),
+      render: (text: string) => (
+        <Space>
+          <TeamOutlined />
+          {text}
+        </Space>
+      ),
+    },
+    {
+      title: 'Seniority Level',
+      dataIndex: 'seniorityLevel',
+      key: 'seniorityLevel',
+      sorter: (a: PositionResponse, b: PositionResponse) => a.seniorityLevel - b.seniorityLevel,
+      render: (level: number) => (
+        <Tag color="blue" style={{ borderRadius: 6 }}>
+          Level {level}
+        </Tag>
+      ),
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Card header={header}>
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={3} style={{ margin: 0 }}>Positions</Title>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/admin/structure/positions/new')}
+              style={{
+                background: '#0a0d54',
+                borderColor: '#0a0d54',
+                borderRadius: 8
+              }}
+            >
+              Create Position
+            </Button>
           </div>
-        )}
-        {loading ? (
-          <Skeleton height="200px" />
-        ) : (
-          <DataTable
-            value={positions}
-            emptyMessage="No positions found"
-            className="p-datatable-sm"
-          >
-            <Column field="name" header="Name" sortable />
-            <Column field="seniorityLevel" header="Seniority Level" body={seniorityTemplate} sortable />
-          </DataTable>
-        )}
+
+          {error && (
+            <Alert message={error} type="error" showIcon closable />
+          )}
+
+          {loading ? (
+            <Skeleton active paragraph={{ rows: 4 }} />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={positions}
+              rowKey="id"
+              locale={{ emptyText: 'No positions found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} positions`,
+              }}
+            />
+          )}
+        </Space>
       </Card>
     </div>
   );

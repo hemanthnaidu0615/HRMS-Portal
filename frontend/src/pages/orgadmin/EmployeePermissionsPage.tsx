@@ -1,11 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { MultiSelect } from 'primereact/multiselect';
-import { Button } from 'primereact/button';
-import { Tag } from 'primereact/tag';
-import { Skeleton } from 'primereact/skeleton';
-import { Toast } from 'primereact/toast';
+import { Card, Select, Button, Tag, Skeleton, Typography, Space, message } from 'antd';
+import { ArrowLeftOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import {
   getEmployeePermissions,
   updateEmployeePermissionGroups,
@@ -14,10 +10,11 @@ import {
   PermissionGroupResponse,
 } from '../../api/employeePermissionsApi';
 
+const { Title, Text } = Typography;
+
 export const EmployeePermissionsPage = () => {
   const { employeeId } = useParams<{ employeeId: string }>();
   const navigate = useNavigate();
-  const toast = useRef<Toast>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -40,12 +37,7 @@ export const EmployeePermissionsPage = () => {
       setAllGroups(groupsData);
       setSelectedGroupIds(permissionsData.assignedGroups.map((g) => g.groupId));
     } catch (err: any) {
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to load employee permissions',
-        life: 3000,
-      });
+      message.error('Failed to load employee permissions');
     } finally {
       setLoading(false);
     }
@@ -56,19 +48,9 @@ export const EmployeePermissionsPage = () => {
       setSaving(true);
       const updated = await updateEmployeePermissionGroups(employeeId!, selectedGroupIds);
       setOverview(updated);
-      toast.current?.show({
-        severity: 'success',
-        summary: 'Success',
-        detail: 'Permission groups updated successfully',
-        life: 3000,
-      });
+      message.success('Permission groups updated successfully');
     } catch (err: any) {
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to update permission groups',
-        life: 3000,
-      });
+      message.error('Failed to update permission groups');
     } finally {
       setSaving(false);
     }
@@ -80,76 +62,107 @@ export const EmployeePermissionsPage = () => {
   }));
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      <Toast ref={toast} />
-
-      <Card>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Manage Employee Permissions</h2>
-          <Button
-            label="Back"
-            icon="pi pi-arrow-left"
-            text
-            onClick={() => navigate(`/admin/employees/${employeeId}`)}
-          />
-        </div>
-
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton height="2rem" />
-            <Skeleton height="3rem" />
-            <Skeleton height="8rem" />
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={3} style={{ margin: 0 }}>Manage Employee Permissions</Title>
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(`/admin/employees/${employeeId}`)}
+              style={{ borderRadius: 8 }}
+            >
+              Back
+            </Button>
           </div>
-        ) : (
-          <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Employee</label>
-              <div className="text-lg font-semibold">{overview?.email}</div>
-            </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Assigned Permission Groups</label>
-              <MultiSelect
-                value={selectedGroupIds}
-                options={groupOptions}
-                onChange={(e) => setSelectedGroupIds(e.value)}
-                placeholder="Select permission groups"
-                className="w-full"
-                display="chip"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Effective Permissions</label>
-              <div className="flex flex-wrap gap-2">
-                {overview?.effectivePermissions && overview.effectivePermissions.length > 0 ? (
-                  overview.effectivePermissions.map((perm) => (
-                    <Tag key={perm} severity="info" value={perm} />
-                  ))
-                ) : (
-                  <span className="text-gray-500">No permissions assigned</span>
-                )}
+          {loading ? (
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Skeleton.Input active style={{ width: '100%' }} />
+              <Skeleton.Input active style={{ width: '100%' }} />
+              <Skeleton paragraph={{ rows: 3 }} active />
+            </Space>
+          ) : (
+            <>
+              <div>
+                <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                  Employee
+                </Text>
+                <Title level={5} style={{ margin: 0 }}>{overview?.email}</Title>
               </div>
-            </div>
 
-            <div className="flex gap-2">
-              <Button
-                label="Save"
-                icon="pi pi-save"
-                onClick={handleSave}
-                loading={saving}
-                disabled={saving}
-              />
-              <Button
-                label="Cancel"
-                icon="pi pi-times"
-                severity="secondary"
-                onClick={() => navigate(`/admin/employees/${employeeId}`)}
-                disabled={saving}
-              />
-            </div>
-          </>
-        )}
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 500
+                }}>
+                  Assigned Permission Groups
+                </label>
+                <Select
+                  mode="multiple"
+                  value={selectedGroupIds}
+                  options={groupOptions}
+                  onChange={setSelectedGroupIds}
+                  placeholder="Select permission groups"
+                  style={{ width: '100%', borderRadius: 8 }}
+                  size="large"
+                />
+              </div>
+
+              <div>
+                <Text strong style={{ display: 'block', marginBottom: 12 }}>
+                  Effective Permissions
+                </Text>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {overview?.effectivePermissions && overview.effectivePermissions.length > 0 ? (
+                    overview.effectivePermissions.map((perm) => (
+                      <Tag
+                        key={perm}
+                        color="blue"
+                        style={{ borderRadius: 6, padding: '4px 12px' }}
+                      >
+                        {perm}
+                      </Tag>
+                    ))
+                  ) : (
+                    <Text type="secondary">No permissions assigned</Text>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  onClick={handleSave}
+                  loading={saving}
+                  disabled={saving}
+                  style={{
+                    background: '#0a0d54',
+                    borderColor: '#0a0d54',
+                    borderRadius: 8
+                  }}
+                >
+                  Save
+                </Button>
+                <Button
+                  icon={<CloseOutlined />}
+                  onClick={() => navigate(`/admin/employees/${employeeId}`)}
+                  disabled={saving}
+                  style={{ borderRadius: 8 }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </>
+          )}
+        </Space>
       </Card>
     </div>
   );

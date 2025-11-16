@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import { Tag } from 'primereact/tag';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag } from 'antd';
+import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined } from '@ant-design/icons';
 import { getEmployees, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
+
+const { Title } = Typography;
 
 export const EmployeeListPage = () => {
   const navigate = useNavigate();
@@ -31,90 +29,131 @@ export const EmployeeListPage = () => {
     }
   };
 
-  const departmentTemplate = (rowData: EmployeeSummaryResponse) => {
-    return rowData.departmentName ? <Tag value={rowData.departmentName} severity="info" /> : <span>—</span>;
+  const employmentTypeColors: Record<string, string> = {
+    internal: 'green',
+    client: 'blue',
+    contract: 'orange',
+    bench: 'red'
   };
 
-  const positionTemplate = (rowData: EmployeeSummaryResponse) => {
-    return rowData.positionName ? <Tag value={rowData.positionName} severity="success" /> : <span>—</span>;
-  };
-
-  const employmentTypeTemplate = (rowData: EmployeeSummaryResponse) => {
-    if (!rowData.employmentType) return <span>—</span>;
-
-    const severityMap: Record<string, any> = {
-      internal: 'success',
-      client: 'info',
-      contract: 'warning',
-      bench: 'danger'
-    };
-
-    return <Tag value={rowData.employmentType} severity={severityMap[rowData.employmentType] || 'secondary'} />;
-  };
-
-  const contractEndTemplate = (rowData: EmployeeSummaryResponse) => {
-    return rowData.contractEndDate || '—';
-  };
-
-  const actionsTemplate = (rowData: EmployeeSummaryResponse) => {
-    return (
-      <div className="flex gap-2">
-        <Button
-          label="Details"
-          icon="pi pi-eye"
-          size="small"
-          onClick={() => navigate(`/admin/employees/${rowData.employeeId}`)}
-        />
-        <Button
-          label="Assignment"
-          icon="pi pi-pencil"
-          size="small"
-          severity="secondary"
-          onClick={() => navigate(`/admin/employees/${rowData.employeeId}/assignment`)}
-        />
-        <Button
-          label="History"
-          icon="pi pi-history"
-          size="small"
-          severity="info"
-          onClick={() => navigate(`/admin/employees/${rowData.employeeId}/history`)}
-        />
-      </div>
-    );
-  };
-
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Employees</h2>
-    </div>
-  );
+  const columns = [
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      sorter: (a: EmployeeSummaryResponse, b: EmployeeSummaryResponse) => a.email.localeCompare(b.email),
+      render: (text: string) => (
+        <Space>
+          <UserOutlined />
+          {text}
+        </Space>
+      ),
+    },
+    {
+      title: 'Department',
+      dataIndex: 'departmentName',
+      key: 'departmentName',
+      render: (text: string) =>
+        text ? <Tag color="blue" style={{ borderRadius: 6 }}>{text}</Tag> : <span>—</span>,
+    },
+    {
+      title: 'Position',
+      dataIndex: 'positionName',
+      key: 'positionName',
+      render: (text: string) =>
+        text ? <Tag color="green" style={{ borderRadius: 6 }}>{text}</Tag> : <span>—</span>,
+    },
+    {
+      title: 'Employment Type',
+      dataIndex: 'employmentType',
+      key: 'employmentType',
+      render: (type: string) =>
+        type ? (
+          <Tag color={employmentTypeColors[type] || 'default'} style={{ borderRadius: 6 }}>
+            {type}
+          </Tag>
+        ) : (
+          <span>—</span>
+        ),
+    },
+    {
+      title: 'Contract End',
+      dataIndex: 'contractEndDate',
+      key: 'contractEndDate',
+      render: (date: string) => date || '—',
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (record: EmployeeSummaryResponse) => (
+        <Space size="small">
+          <Button
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => navigate(`/admin/employees/${record.employeeId}`)}
+            style={{
+              background: '#0a0d54',
+              borderColor: '#0a0d54',
+              borderRadius: 6
+            }}
+          >
+            Details
+          </Button>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => navigate(`/admin/employees/${record.employeeId}/assignment`)}
+            style={{ borderRadius: 6 }}
+          >
+            Assignment
+          </Button>
+          <Button
+            size="small"
+            icon={<HistoryOutlined />}
+            onClick={() => navigate(`/admin/employees/${record.employeeId}/history`)}
+            style={{ borderRadius: 6 }}
+          >
+            History
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Card header={header}>
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level={3} style={{ margin: 0 }}>Employees</Title>
           </div>
-        )}
-        {loading ? (
-          <Skeleton height="400px" />
-        ) : (
-          <DataTable
-            value={employees}
-            emptyMessage="No employees found"
-            className="p-datatable-sm"
-            paginator
-            rows={10}
-          >
-            <Column field="email" header="Email" sortable />
-            <Column header="Department" body={departmentTemplate} />
-            <Column header="Position" body={positionTemplate} />
-            <Column header="Employment Type" body={employmentTypeTemplate} />
-            <Column header="Contract End" body={contractEndTemplate} />
-            <Column header="Actions" body={actionsTemplate} />
-          </DataTable>
-        )}
+
+          {error && (
+            <Alert message={error} type="error" showIcon closable />
+          )}
+
+          {loading ? (
+            <Skeleton active paragraph={{ rows: 8 }} />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={employees}
+              rowKey="employeeId"
+              locale={{ emptyText: 'No employees found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} employees`,
+              }}
+            />
+          )}
+        </Space>
       </Card>
     </div>
   );

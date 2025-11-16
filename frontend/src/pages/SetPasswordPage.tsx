@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { InputText } from 'primereact/inputtext';
-import { Password } from 'primereact/password';
-import { Button } from 'primereact/button';
+import { Card, Input, Button, Alert, Typography, Space } from 'antd';
+import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { authApi } from '../api/authApi';
+
+const { Title, Text } = Typography;
 
 export const SetPasswordPage = () => {
   const navigate = useNavigate();
@@ -41,80 +42,125 @@ export const SetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Set New Password</h1>
-
-        {success ? (
-          <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded text-center">
-            Password changed successfully! Redirecting to login...
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px'
+    }}>
+      <Card
+        style={{
+          width: '100%',
+          maxWidth: 450,
+          borderRadius: 12,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+        }}
+      >
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div style={{ textAlign: 'center' }}>
+            <Title level={2} style={{ marginBottom: 8 }}>Set New Password</Title>
+            <Text type="secondary">Create your permanent password</Text>
           </div>
-        ) : (
-          <form onSubmit={handleSetPassword} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error}
-              </div>
-            )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email
-              </label>
-              <InputText
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="tempPassword" className="block text-sm font-medium mb-2">
-                Temporary Password
-              </label>
-              <Password
-                id="tempPassword"
-                value={temporaryPassword}
-                onChange={(e) => setTemporaryPassword(e.target.value)}
-                placeholder="Enter temporary password"
-                className="w-full"
-                inputClassName="w-full"
-                toggleMask
-                feedback={false}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium mb-2">
-                New Password
-              </label>
-              <Password
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full"
-                inputClassName="w-full"
-                toggleMask
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              label="Set Password"
-              loading={loading}
-              className="w-full"
-              disabled={loading}
+          {success ? (
+            <Alert
+              message="Password Changed"
+              description="Password changed successfully! Redirecting to login..."
+              type="success"
+              showIcon
             />
-          </form>
-        )}
-      </div>
+          ) : (
+            <form onSubmit={handleSetPassword}>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                {error && (
+                  <Alert message={error} type="error" showIcon closable />
+                )}
+
+                <div>
+                  <label htmlFor="email" style={{
+                    display: 'block',
+                    marginBottom: 8,
+                    fontWeight: 500
+                  }}>
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    prefix={<MailOutlined />}
+                    size="large"
+                    required
+                    style={{ borderRadius: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="tempPassword" style={{
+                    display: 'block',
+                    marginBottom: 8,
+                    fontWeight: 500
+                  }}>
+                    Temporary Password
+                  </label>
+                  <Input.Password
+                    id="tempPassword"
+                    value={temporaryPassword}
+                    onChange={(e) => setTemporaryPassword(e.target.value)}
+                    placeholder="Enter temporary password"
+                    prefix={<LockOutlined />}
+                    size="large"
+                    required
+                    style={{ borderRadius: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="newPassword" style={{
+                    display: 'block',
+                    marginBottom: 8,
+                    fontWeight: 500
+                  }}>
+                    New Password
+                  </label>
+                  <Input.Password
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    prefix={<LockOutlined />}
+                    size="large"
+                    required
+                    style={{ borderRadius: 8 }}
+                  />
+                </div>
+
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  block
+                  size="large"
+                  disabled={loading}
+                  style={{
+                    background: '#0a0d54',
+                    borderColor: '#0a0d54',
+                    height: 40,
+                    borderRadius: 8,
+                    marginTop: 8
+                  }}
+                >
+                  Set Password
+                </Button>
+              </Space>
+            </form>
+          )}
+        </Space>
+      </Card>
     </div>
   );
 };
