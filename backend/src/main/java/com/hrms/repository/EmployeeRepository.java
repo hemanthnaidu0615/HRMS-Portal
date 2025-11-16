@@ -1,5 +1,6 @@
 package com.hrms.repository;
 
+import com.hrms.entity.Department;
 import com.hrms.entity.Employee;
 import com.hrms.entity.Organization;
 import com.hrms.entity.User;
@@ -19,4 +20,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     List<Employee> findByReportsToId(UUID managerId);
     List<Employee> findByOrganization(Organization organization);
     Page<Employee> findByOrganization(Organization organization, Pageable pageable);
+    List<Employee> findByDepartment(Department department);
 }

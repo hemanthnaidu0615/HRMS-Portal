@@ -79,6 +79,22 @@ CREATE TABLE user_roles (
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
+-- Permission groups for UI organization
+CREATE TABLE permission_groups (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description VARCHAR(500) NULL
+);
+
+-- Many-to-many: Groups contain multiple permissions
+CREATE TABLE group_permissions (
+    group_id UNIQUEIDENTIFIER NOT NULL,
+    permission_id UNIQUEIDENTIFIER NOT NULL,
+    PRIMARY KEY (group_id, permission_id),
+    FOREIGN KEY (group_id) REFERENCES permission_groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+);
+
 -- =====================================================
 -- ORGANIZATION STRUCTURE
 -- =====================================================
@@ -297,6 +313,70 @@ SELECT @EmployeeRoleId, id FROM permissions
 WHERE resource = 'documents' AND action = 'request';
 
 -- =====================================================
+-- PERMISSION GROUPS FOR UI ORGANIZATION
+-- =====================================================
+
+-- Create permission groups
+INSERT INTO permission_groups (name, description) VALUES
+('Employee Management', 'Permissions for managing employee data and profiles'),
+('Document Management', 'Permissions for managing employee documents'),
+('Organization Structure', 'Permissions for managing departments and positions'),
+('Access Control', 'Permissions for managing roles and permissions'),
+('Leave Management', 'Permissions for managing leave requests and approvals'),
+('Timesheet Management', 'Permissions for managing timesheets'),
+('Payroll Management', 'Permissions for managing payroll');
+
+-- Assign permissions to groups
+-- Employee Management group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Employee Management'
+AND p.resource = 'employees';
+
+-- Document Management group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Document Management'
+AND p.resource = 'documents';
+
+-- Organization Structure group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Organization Structure'
+AND p.resource IN ('departments', 'positions');
+
+-- Access Control group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Access Control'
+AND p.resource = 'roles';
+
+-- Leave Management group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Leave Management'
+AND p.resource = 'leaves';
+
+-- Timesheet Management group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Timesheet Management'
+AND p.resource = 'timesheets';
+
+-- Payroll Management group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Payroll Management'
+AND p.resource = 'payroll';
+
+-- =====================================================
 -- INDEXES FOR PERFORMANCE
 -- =====================================================
 
@@ -313,6 +393,8 @@ CREATE INDEX idx_documents_created ON documents(created_at DESC);
 
 CREATE INDEX idx_permissions_resource ON permissions(resource, action, scope);
 CREATE INDEX idx_roles_org ON roles(organization_id);
+
+CREATE INDEX idx_permission_groups_name ON permission_groups(name);
 
 CREATE INDEX idx_employee_history_employee ON employee_history(employee_id);
 CREATE INDEX idx_employee_history_date ON employee_history(changed_at DESC);
