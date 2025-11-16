@@ -19,6 +19,7 @@ import {
   SearchOutlined,
   ReloadOutlined,
   EyeOutlined,
+  DownloadOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
@@ -26,6 +27,8 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { getMyDocumentRequestsAsTarget } from '../../api/documentRequestsApi';
+import { downloadDocument } from '../../api/documentsApi';
+import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 
 const { Title, Text } = Typography;
 
@@ -53,6 +56,8 @@ export const MyIncomingRequestsPage: React.FC = () => {
   const [error, setError] = useState('');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusType | 'ALL'>('ALL');
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ id: string; fileName: string; fileType: string | null; filePath: string; createdAt: string } | null>(null);
 
   useEffect(() => {
     loadRequests();
@@ -67,7 +72,7 @@ export const MyIncomingRequestsPage: React.FC = () => {
       setLoading(true);
       setError('');
       const response = await getMyDocumentRequestsAsTarget();
-      setRequests(response.data);
+      setRequests(response);
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to load requests';
       setError(errorMsg);
@@ -100,6 +105,29 @@ export const MyIncomingRequestsPage: React.FC = () => {
   const handleUploadForRequest = (requestId: string) => {
     // Navigate to upload page with requestId as query param
     navigate(`/documents/upload?requestId=${requestId}`);
+  };
+
+  const openPreview = (docId: string, filename = 'Requested Document', createdAt?: string) => {
+    setPreviewDoc({ id: docId, fileName: filename, fileType: null, filePath: '', createdAt: createdAt || new Date().toISOString() });
+    setPreviewVisible(true);
+  };
+
+  const handleDownload = async (docId: string, filename = 'requested-document') => {
+    try {
+      const res = await downloadDocument(docId);
+      const contentType = (res as any)?.headers?.['content-type'] || (res as any)?.headers?.get?.('content-type') || undefined;
+      const blob = new Blob([res.data], contentType ? { type: contentType } : undefined);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      message.error('Download failed');
+    }
   };
 
   const getStatusTag = (status: string) => {
@@ -176,13 +204,14 @@ export const MyIncomingRequestsPage: React.FC = () => {
       key: 'actions',
       width: 140,
       render: (_, record) => {
-        if (record.status === 'COMPLETED') {
+        if (record.status === 'COMPLETED' && record.fulfilledDocumentId) {
           return (
             <Space size={8}>
               <Tooltip title="View uploaded document">
-                <Button type="text" size="small" icon={<EyeOutlined />} disabled>
-                  View
-                </Button>
+                <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => openPreview(record.fulfilledDocumentId!, 'Uploaded Document', record.completedAt || record.createdAt)} />
+              </Tooltip>
+              <Tooltip title="Download">
+                <Button type="text" size="small" icon={<DownloadOutlined />} onClick={() => handleDownload(record.fulfilledDocumentId!, 'uploaded-document')} />
               </Tooltip>
             </Space>
           );
@@ -334,6 +363,14 @@ export const MyIncomingRequestsPage: React.FC = () => {
             ),
           }}
         />
+        {/* Preview Modal */}
+        {previewDoc && (
+          <DocumentPreviewModal
+            document={previewDoc}
+            visible={previewVisible}
+            onClose={() => setPreviewVisible(false)}
+          />
+        )}
       </Card>
     </div>
   );

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Card, Space, Input, Tag, Typography, message, Alert, Button, Empty, Tooltip } from 'antd';
-import { SendOutlined, SearchOutlined, ReloadOutlined, EyeOutlined, CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { SendOutlined, SearchOutlined, ReloadOutlined, EyeOutlined, CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { getMyDocumentRequestsAsRequester } from '../../api/documentRequestsApi';
+import { downloadDocument } from '../../api/documentsApi';
+import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 
 const { Title, Text } = Typography;
 
@@ -14,6 +16,7 @@ interface DocumentRequest {
   status: string;
   createdAt: string;
   completedAt: string | null;
+  fulfilledDocumentId?: string | null;
 }
 
 export const MyOutgoingRequestsPage: React.FC = () => {
@@ -22,6 +25,8 @@ export const MyOutgoingRequestsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ id: string; fileName: string; fileType: string | null; filePath: string; createdAt: string } | null>(null);
 
   useEffect(() => {
     loadRequests();
@@ -36,7 +41,7 @@ export const MyOutgoingRequestsPage: React.FC = () => {
       setLoading(true);
       setError('');
       const response = await getMyDocumentRequestsAsRequester();
-      setRequests(response.data);
+      setRequests(response);
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to load requests';
       setError(errorMsg);
@@ -56,6 +61,29 @@ export const MyOutgoingRequestsPage: React.FC = () => {
       );
     }
     setFilteredRequests(filtered);
+  };
+
+  const openPreview = (docId: string, filename = 'Requested Document', createdAt?: string) => {
+    setPreviewDoc({ id: docId, fileName: filename, fileType: null, filePath: '', createdAt: createdAt || new Date().toISOString() });
+    setPreviewVisible(true);
+  };
+
+  const handleDownload = async (docId: string, filename = 'requested-document') => {
+    try {
+      const res = await downloadDocument(docId);
+      const contentType = (res as any)?.headers?.['content-type'] || (res as any)?.headers?.get?.('content-type') || undefined;
+      const blob = new Blob([res.data], contentType ? { type: contentType } : undefined);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      message.error('Download failed');
+    }
   };
 
   const getStatusTag = (status: string) => {
@@ -108,10 +136,17 @@ export const MyOutgoingRequestsPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
+      width: 160,
       render: (_, record) => (
-        record.status === 'COMPLETED' ? (
-          <Button type="text" size="small" icon={<EyeOutlined />} disabled>View</Button>
+        record.status === 'COMPLETED' && record.fulfilledDocumentId ? (
+          <Space size={8}>
+            <Tooltip title="View">
+              <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => openPreview(record.fulfilledDocumentId!, 'Requested Document', record.completedAt || record.createdAt)} />
+            </Tooltip>
+            <Tooltip title="Download">
+              <Button type="text" size="small" icon={<DownloadOutlined />} onClick={() => handleDownload(record.fulfilledDocumentId!, 'requested-document')} />
+            </Tooltip>
+          </Space>
         ) : <Text type="secondary">-</Text>
       ),
     },
@@ -176,6 +211,14 @@ export const MyOutgoingRequestsPage: React.FC = () => {
             ),
           }}
         />
+        {/* Preview Modal */}
+        {previewDoc && (
+          <DocumentPreviewModal
+            document={previewDoc}
+            visible={previewVisible}
+            onClose={() => setPreviewVisible(false)}
+          />
+        )}
       </Card>
     </div>
   );

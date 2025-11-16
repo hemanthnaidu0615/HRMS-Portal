@@ -203,7 +203,7 @@ public class DocumentController {
     }
 
     @GetMapping("/org")
-    @PreAuthorize("hasAnyRole('ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getOrganizationDocuments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,

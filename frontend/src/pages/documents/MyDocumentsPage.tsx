@@ -75,7 +75,7 @@ export const MyDocumentsPage: React.FC = () => {
       setLoading(true);
       setError('');
       const response = await getMyDocuments();
-      setDocuments(response.data);
+      setDocuments(response);
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to load documents';
       setError(errorMsg);

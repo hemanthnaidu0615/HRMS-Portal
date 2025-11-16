@@ -42,7 +42,7 @@ function getItem(
  * SuperAdmin Navigation
  */
 export const superAdminMenuItems: MenuItem[] = [
-  getItem('Dashboard', '/', <DashboardOutlined />),
+  getItem('Dashboard', '/superadmin/organizations', <DashboardOutlined />),
   getItem('Organizations', '/superadmin/organizations', <BankOutlined />),
 ];
 
@@ -50,7 +50,7 @@ export const superAdminMenuItems: MenuItem[] = [
  * OrgAdmin Navigation
  */
 export const orgAdminMenuItems: MenuItem[] = [
-  getItem('Dashboard', '/', <DashboardOutlined />),
+  getItem('Dashboard', '/admin/employees', <DashboardOutlined />),
 
   getItem('Employees', 'employees', <TeamOutlined />, [
     getItem('All Employees', '/admin/employees'),
@@ -82,6 +82,7 @@ export const employeeMenuItems: MenuItem[] = [
   getItem('My Documents', 'my-documents', <FolderOutlined />, [
     getItem('View Documents', '/documents/me'),
     getItem('Upload Document', '/documents/upload'),
+    getItem('Team Documents', '/documents/org'),
   ]),
 
   getItem('Document Requests', 'document-requests', <InboxOutlined />, [

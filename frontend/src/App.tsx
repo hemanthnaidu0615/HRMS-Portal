@@ -186,7 +186,7 @@ function App() {
         <Route
           path="/documents/org"
           element={
-            <ProtectedRoute requiredRole="orgadmin">
+            <ProtectedRoute>
               <LayoutWrapper>
                 <OrgDocumentsPage />
               </LayoutWrapper>

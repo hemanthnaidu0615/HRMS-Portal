@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space } from 'antd';
-import { FileOutlined, UploadOutlined } from '@ant-design/icons';
-import { getOrganizationDocuments } from '../../api/documentsApi';
+import { Card, Table, Button, Alert, Typography, Space, Tooltip } from 'antd';
+import { FileOutlined, UploadOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons';
+import { getOrganizationDocuments, downloadDocument } from '../../api/documentsApi';
+import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
+import { useAuth } from '../../auth/useAuth';
 
 const { Title } = Typography;
 
@@ -17,9 +19,12 @@ interface Document {
 
 export const OrgDocumentsPage = () => {
   const navigate = useNavigate();
+  const { roles } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ id: string; fileName: string; fileType: string | null; filePath: string; createdAt: string } | null>(null);
 
   useEffect(() => {
     loadDocuments();
@@ -29,11 +34,34 @@ export const OrgDocumentsPage = () => {
     try {
       setLoading(true);
       const response = await getOrganizationDocuments();
-      setDocuments(response.data);
+      setDocuments(response);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load documents');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openPreview = (doc: Document) => {
+    setPreviewDoc({ id: doc.id, fileName: doc.fileName, fileType: doc.fileType || null, filePath: doc.filePath, createdAt: doc.createdAt });
+    setPreviewVisible(true);
+  };
+
+  const handleDownload = async (doc: Document) => {
+    try {
+      const res = await downloadDocument(doc.id);
+      const contentType = (res as any)?.headers?.['content-type'] || (res as any)?.headers?.get?.('content-type') || undefined;
+      const blob = new Blob([res.data], contentType ? { type: contentType } : undefined);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      // ignore
     }
   };
 
@@ -79,19 +107,29 @@ export const OrgDocumentsPage = () => {
       title: 'Actions',
       key: 'actions',
       render: (record: Document) => (
-        <Button
-          type="primary"
-          size="small"
-          icon={<UploadOutlined />}
-          onClick={() => navigate(`/documents/employee/${record.employeeId}/upload`)}
-          style={{
-            background: '#0a0d54',
-            borderColor: '#0a0d54',
-            borderRadius: 6
-          }}
-        >
-          Upload for Employee
-        </Button>
+        <Space size={8}>
+          <Tooltip title="View">
+            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => openPreview(record)} />
+          </Tooltip>
+          <Tooltip title="Download">
+            <Button type="text" size="small" icon={<DownloadOutlined />} onClick={() => handleDownload(record)} />
+          </Tooltip>
+          {(roles.includes('orgadmin') || roles.includes('superadmin')) && (
+            <Button
+              type="primary"
+              size="small"
+              icon={<UploadOutlined />}
+              onClick={() => navigate(`/documents/employee/${record.employeeId}/upload`)}
+              style={{
+                background: '#0a0d54',
+                borderColor: '#0a0d54',
+                borderRadius: 6
+              }}
+            >
+              Upload for Employee
+            </Button>
+          )}
+        </Space>
       ),
     },
   ];
@@ -124,6 +162,13 @@ export const OrgDocumentsPage = () => {
                 showTotal: (total) => `Total ${total} documents`,
               }}
             />
+            {previewDoc && (
+              <DocumentPreviewModal
+                document={previewDoc}
+                visible={previewVisible}
+                onClose={() => setPreviewVisible(false)}
+              />
+            )}
           </Space>
         </Card>
       </div>
