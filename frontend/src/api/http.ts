@@ -30,12 +30,16 @@ http.interceptors.request.use(
 http.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      // Token expired or unauthorized
+    if (error.response?.status === 401) {
+      // Token expired or invalid - logout
       localStorage.removeItem('token');
       localStorage.removeItem('roles');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    } else if (error.response?.status === 403) {
+      // Permission denied - don't logout, just show error
+      console.error('Access denied:', error.response.data);
+      // Don't redirect - let the component handle 403
     }
     return Promise.reject(error);
   }

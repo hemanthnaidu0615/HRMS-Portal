@@ -1,10 +1,15 @@
 package com.hrms.security;
 
 import com.hrms.service.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +24,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
@@ -53,8 +59,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
+        } catch (ExpiredJwtException e) {
+            logger.warn("Expired JWT token from IP {}: {}",
+                request.getRemoteAddr(), e.getMessage());
+        } catch (MalformedJwtException e) {
+            logger.error("Malformed JWT token from IP {}: {}",
+                request.getRemoteAddr(), e.getMessage());
+        } catch (SignatureException e) {
+            logger.error("Invalid JWT signature from IP {}: {}",
+                request.getRemoteAddr(), e.getMessage());
         } catch (Exception e) {
-            // Invalid token, continue without authentication
+            logger.error("JWT authentication failed from IP {}: {}",
+                request.getRemoteAddr(), e.getMessage());
         }
 
         filterChain.doFilter(request, response);

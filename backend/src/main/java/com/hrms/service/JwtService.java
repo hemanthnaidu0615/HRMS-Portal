@@ -4,6 +4,9 @@ import com.hrms.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +20,34 @@ import java.util.stream.Collectors;
 @Service
 public class JwtService {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
+    private static final int MINIMUM_SECRET_LENGTH = 32; // 256 bits
+
     @Value("${security.jwt.secret}")
     private String secretKey;
 
-    private static final long EXPIRATION_TIME = 86400000; // 24 hours
+    @Value("${security.jwt.expiration:86400000}")
+    private long expirationTime;
+
+    @PostConstruct
+    public void validateSecretKey() {
+        if (secretKey == null || secretKey.trim().isEmpty()) {
+            throw new IllegalStateException("JWT secret key is not configured. Set SECURITY_JWT_SECRET environment variable.");
+        }
+
+        // Check for known insecure defaults
+        if ("changeme-dev-secret".equals(secretKey) || "secret".equals(secretKey)) {
+            throw new IllegalStateException("Insecure default JWT secret detected. Use a strong random secret in production.");
+        }
+
+        if (secretKey.length() < MINIMUM_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                String.format("JWT secret is too short (%d chars). Minimum required: %d chars (256 bits).",
+                    secretKey.length(), MINIMUM_SECRET_LENGTH));
+        }
+
+        logger.info("JWT secret key validated successfully (length: {} chars)", secretKey.length());
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
@@ -38,7 +65,7 @@ public class JwtService {
                 .claims(claims)
                 .subject(user.getEmail())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey())
                 .compact();
     }
