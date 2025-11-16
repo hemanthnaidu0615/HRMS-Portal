@@ -355,6 +355,143 @@ public class DocumentController {
                 .body(resource);
     }
 
+    @DeleteMapping("/{documentId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deleteDocument(@PathVariable UUID documentId, Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        Employee currentEmployee = getOrCreateEmployee(user);
+
+        // Organization boundary check
+        if (user.getOrganization() != null &&
+                !document.getEmployee().getOrganization().getId().equals(currentEmployee.getOrganization().getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        // Check if document is linked to active document requests
+        List<com.hrms.entity.DocumentRequest> activeRequests =
+                documentRequestRepository.findByFulfilledDocument_Id(documentId).stream()
+                        .filter(req -> "REQUESTED".equals(req.getStatus()) || "COMPLETED".equals(req.getStatus()))
+                        .collect(Collectors.toList());
+
+        if (!activeRequests.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Cannot delete document that is linked to active document requests",
+                    "message", "This document is currently fulfilling " + activeRequests.size() + " active request(s). Please revoke or reject the request(s) first."
+            ));
+        }
+
+        // Check delete permissions
+        boolean canDelete = false;
+
+        // Owner with own-docs delete permission
+        if (document.getEmployee().getId().equals(currentEmployee.getId()) &&
+                permissionService.has(currentEmployee, "DELETE_OWN_DOCS")) {
+            canDelete = true;
+        }
+
+        // Org-wide delete access
+        if (!canDelete && permissionService.has(currentEmployee, "DELETE_ORG_DOCS")) {
+            canDelete = true;
+        }
+
+        if (!canDelete) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        try {
+            // Delete file from storage
+            fileStorageService.delete(document.getFilePath());
+
+            // Delete document record
+            documentRepository.delete(document);
+
+            logger.info("Document {} deleted by user {}", documentId, user.getEmail());
+            return ResponseEntity.ok(Map.of("message", "Document deleted successfully"));
+        } catch (Exception e) {
+            logger.error("Error deleting document {}: {}", documentId, e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to delete document"));
+        }
+    }
+
+    @PutMapping("/{documentId}/replace")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> replaceDocument(@PathVariable UUID documentId,
+                                             @RequestParam("file") MultipartFile file,
+                                             Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        Employee currentEmployee = getOrCreateEmployee(user);
+
+        // Organization boundary check
+        if (user.getOrganization() != null &&
+                !document.getEmployee().getOrganization().getId().equals(currentEmployee.getOrganization().getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        // Check if document is linked to active document requests
+        List<com.hrms.entity.DocumentRequest> activeRequests =
+                documentRequestRepository.findByFulfilledDocument_Id(documentId).stream()
+                        .filter(req -> "REQUESTED".equals(req.getStatus()) || "COMPLETED".equals(req.getStatus()))
+                        .collect(Collectors.toList());
+
+        if (!activeRequests.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Cannot replace document that is linked to active document requests",
+                    "message", "This document is currently fulfilling " + activeRequests.size() + " active request(s). Contact the requester to update."
+            ));
+        }
+
+        // Check update permissions
+        boolean canUpdate = false;
+
+        // Owner with own-docs permission
+        if (document.getEmployee().getId().equals(currentEmployee.getId()) &&
+                permissionService.has(currentEmployee, "UPLOAD_OWN_DOCS")) {
+            canUpdate = true;
+        }
+
+        // Org-wide upload access
+        if (!canUpdate && permissionService.has(currentEmployee, "UPLOAD_FOR_OTHERS")) {
+            canUpdate = true;
+        }
+
+        if (!canUpdate) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        try {
+            // Delete old file from storage
+            fileStorageService.delete(document.getFilePath());
+
+            // Store new file
+            String newFilePath = fileStorageService.store(file, document.getEmployee().getId(), currentEmployee.getOrganization().getId());
+
+            // Update document record
+            document.setFileName(file.getOriginalFilename());
+            document.setFilePath(newFilePath);
+            document.setFileType(file.getContentType());
+            Document updated = documentRepository.save(document);
+
+            logger.info("Document {} replaced by user {}", documentId, user.getEmail());
+            DocumentResponse response = toDocumentResponse(updated);
+            return ResponseEntity.ok(new DocumentUploadResponse("Document replaced successfully", response));
+        } catch (Exception e) {
+            logger.error("Error replacing document {}: {}", documentId, e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to replace document"));
+        }
+    }
+
     private Employee getOrCreateEmployee(User user) {
         return employeeRepository.findByUser_Id(user.getId())
                 .orElseGet(() -> {
