@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/orgadmin/structure")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ORGADMIN','SUPERADMIN')")
+@PreAuthorize("hasRole('ORGADMIN')")
 public class OrganizationStructureController {
 
     private final DepartmentRepository departmentRepository;

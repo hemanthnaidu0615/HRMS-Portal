@@ -1,0 +1,122 @@
+import { useState, useEffect } from 'react';
+import { Card, Form, Input, Button, message, Space } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { roleApi, Permission } from '../../../api/roleApi';
+import { PermissionCheckboxGrid } from '../../../components/roles/PermissionCheckboxGrid';
+import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+
+const { TextArea } = Input;
+
+export const CreateRolePage = () => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<string[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchPermissions();
+  }, []);
+
+  const fetchPermissions = async () => {
+    try {
+      const data = await roleApi.getAllPermissions();
+      setPermissions(data);
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Failed to load permissions');
+    }
+  };
+
+  const handleSubmit = async (values: { name: string; description?: string }) => {
+    if (selectedPermissionIds.length === 0) {
+      message.warning('Please select at least one permission');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await roleApi.createRole({
+        name: values.name,
+        description: values.description,
+        permissionIds: selectedPermissionIds,
+      });
+      message.success('Role created successfully');
+      navigate('/admin/roles');
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Failed to create role');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <Space style={{ marginBottom: 16 }}>
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/admin/roles')}
+        >
+          Back to Roles
+        </Button>
+      </Space>
+
+      <Card title="Create New Role">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          autoComplete="off"
+        >
+          <Form.Item
+            label="Role Name"
+            name="name"
+            rules={[
+              { required: true, message: 'Please enter role name' },
+              { min: 2, message: 'Role name must be at least 2 characters' },
+              { max: 100, message: 'Role name must not exceed 100 characters' },
+            ]}
+          >
+            <Input placeholder="e.g. Team Lead, Department Manager, HR Manager" />
+          </Form.Item>
+
+          <Form.Item
+            label="Description"
+            name="description"
+            rules={[
+              { max: 500, message: 'Description must not exceed 500 characters' },
+            ]}
+          >
+            <TextArea
+              rows={3}
+              placeholder="Brief description of this role's responsibilities"
+            />
+          </Form.Item>
+
+          <Form.Item label="Permissions" required>
+            <PermissionCheckboxGrid
+              permissions={permissions}
+              selectedPermissionIds={selectedPermissionIds}
+              onChange={setSelectedPermissionIds}
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                icon={<SaveOutlined />}
+              >
+                Create Role
+              </Button>
+              <Button onClick={() => navigate('/admin/roles')}>
+                Cancel
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
+    </div>
+  );
+};

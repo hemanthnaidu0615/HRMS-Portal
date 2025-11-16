@@ -111,21 +111,21 @@ public class EmployeeService {
     }
 
     @Transactional
-    public Employee updateClient(Employee employee, UUID clientId, User changedBy) {
-        String oldValue = employee.getClientId() != null ? employee.getClientId().toString() : null;
-        String newValue = clientId != null ? clientId.toString() : null;
+    public Employee updateClientName(Employee employee, String clientName, User changedBy) {
+        String oldValue = employee.getClientName();
+        String newValue = clientName;
 
-        employee.setClientId(clientId);
+        employee.setClientName(clientName);
         Employee updated = employeeRepository.save(employee);
 
-        recordHistory(employee, "client_id", oldValue, newValue, changedBy);
+        recordHistory(employee, "client_name", oldValue, newValue, changedBy);
         return updated;
     }
 
     @Transactional
-    public Employee updateProject(Employee employee, UUID projectId, User changedBy) {
-        String oldValue = employee.getProjectId() != null ? employee.getProjectId().toString() : null;
-        String newValue = projectId != null ? projectId.toString() : null;
+    public Employee updateProject(Employee employee, String projectId, User changedBy) {
+        String oldValue = employee.getProjectId();
+        String newValue = projectId;
 
         employee.setProjectId(projectId);
         Employee updated = employeeRepository.save(employee);

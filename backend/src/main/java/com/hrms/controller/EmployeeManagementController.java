@@ -6,6 +6,7 @@ import com.hrms.repository.DepartmentRepository;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PermissionGroupRepository;
 import com.hrms.repository.PositionRepository;
+import com.hrms.repository.RoleRepository;
 import com.hrms.service.EmployeeService;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/orgadmin/employees")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ORGADMIN','SUPERADMIN')")
+@PreAuthorize("hasRole('ORGADMIN')")
 public class EmployeeManagementController {
 
     private final EmployeeService employeeService;
@@ -33,6 +34,7 @@ public class EmployeeManagementController {
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
     private final PermissionGroupRepository permissionGroupRepository;
+    private final RoleRepository roleRepository;
     private final PermissionService permissionService;
     private final UserService userService;
 
@@ -144,8 +146,8 @@ public class EmployeeManagementController {
             employeeService.updateContractEndDate(employee, request.getContractEndDate(), currentUser);
         }
 
-        if (request.getClientId() != null) {
-            employeeService.updateClient(employee, request.getClientId(), currentUser);
+        if (request.getClientName() != null) {
+            employeeService.updateClientName(employee, request.getClientName(), currentUser);
         }
 
         if (request.getProjectId() != null) {
@@ -319,6 +321,55 @@ public class EmployeeManagementController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Assign roles to an employee (new role-based system)
+     */
+    @PutMapping("/{employeeId}/roles")
+    public ResponseEntity<?> updateEmployeeRoles(@PathVariable UUID employeeId,
+                                                 @Valid @RequestBody EmployeeRoleUpdateRequest request,
+                                                 Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        // Check permission
+        if (!permissionService.hasPermission(currentUser, "roles:assign:organization")) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        Employee employee = employeeService.getById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        if (!employee.getOrganization().getId().equals(organization.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        // Update user roles
+        User user = employee.getUser();
+        Set<Role> newRoles = new HashSet<>();
+        for (Integer roleId : request.getRoleIds()) {
+            Role role = roleRepository.findById(roleId)
+                    .orElseThrow(() -> new RuntimeException("Role not found: " + roleId));
+
+            // Validate role belongs to this org or is a system role
+            if (!role.isSystemRole() &&
+                (role.getOrganization() == null || !role.getOrganization().getId().equals(organization.getId()))) {
+                return ResponseEntity.status(403).body(Map.of("error", "Cannot assign role from another organization"));
+            }
+
+            newRoles.add(role);
+        }
+
+        user.setRoles(newRoles);
+        userService.save(user);
+
+        return ResponseEntity.ok(Map.of("message", "Roles updated successfully"));
     }
 
     private EmployeeSummaryResponse mapToSummary(Employee employee) {

@@ -1,8 +1,6 @@
 package com.hrms.controller;
 
-import com.hrms.entity.Employee;
 import com.hrms.entity.User;
-import com.hrms.repository.EmployeeRepository;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -16,27 +14,23 @@ import java.util.Set;
 
 /**
  * Controller for retrieving user permissions
- * Replaces hardcoded frontend permissions with backend-computed values
+ * Returns permissions computed from user roles in resource:action:scope format
  */
 @RestController
 @RequestMapping("/api/me")
 public class PermissionsController {
 
     private final UserService userService;
-    private final EmployeeRepository employeeRepository;
     private final PermissionService permissionService;
 
-    public PermissionsController(UserService userService,
-                                EmployeeRepository employeeRepository,
-                                PermissionService permissionService) {
+    public PermissionsController(UserService userService, PermissionService permissionService) {
         this.userService = userService;
-        this.employeeRepository = employeeRepository;
         this.permissionService = permissionService;
     }
 
     /**
      * Get effective permissions for the current user
-     * Returns permissions computed from their permission groups
+     * Returns permissions in format: ["employees:view:own", "documents:upload:team", ...]
      */
     @GetMapping("/permissions")
     @PreAuthorize("isAuthenticated()")
@@ -45,31 +39,13 @@ public class PermissionsController {
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Get or create employee record
-        Employee employee = employeeRepository.findByUser_Id(user.getId())
-                .orElseGet(() -> {
-                    if (user.getOrganization() == null) {
-                        // SuperAdmin users might not have employee records
-                        return null;
-                    }
-                    // This will auto-assign permission groups based on role
-                    return employeeRepository.save(new com.hrms.entity.Employee(user, user.getOrganization()));
-                });
-
-        Set<String> permissions;
-        if (employee != null) {
-            permissions = permissionService.getEffectivePermissions(employee);
-        } else {
-            // SuperAdmin has all permissions
-            permissions = Set.of(
-                "VIEW_OWN_DOCS",
-                "UPLOAD_OWN_DOCS",
-                "REQUEST_DOCS",
-                "VIEW_ORG_DOCS",
-                "UPLOAD_FOR_OTHERS",
-                "VIEW_DEPT_DOCS"
-            );
+        // SuperAdmin should have no organization-level permissions
+        if (permissionService.isSuperAdmin(user)) {
+            return ResponseEntity.ok(Set.of());
         }
+
+        // Get all permissions from user's roles
+        Set<String> permissions = permissionService.getAllPermissionCodes(user);
 
         return ResponseEntity.ok(permissions);
     }

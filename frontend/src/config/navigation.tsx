@@ -63,7 +63,8 @@ export const orgAdminMenuItems: MenuItem[] = [
     getItem('Positions', '/admin/structure/positions'),
   ]),
 
-  getItem('Permissions', 'permissions', <SafetyCertificateOutlined />, [
+  getItem('Access Control', 'permissions', <SafetyCertificateOutlined />, [
+    getItem('Roles', '/admin/roles'),
     getItem('Permission Groups', '/admin/permissions/groups'),
   ]),
 

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/orgadmin/permissions")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ORGADMIN','SUPERADMIN')")
+@PreAuthorize("hasRole('ORGADMIN')")
 public class PermissionGroupController {
 
     private final PermissionGroupRepository permissionGroupRepository;

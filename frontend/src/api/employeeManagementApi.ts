@@ -23,7 +23,7 @@ export interface EmployeeDetailResponse {
   reportsToEmployeeId: string | null;
   reportsToEmail: string | null;
   employmentType: string | null;
-  clientId: string | null;
+  clientName: string | null;
   projectId: string | null;
   contractEndDate: string | null;
 }
@@ -33,7 +33,7 @@ export interface EmployeeAssignmentUpdateRequest {
   positionId?: string | null;
   reportsToEmployeeId?: string | null;
   employmentType?: string | null;
-  clientId?: string | null;
+  clientName?: string | null;
   projectId?: string | null;
   contractEndDate?: string | null;
 }

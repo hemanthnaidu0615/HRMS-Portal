@@ -16,8 +16,11 @@ public class EmployeeAssignmentUpdateRequest {
     @Pattern(regexp = "internal|contract|client", message = "Employment type must be one of: internal, contract, client")
     private String employmentType;
 
-    private UUID clientId;
-    private UUID projectId;
+    // For client employees - store client company name
+    private String clientName;
+
+    // For contract/project employees - store project identifier
+    private String projectId;
 
     @Future(message = "Contract end date must be in the future")
     private LocalDate contractEndDate;

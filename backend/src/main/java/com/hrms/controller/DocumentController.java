@@ -62,7 +62,7 @@ public class DocumentController {
     }
 
     @PostMapping("/me/upload")
-    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ORGADMIN')")
     public ResponseEntity<?> uploadForSelf(@RequestParam("file") MultipartFile file,
                                            @RequestParam(value = "requestId", required = false) UUID requestId,
                                            Authentication authentication) {
@@ -101,7 +101,7 @@ public class DocumentController {
     }
 
     @PostMapping("/employee/{employeeId}/upload")
-    @PreAuthorize("hasAnyRole('ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasRole('ORGADMIN')")
     public ResponseEntity<?> uploadForEmployee(@PathVariable UUID employeeId,
                                               @RequestParam("file") MultipartFile file,
                                               @RequestParam(value = "requestId", required = false) UUID requestId,
@@ -148,7 +148,7 @@ public class DocumentController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ORGADMIN')")
     public ResponseEntity<?> getMyDocuments(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)
@@ -169,7 +169,7 @@ public class DocumentController {
     }
 
     @GetMapping("/employee/{employeeId}")
-    @PreAuthorize("hasAnyRole('ORGADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasRole('ORGADMIN')")
     public ResponseEntity<?> getEmployeeDocuments(@PathVariable UUID employeeId, Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)
