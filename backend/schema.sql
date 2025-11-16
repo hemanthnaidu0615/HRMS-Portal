@@ -164,10 +164,16 @@ CREATE TABLE documents (
     file_name VARCHAR(255) NOT NULL,
     file_path VARCHAR(500) NOT NULL,
     file_type VARCHAR(100) NULL,
+    document_type VARCHAR(100) NULL,
+    approval_status VARCHAR(20) DEFAULT 'PENDING',
+    approved_by UNIQUEIDENTIFIER NULL,
+    approved_at DATETIME2 NULL,
+    rejection_reason VARCHAR(500) NULL,
     file_size BIGINT NULL,
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     FOREIGN KEY (employee_id) REFERENCES employees(id),
-    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+    FOREIGN KEY (uploaded_by) REFERENCES users(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id)
 );
 
 CREATE TABLE document_requests (
