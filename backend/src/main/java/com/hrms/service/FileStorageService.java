@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Service
@@ -33,7 +35,7 @@ public class FileStorageService {
         return containerClient;
     }
 
-    public String store(MultipartFile file, UUID employeeId) {
+    public String store(MultipartFile file, UUID employeeId, UUID organizationId) {
         try {
             if (file.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file");
@@ -45,8 +47,17 @@ public class FileStorageService {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
 
-            String fileName = UUID.randomUUID() + extension;
-            String blobPath = employeeId.toString() + "/" + fileName;
+            LocalDateTime now = LocalDateTime.now();
+            String year = now.format(DateTimeFormatter.ofPattern("yyyy"));
+            String month = now.format(DateTimeFormatter.ofPattern("MM"));
+
+            String sanitizedFilename = originalFilename != null ?
+                originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_") :
+                "document" + extension;
+
+            String fileName = UUID.randomUUID() + "_" + sanitizedFilename;
+            String blobPath = String.format("org/%s/employee/%s/%s/%s/%s",
+                organizationId, employeeId, year, month, fileName);
 
             BlobContainerClient container = getContainer();
             BlobClient blobClient = container.getBlobClient(blobPath);
@@ -70,7 +81,7 @@ public class FileStorageService {
             BlobClient blobClient = container.getBlobClient(storedPath);
 
             ByteArrayOutputStream output = new ByteArrayOutputStream();
-            blobClient.download(output);
+            blobClient.downloadStream(output);
 
             return new ByteArrayInputStream(output.toByteArray());
 

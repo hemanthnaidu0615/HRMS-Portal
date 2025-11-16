@@ -17,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -61,7 +60,7 @@ public class DocumentController {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
         }
 
-        String filePath = fileStorageService.store(file, employee.getId());
+        String filePath = fileStorageService.store(file, employee.getId(), employee.getOrganization().getId());
         Document document = documentService.uploadForEmployee(
                 employee,
                 user,
@@ -96,7 +95,7 @@ public class DocumentController {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
         }
 
-        String filePath = fileStorageService.store(file, employee.getId());
+        String filePath = fileStorageService.store(file, employee.getId(), employee.getOrganization().getId());
         Document document = documentService.uploadForEmployee(
                 employee,
                 user,

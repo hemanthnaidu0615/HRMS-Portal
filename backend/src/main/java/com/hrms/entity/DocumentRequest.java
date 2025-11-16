@@ -27,6 +27,10 @@ public class DocumentRequest {
     @Column(nullable = false, length = 50)
     private String status = "REQUESTED";
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fulfilled_document_id")
+    private Document fulfilledDocument;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -81,6 +85,14 @@ public class DocumentRequest {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Document getFulfilledDocument() {
+        return fulfilledDocument;
+    }
+
+    public void setFulfilledDocument(Document fulfilledDocument) {
+        this.fulfilledDocument = fulfilledDocument;
     }
 
     public LocalDateTime getCreatedAt() {
