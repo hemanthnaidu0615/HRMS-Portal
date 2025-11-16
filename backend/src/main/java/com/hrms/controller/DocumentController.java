@@ -7,10 +7,13 @@ import com.hrms.entity.Employee;
 import com.hrms.entity.User;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.service.DocumentService;
+import com.hrms.service.EmailService;
 import com.hrms.service.EmployeeService;
 import com.hrms.service.FileStorageService;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,12 +37,15 @@ import java.time.LocalDateTime;
 @RequestMapping("/api/documents")
 public class DocumentController {
 
+    private static final Logger logger = LoggerFactory.getLogger(DocumentController.class);
+
     private final DocumentService documentService;
     private final FileStorageService fileStorageService;
     private final UserService userService;
     private final EmployeeRepository employeeRepository;
     private final EmployeeService employeeService;
     private final PermissionService permissionService;
+    private final EmailService emailService;
     private final com.hrms.repository.DocumentRepository documentRepository;
     private final com.hrms.repository.DocumentRequestRepository documentRequestRepository;
 
@@ -49,6 +55,7 @@ public class DocumentController {
                              EmployeeRepository employeeRepository,
                              EmployeeService employeeService,
                              PermissionService permissionService,
+                             EmailService emailService,
                              com.hrms.repository.DocumentRepository documentRepository,
                              com.hrms.repository.DocumentRequestRepository documentRequestRepository) {
         this.documentService = documentService;
@@ -57,6 +64,7 @@ public class DocumentController {
         this.employeeRepository = employeeRepository;
         this.employeeService = employeeService;
         this.permissionService = permissionService;
+        this.emailService = emailService;
         this.documentRepository = documentRepository;
         this.documentRequestRepository = documentRequestRepository;
     }
@@ -92,6 +100,21 @@ public class DocumentController {
                     req.setStatus("COMPLETED");
                     req.setCompletedAt(LocalDateTime.now());
                     documentRequestRepository.save(req);
+
+                    // Send email notification to requester
+                    try {
+                        String uploaderName = user.getEmail().split("@")[0];
+                        String requesterEmail = req.getRequester().getEmail();
+                        emailService.sendDocumentUploadedEmail(
+                            requesterEmail,
+                            uploaderName,
+                            user.getEmail(),
+                            document.getFileType() != null ? document.getFileType() : "Document",
+                            document.getId().toString()
+                        );
+                    } catch (Exception e) {
+                        logger.error("Failed to send document uploaded email to {}: {}", req.getRequester().getEmail(), e.getMessage(), e);
+                    }
                 }
             });
         }
@@ -139,6 +162,21 @@ public class DocumentController {
                     req.setStatus("COMPLETED");
                     req.setCompletedAt(LocalDateTime.now());
                     documentRequestRepository.save(req);
+
+                    // Send email notification to requester
+                    try {
+                        String uploaderName = employee.getUser().getEmail().split("@")[0];
+                        String requesterEmail = req.getRequester().getEmail();
+                        emailService.sendDocumentUploadedEmail(
+                            requesterEmail,
+                            uploaderName,
+                            employee.getUser().getEmail(),
+                            document.getFileType() != null ? document.getFileType() : "Document",
+                            document.getId().toString()
+                        );
+                    } catch (Exception e) {
+                        logger.error("Failed to send document uploaded email to {}: {}", req.getRequester().getEmail(), e.getMessage(), e);
+                    }
                 }
             });
         }
@@ -315,6 +353,143 @@ public class DocumentController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(resource);
+    }
+
+    @DeleteMapping("/{documentId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deleteDocument(@PathVariable UUID documentId, Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        Employee currentEmployee = getOrCreateEmployee(user);
+
+        // Organization boundary check
+        if (user.getOrganization() != null &&
+                !document.getEmployee().getOrganization().getId().equals(currentEmployee.getOrganization().getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        // Check if document is linked to active document requests
+        List<com.hrms.entity.DocumentRequest> activeRequests =
+                documentRequestRepository.findByFulfilledDocument_Id(documentId).stream()
+                        .filter(req -> "REQUESTED".equals(req.getStatus()) || "COMPLETED".equals(req.getStatus()))
+                        .collect(Collectors.toList());
+
+        if (!activeRequests.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Cannot delete document that is linked to active document requests",
+                    "message", "This document is currently fulfilling " + activeRequests.size() + " active request(s). Please revoke or reject the request(s) first."
+            ));
+        }
+
+        // Check delete permissions
+        boolean canDelete = false;
+
+        // Owner with own-docs delete permission
+        if (document.getEmployee().getId().equals(currentEmployee.getId()) &&
+                permissionService.has(currentEmployee, "DELETE_OWN_DOCS")) {
+            canDelete = true;
+        }
+
+        // Org-wide delete access
+        if (!canDelete && permissionService.has(currentEmployee, "DELETE_ORG_DOCS")) {
+            canDelete = true;
+        }
+
+        if (!canDelete) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        try {
+            // Delete file from storage
+            fileStorageService.delete(document.getFilePath());
+
+            // Delete document record
+            documentRepository.delete(document);
+
+            logger.info("Document {} deleted by user {}", documentId, user.getEmail());
+            return ResponseEntity.ok(Map.of("message", "Document deleted successfully"));
+        } catch (Exception e) {
+            logger.error("Error deleting document {}: {}", documentId, e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to delete document"));
+        }
+    }
+
+    @PutMapping("/{documentId}/replace")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> replaceDocument(@PathVariable UUID documentId,
+                                             @RequestParam("file") MultipartFile file,
+                                             Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        Employee currentEmployee = getOrCreateEmployee(user);
+
+        // Organization boundary check
+        if (user.getOrganization() != null &&
+                !document.getEmployee().getOrganization().getId().equals(currentEmployee.getOrganization().getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        // Check if document is linked to active document requests
+        List<com.hrms.entity.DocumentRequest> activeRequests =
+                documentRequestRepository.findByFulfilledDocument_Id(documentId).stream()
+                        .filter(req -> "REQUESTED".equals(req.getStatus()) || "COMPLETED".equals(req.getStatus()))
+                        .collect(Collectors.toList());
+
+        if (!activeRequests.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Cannot replace document that is linked to active document requests",
+                    "message", "This document is currently fulfilling " + activeRequests.size() + " active request(s). Contact the requester to update."
+            ));
+        }
+
+        // Check update permissions
+        boolean canUpdate = false;
+
+        // Owner with own-docs permission
+        if (document.getEmployee().getId().equals(currentEmployee.getId()) &&
+                permissionService.has(currentEmployee, "UPLOAD_OWN_DOCS")) {
+            canUpdate = true;
+        }
+
+        // Org-wide upload access
+        if (!canUpdate && permissionService.has(currentEmployee, "UPLOAD_FOR_OTHERS")) {
+            canUpdate = true;
+        }
+
+        if (!canUpdate) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        try {
+            // Delete old file from storage
+            fileStorageService.delete(document.getFilePath());
+
+            // Store new file
+            String newFilePath = fileStorageService.store(file, document.getEmployee().getId(), currentEmployee.getOrganization().getId());
+
+            // Update document record
+            document.setFileName(file.getOriginalFilename());
+            document.setFilePath(newFilePath);
+            document.setFileType(file.getContentType());
+            Document updated = documentRepository.save(document);
+
+            logger.info("Document {} replaced by user {}", documentId, user.getEmail());
+            DocumentResponse response = toDocumentResponse(updated);
+            return ResponseEntity.ok(new DocumentUploadResponse("Document replaced successfully", response));
+        } catch (Exception e) {
+            logger.error("Error replacing document {}: {}", documentId, e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to replace document"));
+        }
     }
 
     private Employee getOrCreateEmployee(User user) {

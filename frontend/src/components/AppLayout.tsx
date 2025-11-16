@@ -44,12 +44,32 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'email',
-      label: <Text strong>{user?.email}</Text>,
+      label: (
+        <Text strong style={{
+          maxWidth: '200px',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          display: 'block'
+        }}>
+          {user?.email}
+        </Text>
+      ),
       disabled: true,
     },
     {
       key: 'roles',
-      label: <Text type="secondary">{roles.join(', ')}</Text>,
+      label: (
+        <Text type="secondary" style={{
+          maxWidth: '200px',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          display: 'block'
+        }}>
+          {roles.join(', ')}
+        </Text>
+      ),
       disabled: true,
     },
     { type: 'divider' },
@@ -84,22 +104,28 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
     if (roles.includes('orgadmin')) {
       items.push({
-        key: 'organization',
-        icon: <ApartmentOutlined />,
-        label: 'Organization',
+        key: 'employees',
+        icon: <TeamOutlined />,
+        label: 'Employees',
         children: [
           {
             key: '/admin/employees',
-            label: 'Employees',
-            icon: <TeamOutlined />,
+            label: 'All Employees',
             onClick: () => navigate('/admin/employees'),
           },
           {
             key: '/admin/employees/tree',
-            label: 'Org Chart',
-            icon: <ApartmentOutlined />,
+            label: 'Organization Chart',
             onClick: () => navigate('/admin/employees/tree'),
           },
+        ],
+      });
+
+      items.push({
+        key: 'structure',
+        icon: <ApartmentOutlined />,
+        label: 'Organization Structure',
+        children: [
           {
             key: '/admin/structure/departments',
             label: 'Departments',
@@ -114,33 +140,75 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       });
 
       items.push({
-        key: '/documents-requests',
+        key: 'documents',
         icon: <FileTextOutlined />,
-        label: 'Documents & Requests',
-        onClick: () => navigate('/documents-requests'),
+        label: 'Documents',
+        children: [
+          {
+            key: '/documents/org',
+            label: 'Organization Documents',
+            onClick: () => navigate('/documents/org'),
+          },
+          {
+            key: '/document-requests/org',
+            label: 'Document Requests',
+            onClick: () => navigate('/document-requests/org'),
+          },
+        ],
       });
 
-      if (hasPermission('VIEW_ORG_DOCS') || hasPermission('UPLOAD_FOR_OTHERS')) {
-        items.push({
-          key: 'admin',
-          icon: <SettingOutlined />,
-          label: 'Administration',
-          children: [
-            {
-              key: '/admin/permissions/groups',
-              label: 'Permission Groups',
-              icon: <SafetyCertificateOutlined />,
-              onClick: () => navigate('/admin/permissions/groups'),
-            },
-          ],
-        });
-      }
+      items.push({
+        key: 'access-control',
+        icon: <SafetyCertificateOutlined />,
+        label: 'Access Control',
+        children: [
+          {
+            key: '/admin/roles',
+            label: 'Roles',
+            onClick: () => navigate('/admin/roles'),
+          },
+          {
+            key: '/admin/permissions/groups',
+            label: 'Permission Groups',
+            onClick: () => navigate('/admin/permissions/groups'),
+          },
+        ],
+      });
     } else if (roles.includes('employee')) {
       items.push({
-        key: '/documents-requests',
+        key: 'my-documents',
         icon: <FileTextOutlined />,
-        label: 'Documents & Requests',
-        onClick: () => navigate('/documents-requests'),
+        label: 'My Documents',
+        children: [
+          {
+            key: '/documents/me',
+            label: 'View Documents',
+            onClick: () => navigate('/documents/me'),
+          },
+          {
+            key: '/documents/upload',
+            label: 'Upload Document',
+            onClick: () => navigate('/documents/upload'),
+          },
+        ],
+      });
+
+      items.push({
+        key: 'my-requests',
+        icon: <FileTextOutlined />,
+        label: 'Document Requests',
+        children: [
+          {
+            key: '/document-requests/me',
+            label: 'Incoming Requests',
+            onClick: () => navigate('/document-requests/me'),
+          },
+          {
+            key: '/document-requests/my',
+            label: 'My Requests',
+            onClick: () => navigate('/document-requests/my'),
+          },
+        ],
       });
     }
 
@@ -148,7 +216,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   const selectedKeys = [location.pathname];
-  const openKeys = location.pathname.startsWith('/admin') ? ['organization', 'admin'] : [];
+
+  // Determine which submenu to keep open based on current path
+  const getOpenKeys = () => {
+    if (location.pathname.startsWith('/admin/employees')) return ['employees'];
+    if (location.pathname.startsWith('/admin/structure')) return ['structure'];
+    if (location.pathname.startsWith('/admin/roles') || location.pathname.startsWith('/admin/permissions')) return ['access-control'];
+    if (location.pathname.startsWith('/documents')) return ['documents', 'my-documents'];
+    if (location.pathname.startsWith('/document-requests')) return ['documents', 'my-requests'];
+    return [];
+  };
+
+  const openKeys = getOpenKeys();
 
   return (
     <Layout className="min-h-screen">
@@ -174,7 +253,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
           <Space style={{ cursor: 'pointer' }}>
             <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#15195c' }} />
-            {screens.sm && <Text style={{ color: '#fff' }}>{user?.email?.split('@')[0]}</Text>}
+            {screens.sm && (
+              <Text
+                style={{
+                  color: '#fff',
+                  maxWidth: '150px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {user?.email?.split('@')[0]}
+              </Text>
+            )}
           </Space>
         </Dropdown>
       </Header>

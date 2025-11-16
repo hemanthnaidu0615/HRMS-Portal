@@ -66,6 +66,55 @@ public class OrganizationStructureController {
         return ResponseEntity.ok(new DepartmentResponse(saved.getId(), saved.getName()));
     }
 
+    @PutMapping("/departments/{departmentId}")
+    public ResponseEntity<DepartmentResponse> updateDepartment(@PathVariable Long departmentId,
+                                                               @Valid @RequestBody DepartmentRequest request,
+                                                               Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new RuntimeException("Department not found"));
+
+        // Ensure department belongs to the user's organization
+        if (!department.getOrganization().getId().equals(organization.getId())) {
+            throw new RuntimeException("Department does not belong to your organization");
+        }
+
+        department.setName(request.getName());
+        Department saved = departmentRepository.save(department);
+
+        return ResponseEntity.ok(new DepartmentResponse(saved.getId(), saved.getName()));
+    }
+
+    @DeleteMapping("/departments/{departmentId}")
+    public ResponseEntity<Void> deleteDepartment(@PathVariable Long departmentId,
+                                                  Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new RuntimeException("Department not found"));
+
+        // Ensure department belongs to the user's organization
+        if (!department.getOrganization().getId().equals(organization.getId())) {
+            throw new RuntimeException("Department does not belong to your organization");
+        }
+
+        departmentRepository.delete(department);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/positions")
     public ResponseEntity<List<PositionResponse>> getPositions(Authentication authentication) {
         User currentUser = userService.findByEmail(authentication.getName())
@@ -99,5 +148,55 @@ public class OrganizationStructureController {
         Position saved = positionRepository.save(position);
 
         return ResponseEntity.ok(new PositionResponse(saved.getId(), saved.getName(), saved.getSeniorityLevel()));
+    }
+
+    @PutMapping("/positions/{positionId}")
+    public ResponseEntity<PositionResponse> updatePosition(@PathVariable Long positionId,
+                                                           @Valid @RequestBody PositionRequest request,
+                                                           Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        Position position = positionRepository.findById(positionId)
+                .orElseThrow(() -> new RuntimeException("Position not found"));
+
+        // Ensure position belongs to the user's organization
+        if (!position.getOrganization().getId().equals(organization.getId())) {
+            throw new RuntimeException("Position does not belong to your organization");
+        }
+
+        position.setName(request.getName());
+        position.setSeniorityLevel(request.getSeniorityLevel());
+        Position saved = positionRepository.save(position);
+
+        return ResponseEntity.ok(new PositionResponse(saved.getId(), saved.getName(), saved.getSeniorityLevel()));
+    }
+
+    @DeleteMapping("/positions/{positionId}")
+    public ResponseEntity<Void> deletePosition(@PathVariable Long positionId,
+                                                Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new RuntimeException("User has no organization");
+        }
+
+        Position position = positionRepository.findById(positionId)
+                .orElseThrow(() -> new RuntimeException("Position not found"));
+
+        // Ensure position belongs to the user's organization
+        if (!position.getOrganization().getId().equals(organization.getId())) {
+            throw new RuntimeException("Position does not belong to your organization");
+        }
+
+        positionRepository.delete(position);
+        return ResponseEntity.noContent().build();
     }
 }

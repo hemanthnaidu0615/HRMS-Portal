@@ -8,10 +8,13 @@ import com.hrms.entity.Employee;
 import com.hrms.entity.User;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.service.DocumentRequestService;
+import com.hrms.service.EmailService;
 import com.hrms.service.EmployeeService;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,22 +29,27 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/document-requests")
 public class DocumentRequestController {
 
+    private static final Logger logger = LoggerFactory.getLogger(DocumentRequestController.class);
+
     private final DocumentRequestService documentRequestService;
     private final UserService userService;
     private final EmployeeRepository employeeRepository;
     private final EmployeeService employeeService;
     private final PermissionService permissionService;
+    private final EmailService emailService;
 
     public DocumentRequestController(DocumentRequestService documentRequestService,
                                     UserService userService,
                                     EmployeeRepository employeeRepository,
                                     EmployeeService employeeService,
-                                    PermissionService permissionService) {
+                                    PermissionService permissionService,
+                                    EmailService emailService) {
         this.documentRequestService = documentRequestService;
         this.userService = userService;
         this.employeeRepository = employeeRepository;
         this.employeeService = employeeService;
         this.permissionService = permissionService;
+        this.emailService = emailService;
     }
 
     @PostMapping
@@ -67,6 +75,22 @@ public class DocumentRequestController {
 
         DocumentRequest docRequest = documentRequestService.createRequest(user, targetEmployee, request.getMessage());
         DocumentRequestResponse response = toDocumentRequestResponse(docRequest);
+
+        // Send email notification to target employee
+        try {
+            String requesterName = user.getEmail().split("@")[0]; // Extract name from email
+            String targetEmail = targetEmployee.getUser().getEmail();
+            emailService.sendDocumentRequestEmail(
+                targetEmail,
+                requesterName,
+                "Document",
+                request.getMessage(),
+                docRequest.getId().toString()
+            );
+        } catch (Exception e) {
+            logger.error("Failed to send document request email to {}: {}", targetEmployee.getUser().getEmail(), e.getMessage(), e);
+            // Don't fail the request - just log the error
+        }
 
         return ResponseEntity.ok(response);
     }

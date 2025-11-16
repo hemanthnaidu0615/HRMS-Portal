@@ -10,7 +10,8 @@
 CREATE TABLE organizations (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     name VARCHAR(255) NOT NULL,
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME()
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    deleted_at DATETIME2 NULL
 );
 
 CREATE TABLE users (
@@ -131,6 +132,7 @@ CREATE TABLE employees (
     contract_end_date DATE NULL,                              -- for contract employees
 
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    deleted_at DATETIME2 NULL,
 
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (organization_id) REFERENCES organizations(id),
@@ -162,10 +164,16 @@ CREATE TABLE documents (
     file_name VARCHAR(255) NOT NULL,
     file_path VARCHAR(500) NOT NULL,
     file_type VARCHAR(100) NULL,
+    document_type VARCHAR(100) NULL,
+    approval_status VARCHAR(20) DEFAULT 'PENDING',
+    approved_by UNIQUEIDENTIFIER NULL,
+    approved_at DATETIME2 NULL,
+    rejection_reason VARCHAR(500) NULL,
     file_size BIGINT NULL,
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     FOREIGN KEY (employee_id) REFERENCES employees(id),
-    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+    FOREIGN KEY (uploaded_by) REFERENCES users(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id)
 );
 
 CREATE TABLE document_requests (
@@ -180,6 +188,44 @@ CREATE TABLE document_requests (
     FOREIGN KEY (requester_id) REFERENCES users(id),
     FOREIGN KEY (target_employee_id) REFERENCES employees(id),
     FOREIGN KEY (fulfilled_document_id) REFERENCES documents(id)
+);
+
+-- =====================================================
+-- EMAIL AUDIT LOGGING
+-- =====================================================
+
+CREATE TABLE email_logs (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    recipient_email VARCHAR(255) NOT NULL,
+    email_type VARCHAR(100) NOT NULL,
+    subject VARCHAR(500) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    error_message VARCHAR(MAX) NULL,
+    related_entity_id VARCHAR(255) NULL,
+    related_entity_type VARCHAR(100) NULL,
+    sent_at DATETIME2 DEFAULT SYSUTCDATETIME()
+);
+
+-- =====================================================
+-- ACTIVITY AUDIT LOGGING
+-- =====================================================
+
+CREATE TABLE audit_logs (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    action_type VARCHAR(50) NOT NULL,
+    entity_type VARCHAR(100) NULL,
+    entity_id VARCHAR(255) NULL,
+    performed_by UNIQUEIDENTIFIER NULL,
+    old_value VARCHAR(MAX) NULL,
+    new_value VARCHAR(MAX) NULL,
+    status VARCHAR(20) NOT NULL,
+    error_message VARCHAR(MAX) NULL,
+    ip_address VARCHAR(50) NULL,
+    metadata VARCHAR(MAX) NULL,
+    performed_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    organization_id UNIQUEIDENTIFIER NULL,
+    FOREIGN KEY (performed_by) REFERENCES users(id),
+    FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
 
 -- =====================================================
@@ -398,3 +444,15 @@ CREATE INDEX idx_permission_groups_name ON permission_groups(name);
 
 CREATE INDEX idx_employee_history_employee ON employee_history(employee_id);
 CREATE INDEX idx_employee_history_date ON employee_history(changed_at DESC);
+
+CREATE INDEX idx_email_logs_recipient ON email_logs(recipient_email);
+CREATE INDEX idx_email_logs_type ON email_logs(email_type);
+CREATE INDEX idx_email_logs_sent_at ON email_logs(sent_at DESC);
+CREATE INDEX idx_email_logs_related_entity ON email_logs(related_entity_id, related_entity_type);
+
+CREATE INDEX idx_audit_logs_organization ON audit_logs(organization_id);
+CREATE INDEX idx_audit_logs_performed_by ON audit_logs(performed_by);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action_type);
+CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX idx_audit_logs_performed_at ON audit_logs(performed_at DESC);
+CREATE INDEX idx_audit_logs_org_action ON audit_logs(organization_id, action_type);

@@ -59,6 +59,9 @@ public class Employee {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     public Employee() {
         this.createdAt = LocalDateTime.now();
     }
@@ -164,6 +167,18 @@ public class Employee {
 
     public void setPermissionGroups(Set<PermissionGroup> permissionGroups) {
         this.permissionGroups = permissionGroups;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 
     public String getClientId() {

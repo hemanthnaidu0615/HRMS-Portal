@@ -96,4 +96,16 @@ public class FileStorageService {
             throw new RuntimeException("Azure Blob load failed", e);
         }
     }
+
+    public void delete(String storedPath) {
+        try {
+            BlobContainerClient container = getContainer();
+            BlobClient blobClient = container.getBlobClient(storedPath);
+
+            blobClient.deleteIfExists();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Azure Blob delete failed", e);
+        }
+    }
 }

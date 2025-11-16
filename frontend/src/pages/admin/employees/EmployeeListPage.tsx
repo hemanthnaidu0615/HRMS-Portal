@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag } from 'antd';
-import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input } from 'antd';
+import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { getEmployees, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
 
 const { Title } = Typography;
@@ -9,8 +9,10 @@ const { Title } = Typography;
 export const EmployeeListPage = () => {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<EmployeeSummaryResponse[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<EmployeeSummaryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     loadEmployees();
@@ -19,14 +21,28 @@ export const EmployeeListPage = () => {
   const loadEmployees = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await getEmployees();
       setEmployees(data);
-      setError('');
+      setFilteredEmployees(data);
     } catch (err: any) {
-      setError('Failed to load employees');
+      setError(err.response?.data?.message || 'Failed to load employees. Please try again.');
+      console.error('Error loading employees:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+    const lowercasedValue = value.toLowerCase();
+    const filtered = employees.filter(emp =>
+      emp.email.toLowerCase().includes(lowercasedValue) ||
+      emp.departmentName?.toLowerCase().includes(lowercasedValue) ||
+      emp.positionName?.toLowerCase().includes(lowercasedValue) ||
+      emp.employmentType?.toLowerCase().includes(lowercasedValue)
+    );
+    setFilteredEmployees(filtered);
   };
 
   const employmentTypeColors: Record<string, string> = {
@@ -130,12 +146,41 @@ export const EmployeeListPage = () => {
         }}
       >
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <Title level={3} style={{ margin: 0 }}>Employees</Title>
+            <Space>
+              <Input
+                placeholder="Search employees..."
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={(e) => handleSearch(e.target.value)}
+                style={{ width: 250, borderRadius: 6 }}
+                allowClear
+              />
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate('/admin/employees/create')}
+                style={{
+                  background: '#0a0d54',
+                  borderColor: '#0a0d54',
+                  borderRadius: 6
+                }}
+              >
+                Add Employee
+              </Button>
+            </Space>
           </div>
 
           {error && (
-            <Alert message={error} type="error" showIcon closable />
+            <Alert
+              message="Error Loading Employees"
+              description={error}
+              type="error"
+              showIcon
+              closable
+              onClose={() => setError('')}
+            />
           )}
 
           {loading ? (
@@ -143,13 +188,17 @@ export const EmployeeListPage = () => {
           ) : (
             <Table
               columns={columns}
-              dataSource={employees}
+              dataSource={filteredEmployees}
               rowKey="employeeId"
-              locale={{ emptyText: 'No employees found' }}
+              locale={{
+                emptyText: searchText
+                  ? `No employees match "${searchText}"`
+                  : 'No employees found. Click "Add Employee" to create one.'
+              }}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,
-                showTotal: (total) => `Total ${total} employees`,
+                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} employees`,
               }}
             />
           )}

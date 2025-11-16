@@ -23,10 +23,10 @@ export const CreateEmployeePage = () => {
       await orgadminApi.createEmployee({ email, temporaryPassword });
       setSuccess(true);
       setTimeout(() => {
-        navigate('/orgadmin/employees');
+        navigate('/admin/employees');
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create employee');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to create employee. Please check the email and try again.');
     } finally {
       setLoading(false);
     }
@@ -54,7 +54,14 @@ export const CreateEmployeePage = () => {
             ) : (
               <>
                 {error && (
-                  <Alert message={error} type="error" showIcon closable />
+                  <Alert
+                    message="Error Creating Employee"
+                    description={error}
+                    type="error"
+                    showIcon
+                    closable
+                    onClose={() => setError('')}
+                  />
                 )}
 
                 <form onSubmit={handleSubmit}>
