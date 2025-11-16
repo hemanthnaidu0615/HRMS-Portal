@@ -108,10 +108,12 @@ CREATE TABLE document_requests (
     target_employee_id UNIQUEIDENTIFIER NOT NULL,
     message VARCHAR(1000) NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'REQUESTED',
+    fulfilled_document_id UNIQUEIDENTIFIER NULL,
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     completed_at DATETIME2 NULL,
     FOREIGN KEY (requester_id) REFERENCES users(id),
-    FOREIGN KEY (target_employee_id) REFERENCES employees(id)
+    FOREIGN KEY (target_employee_id) REFERENCES employees(id),
+    FOREIGN KEY (fulfilled_document_id) REFERENCES documents(id)
 );
 
 CREATE TABLE permissions (

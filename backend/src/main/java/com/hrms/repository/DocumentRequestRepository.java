@@ -12,4 +12,6 @@ public interface DocumentRequestRepository extends JpaRepository<DocumentRequest
     List<DocumentRequest> findByTargetEmployeeId(UUID employeeId);
     List<DocumentRequest> findByRequesterId(UUID requesterId);
     List<DocumentRequest> findByTargetEmployeeOrganizationId(UUID organizationId);
+    // Spring Data derived query must traverse associations using _ and property names
+    List<DocumentRequest> findByFulfilledDocument_IdAndRequester_Id(UUID fulfilledDocumentId, UUID requesterUserId);
 }

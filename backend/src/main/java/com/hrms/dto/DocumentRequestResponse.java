@@ -11,11 +11,14 @@ public class DocumentRequestResponse {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
+    private UUID fulfilledDocumentId;
 
     public DocumentRequestResponse() {
     }
 
-    public DocumentRequestResponse(UUID id, UUID requesterUserId, UUID targetEmployeeId, String message, String status, LocalDateTime createdAt, LocalDateTime completedAt) {
+    public DocumentRequestResponse(UUID id, UUID requesterUserId, UUID targetEmployeeId, String message,
+                                   String status, LocalDateTime createdAt, LocalDateTime completedAt,
+                                   UUID fulfilledDocumentId) {
         this.id = id;
         this.requesterUserId = requesterUserId;
         this.targetEmployeeId = targetEmployeeId;
@@ -23,6 +26,7 @@ public class DocumentRequestResponse {
         this.status = status;
         this.createdAt = createdAt;
         this.completedAt = completedAt;
+        this.fulfilledDocumentId = fulfilledDocumentId;
     }
 
     public UUID getId() {
@@ -79,5 +83,13 @@ public class DocumentRequestResponse {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public UUID getFulfilledDocumentId() {
+        return fulfilledDocumentId;
+    }
+
+    public void setFulfilledDocumentId(UUID fulfilledDocumentId) {
+        this.fulfilledDocumentId = fulfilledDocumentId;
     }
 }
