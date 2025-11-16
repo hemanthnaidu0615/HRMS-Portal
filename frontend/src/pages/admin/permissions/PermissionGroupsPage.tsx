@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import { Tag } from 'primereact/tag';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Table, Alert, Row, Col, Button, Tag } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 import { getPermissionGroups, PermissionGroupResponse } from '../../../api/permissionsApi';
 
 export const PermissionGroupsPage = () => {
@@ -31,49 +28,85 @@ export const PermissionGroupsPage = () => {
     }
   };
 
-  const nameTemplate = (rowData: PermissionGroupResponse) => {
-    return <Tag value={rowData.name} severity="info" />;
-  };
-
-  const permissionCountTemplate = (rowData: PermissionGroupResponse) => {
-    return <Tag value={`${rowData.permissions.length} permissions`} severity="success" />;
-  };
-
-  const actionsTemplate = (rowData: PermissionGroupResponse) => {
-    return (
-      <Button
-        label="View"
-        icon="pi pi-eye"
-        size="small"
-        onClick={() => navigate(`/admin/permissions/groups/${rowData.id}`)}
-      />
-    );
-  };
+  const columns: ColumnsType<PermissionGroupResponse> = [
+    {
+      title: 'Group Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name: string) => <Tag color="#1890ff">{name}</Tag>,
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      render: (description: string) => description || '—',
+    },
+    {
+      title: 'Permission Count',
+      dataIndex: 'permissions',
+      key: 'permissions',
+      render: (permissions: any[]) => (
+        <Tag color="#52c41a">{permissions.length} permissions</Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => navigate(`/admin/permissions/groups/${record.id}`)}
+          style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+        >
+          View
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="max-w-5xl mx-auto p-4 space-y-4">
-      <Card>
-        <h2 className="text-xl font-semibold mb-4">Permission Groups</h2>
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-        {loading ? (
-          <Skeleton height="300px" />
-        ) : (
-          <DataTable
-            value={groups}
-            emptyMessage="No permission groups found"
-            className="p-datatable-sm"
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row justify="center">
+        <Col xs={24} xl={20}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
           >
-            <Column field="name" header="Group Name" body={nameTemplate} />
-            <Column field="description" header="Description" />
-            <Column header="Permission Count" body={permissionCountTemplate} />
-            <Column header="Actions" body={actionsTemplate} />
-          </DataTable>
-        )}
-      </Card>
+            <h2 className="text-xl font-semibold mb-6" style={{ color: '#0a0d54' }}>
+              Permission Groups
+            </h2>
+
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError('')}
+                className="mb-4"
+              />
+            )}
+
+            <Table
+              columns={columns}
+              dataSource={groups}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} permission groups`,
+              }}
+              locale={{ emptyText: 'No permission groups found' }}
+            />
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

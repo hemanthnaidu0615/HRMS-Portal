@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Card } from 'primereact/card';
-import { Tree, TreeNode } from 'primereact/tree';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Tree, Spin, Alert, Row, Col, Descriptions } from 'antd';
+import type { DataNode } from 'antd/es/tree';
 import { getEmployeeTree, EmployeeTreeNodeResponse } from '../../../api/employeeManagementApi';
 
 export const EmployeeTreePage = () => {
-  const [treeData, setTreeData] = useState<TreeNode[]>([]);
+  const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedNode, setSelectedNode] = useState<EmployeeTreeNodeResponse | null>(null);
@@ -28,73 +27,103 @@ export const EmployeeTreePage = () => {
     }
   };
 
-  const toTreeNode = (node: EmployeeTreeNodeResponse): TreeNode => {
-    const label = (
-      <div>
-        <div className="font-semibold">{node.email}</div>
-        <div className="text-xs text-gray-500">
-          {node.positionName && <span className="mr-2">{node.positionName}</span>}
-          {node.departmentName && <span>{node.departmentName}</span>}
-        </div>
-      </div>
-    );
-
+  const toTreeNode = (node: EmployeeTreeNodeResponse): DataNode & { nodeData?: EmployeeTreeNodeResponse } => {
     return {
       key: node.employeeId,
-      label,
-      data: node,
-      children: (node.reports || []).map(toTreeNode)
+      title: (
+        <div>
+          <div className="font-semibold">{node.email}</div>
+          {(node.positionName || node.departmentName) && (
+            <div className="text-xs text-gray-500">
+              {node.positionName && <span className="mr-2">{node.positionName}</span>}
+              {node.departmentName && <span>{node.departmentName}</span>}
+            </div>
+          )}
+        </div>
+      ),
+      children: (node.reports || []).map(toTreeNode),
+      nodeData: node,
     };
   };
 
-  const handleNodeSelect = (e: any) => {
-    if (e.node && e.node.data) {
-      setSelectedNode(e.node.data);
+  const handleSelect = (_: React.Key[], info: any) => {
+    if (info.node && info.node.nodeData) {
+      setSelectedNode(info.node.nodeData);
     }
   };
 
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Employee Reporting Tree</h2>
-    </div>
-  );
-
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Card header={header}>
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-        {loading ? (
-          <Skeleton height="400px" />
-        ) : (
-          <div className="space-y-4">
-            <Tree
-              value={treeData}
-              selectionMode="single"
-              onSelect={handleNodeSelect}
-              className="w-full"
-            />
-            {selectedNode && (
-              <Card title="Selected Employee" className="mt-4">
-                <div className="space-y-2">
-                  <div>
-                    <span className="font-semibold">Email:</span> {selectedNode.email}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Position:</span> {selectedNode.positionName || '—'}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Department:</span> {selectedNode.departmentName || '—'}
-                  </div>
-                </div>
-              </Card>
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row gutter={[16, 16]}>
+        <Col span={24}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <h2 className="text-2xl font-bold mb-6" style={{ color: '#0a0d54' }}>
+              Employee Reporting Tree
+            </h2>
+
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError('')}
+                className="mb-4"
+              />
             )}
-          </div>
-        )}
-      </Card>
+
+            {loading ? (
+              <div className="text-center py-12">
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Row gutter={[24, 24]}>
+                <Col xs={24} lg={14}>
+                  <Tree
+                    treeData={treeData}
+                    onSelect={handleSelect}
+                    defaultExpandAll
+                    showLine
+                    style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e0e0e0' }}
+                  />
+                </Col>
+                {selectedNode && (
+                  <Col xs={24} lg={10}>
+                    <Card
+                      title="Selected Employee"
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0',
+                      }}
+                    >
+                      <Descriptions column={1} bordered size="small">
+                        <Descriptions.Item label="Email">
+                          <strong>{selectedNode.email}</strong>
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Position">
+                          {selectedNode.positionName || '—'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Department">
+                          {selectedNode.departmentName || '—'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Reports">
+                          {selectedNode.reports?.length || 0} direct report(s)
+                        </Descriptions.Item>
+                      </Descriptions>
+                    </Card>
+                  </Col>
+                )}
+              </Row>
+            )}
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

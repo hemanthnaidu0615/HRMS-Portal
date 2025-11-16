@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Table, Alert, Row, Col, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 import { getDepartments, DepartmentResponse } from '../../../api/structureApi';
 
 export const DepartmentsPage = () => {
@@ -30,37 +28,67 @@ export const DepartmentsPage = () => {
     }
   };
 
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Departments</h2>
-      <Button
-        label="Create Department"
-        icon="pi pi-plus"
-        onClick={() => navigate('/admin/structure/departments/new')}
-      />
-    </div>
-  );
+  const columns: ColumnsType<DepartmentResponse> = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Card header={header}>
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-        {loading ? (
-          <Skeleton height="200px" />
-        ) : (
-          <DataTable
-            value={departments}
-            emptyMessage="No departments found"
-            className="p-datatable-sm"
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row gutter={[16, 16]}>
+        <Col span={24}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
           >
-            <Column field="name" header="Name" sortable />
-          </DataTable>
-        )}
-      </Card>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: '#0a0d54', margin: 0 }}>
+                Departments
+              </h2>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="large"
+                onClick={() => navigate('/admin/structure/departments/new')}
+                style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+              >
+                Create Department
+              </Button>
+            </div>
+
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError('')}
+                className="mb-4"
+              />
+            )}
+
+            <Table
+              columns={columns}
+              dataSource={departments}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} departments`,
+              }}
+              locale={{ emptyText: 'No departments found' }}
+            />
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

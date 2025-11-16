@@ -1,21 +1,26 @@
 import http from './http';
 
 export async function createDocumentRequest(targetEmployeeId: string, message: string) {
-  return http.post('/api/document-requests', { targetEmployeeId, message });
+  const res = await http.post('/api/document-requests', { targetEmployeeId, message });
+  return res.data;
 }
 
 export async function getMyDocumentRequestsAsTarget() {
-  return http.get('/api/document-requests/me');
+  const res = await http.get('/api/document-requests/me');
+  return res.data;
 }
 
 export async function getMyDocumentRequestsAsRequester() {
-  return http.get('/api/document-requests/my-requests');
+  const res = await http.get('/api/document-requests/my-requests');
+  return res.data;
 }
 
 export async function getOrgDocumentRequests() {
-  return http.get('/api/document-requests/org');
+  const res = await http.get('/api/document-requests/org');
+  return res.data;
 }
 
 export async function updateDocumentRequestStatus(requestId: string, status: string) {
-  return http.patch(`/api/document-requests/${requestId}/status`, { status });
+  const res = await http.patch(`/api/document-requests/${requestId}/status`, { status });
+  return res.data;
 }

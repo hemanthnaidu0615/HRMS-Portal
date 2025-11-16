@@ -1,22 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
+import { Form, Input, Button, Card, Alert, Row, Col } from 'antd';
 import { superadminApi } from '../../api/superadminApi';
 
 export const CreateOrganizationPage = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: any) => {
     setError('');
     setLoading(true);
 
     try {
-      await superadminApi.createOrganization({ name });
+      await superadminApi.createOrganization({ name: values.name });
       navigate('/superadmin/organizations');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create organization');
@@ -26,47 +24,71 @@ export const CreateOrganizationPage = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Create Organization</h1>
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row justify="center">
+        <Col xs={24} sm={20} md={16} lg={12} xl={10}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <h1 className="text-3xl font-bold mb-6" style={{ color: '#0a0d54' }}>
+              Create Organization
+            </h1>
 
-        {error && (
-          <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError('')}
+                className="mb-4"
+              />
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-2">
-              Organization Name
-            </label>
-            <InputText
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter organization name"
-              className="w-full"
-              required
-            />
-          </div>
+            <Form
+              form={form}
+              onFinish={handleSubmit}
+              layout="vertical"
+              autoComplete="off"
+            >
+              <Form.Item
+                label="Organization Name"
+                name="name"
+                rules={[{ required: true, message: 'Please input organization name!' }]}
+              >
+                <Input
+                  placeholder="Enter organization name"
+                  size="large"
+                />
+              </Form.Item>
 
-          <div className="flex gap-2">
-            <Button
-              type="submit"
-              label="Create"
-              loading={loading}
-              disabled={loading}
-            />
-            <Button
-              type="button"
-              label="Cancel"
-              severity="secondary"
-              onClick={() => navigate('/superadmin/organizations')}
-            />
-          </div>
-        </form>
-      </div>
+              <Form.Item>
+                <div className="flex gap-2">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    size="large"
+                    style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+                  >
+                    Create
+                  </Button>
+                  <Button
+                    size="large"
+                    onClick={() => navigate('/superadmin/organizations')}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </Form.Item>
+            </Form>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

@@ -1,19 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
-import { InputText } from 'primereact/inputtext';
-import { Calendar } from 'primereact/calendar';
-import { Toast } from 'primereact/toast';
-import { Skeleton } from 'primereact/skeleton';
+import { Card, Button, Spin, Alert, Row, Col, Form, Select, Input, DatePicker, Space, Divider } from 'antd';
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { message } from 'antd';
+import dayjs from 'dayjs';
 import { getEmployeeDetails, updateEmployeeAssignment, getEmployees, EmployeeDetailResponse, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
 import { getDepartments, getPositions, DepartmentResponse, PositionResponse } from '../../../api/structureApi';
 
 export const EmployeeAssignmentPage = () => {
   const { employeeId } = useParams<{ employeeId: string }>();
   const navigate = useNavigate();
-  const toast = useRef<Toast>(null);
+  const [form] = Form.useForm();
 
   const [employee, setEmployee] = useState<EmployeeDetailResponse | null>(null);
   const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
@@ -22,14 +19,6 @@ export const EmployeeAssignmentPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  const [departmentId, setDepartmentId] = useState<string | null>(null);
-  const [positionId, setPositionId] = useState<string | null>(null);
-  const [reportsToEmployeeId, setReportsToEmployeeId] = useState<string | null>(null);
-  const [employmentType, setEmploymentType] = useState<string | null>(null);
-  const [clientId, setClientId] = useState<string>('');
-  const [projectId, setProjectId] = useState<string>('');
-  const [contractEndDate, setContractEndDate] = useState<Date | null>(null);
 
   const employmentTypeOptions = [
     { label: 'Internal', value: 'internal' },
@@ -59,13 +48,15 @@ export const EmployeeAssignmentPage = () => {
       setPositions(posData);
       setEmployees(empListData.filter(e => e.employeeId !== employeeId));
 
-      setDepartmentId(empData.departmentId);
-      setPositionId(empData.positionId);
-      setReportsToEmployeeId(empData.reportsToEmployeeId);
-      setEmploymentType(empData.employmentType);
-      setClientId(empData.clientId || '');
-      setProjectId(empData.projectId || '');
-      setContractEndDate(empData.contractEndDate ? new Date(empData.contractEndDate) : null);
+      form.setFieldsValue({
+        departmentId: empData.departmentId,
+        positionId: empData.positionId,
+        reportsToEmployeeId: empData.reportsToEmployeeId,
+        employmentType: empData.employmentType,
+        clientId: empData.clientId || '',
+        projectId: empData.projectId || '',
+        contractEndDate: empData.contractEndDate ? dayjs(empData.contractEndDate) : null,
+      });
 
       setError('');
     } catch (err: any) {
@@ -75,48 +66,35 @@ export const EmployeeAssignmentPage = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (values: any) => {
     try {
       setSaving(true);
       await updateEmployeeAssignment(employeeId!, {
-        departmentId: departmentId || null,
-        positionId: positionId || null,
-        reportsToEmployeeId: reportsToEmployeeId || null,
-        employmentType: employmentType || null,
-        clientId: clientId || null,
-        projectId: projectId || null,
-        contractEndDate: contractEndDate ? contractEndDate.toISOString().split('T')[0] : null
+        departmentId: values.departmentId || null,
+        positionId: values.positionId || null,
+        reportsToEmployeeId: values.reportsToEmployeeId || null,
+        employmentType: values.employmentType || null,
+        clientId: values.clientId || null,
+        projectId: values.projectId || null,
+        contractEndDate: values.contractEndDate ? values.contractEndDate.format('YYYY-MM-DD') : null
       });
 
-      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Assignment updated' });
+      message.success('Assignment updated successfully');
       setTimeout(() => navigate(`/admin/employees/${employeeId}`), 1000);
     } catch (err: any) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to update assignment' });
+      message.error('Failed to update assignment');
     } finally {
       setSaving(false);
     }
   };
 
-  const header = (
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-bold">Edit Employee Assignment</h2>
-      <Button
-        label="Back"
-        icon="pi pi-arrow-left"
-        severity="secondary"
-        onClick={() => navigate(`/admin/employees/${employeeId}`)}
-      />
-    </div>
-  );
-
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-4 space-y-4">
-        <Toast ref={toast} />
-        <Card header={header}>
-          <Skeleton height="500px" />
+      <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+        <Card className="shadow-md">
+          <div className="text-center py-12">
+            <Spin size="large" />
+          </div>
         </Card>
       </div>
     );
@@ -124,151 +102,195 @@ export const EmployeeAssignmentPage = () => {
 
   if (error || !employee) {
     return (
-      <div className="max-w-6xl mx-auto p-4 space-y-4">
-        <Toast ref={toast} />
-        <Card header={header}>
-          <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error || 'Employee not found'}
-          </div>
+      <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+        <Card className="shadow-md">
+          <Alert
+            message={error || 'Employee not found'}
+            type="error"
+            showIcon
+            className="mb-4"
+          />
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/admin/employees')}
+          >
+            Back
+          </Button>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Toast ref={toast} />
-      <Card header={header}>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Reporting</h3>
-            <div>
-              <label htmlFor="reportsTo" className="block text-sm font-medium mb-2">
-                Reports To
-              </label>
-              <Dropdown
-                id="reportsTo"
-                value={reportsToEmployeeId}
-                onChange={(e) => setReportsToEmployeeId(e.value)}
-                options={employees}
-                optionLabel={(emp) => `${emp.email} ${emp.positionName ? `(${emp.positionName})` : ''}`}
-                optionValue="employeeId"
-                placeholder="Select manager"
-                className="w-full"
-                showClear
-              />
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row justify="center">
+        <Col xs={24} lg={20} xl={16}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: '#0a0d54', margin: 0 }}>
+                Edit Employee Assignment
+              </h2>
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate(`/admin/employees/${employeeId}`)}
+              >
+                Back
+              </Button>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Structure</h3>
-            <div>
-              <label htmlFor="department" className="block text-sm font-medium mb-2">
-                Department
-              </label>
-              <Dropdown
-                id="department"
-                value={departmentId}
-                onChange={(e) => setDepartmentId(e.value)}
-                options={departments}
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Select department"
-                className="w-full"
-                showClear
-              />
-            </div>
-            <div>
-              <label htmlFor="position" className="block text-sm font-medium mb-2">
-                Position
-              </label>
-              <Dropdown
-                id="position"
-                value={positionId}
-                onChange={(e) => setPositionId(e.value)}
-                options={positions}
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Select position"
-                className="w-full"
-                showClear
-              />
-            </div>
-          </div>
+            <Form
+              form={form}
+              onFinish={handleSubmit}
+              layout="vertical"
+              autoComplete="off"
+            >
+              <Divider orientation="left" style={{ color: '#0a0d54', fontWeight: 'bold' }}>
+                Reporting
+              </Divider>
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Employment</h3>
-            <div>
-              <label htmlFor="employmentType" className="block text-sm font-medium mb-2">
-                Employment Type
-              </label>
-              <Dropdown
-                id="employmentType"
-                value={employmentType}
-                onChange={(e) => setEmploymentType(e.value)}
-                options={employmentTypeOptions}
-                placeholder="Select employment type"
-                className="w-full"
-                showClear
-              />
-            </div>
-            <div>
-              <label htmlFor="clientId" className="block text-sm font-medium mb-2">
-                Client ID
-              </label>
-              <InputText
-                id="clientId"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                className="w-full"
-                placeholder="Enter client ID"
-              />
-            </div>
-            <div>
-              <label htmlFor="projectId" className="block text-sm font-medium mb-2">
-                Project ID
-              </label>
-              <InputText
-                id="projectId"
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className="w-full"
-                placeholder="Enter project ID"
-              />
-            </div>
-            <div>
-              <label htmlFor="contractEndDate" className="block text-sm font-medium mb-2">
-                Contract End Date
-              </label>
-              <Calendar
-                id="contractEndDate"
-                value={contractEndDate}
-                onChange={(e) => setContractEndDate(e.value as Date)}
-                className="w-full"
-                placeholder="Select date"
-                showIcon
-                dateFormat="yy-mm-dd"
-              />
-            </div>
-          </div>
+              <Form.Item
+                label="Reports To"
+                name="reportsToEmployeeId"
+              >
+                <Select
+                  placeholder="Select manager"
+                  size="large"
+                  allowClear
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={employees.map(emp => ({
+                    label: `${emp.email}${emp.positionName ? ` (${emp.positionName})` : ''}`,
+                    value: emp.employeeId,
+                  }))}
+                />
+              </Form.Item>
 
-          <div className="flex gap-2 pt-4">
-            <Button
-              label="Save"
-              icon="pi pi-check"
-              type="submit"
-              loading={saving}
-            />
-            <Button
-              label="Cancel"
-              icon="pi pi-times"
-              severity="secondary"
-              type="button"
-              onClick={() => navigate(`/admin/employees/${employeeId}`)}
-            />
-          </div>
-        </form>
-      </Card>
+              <Divider orientation="left" style={{ color: '#0a0d54', fontWeight: 'bold' }}>
+                Structure
+              </Divider>
+
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    label="Department"
+                    name="departmentId"
+                  >
+                    <Select
+                      placeholder="Select department"
+                      size="large"
+                      allowClear
+                      options={departments.map(dept => ({
+                        label: dept.name,
+                        value: dept.id,
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    label="Position"
+                    name="positionId"
+                  >
+                    <Select
+                      placeholder="Select position"
+                      size="large"
+                      allowClear
+                      options={positions.map(pos => ({
+                        label: pos.name,
+                        value: pos.id,
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Divider orientation="left" style={{ color: '#0a0d54', fontWeight: 'bold' }}>
+                Employment
+              </Divider>
+
+              <Form.Item
+                label="Employment Type"
+                name="employmentType"
+              >
+                <Select
+                  placeholder="Select employment type"
+                  size="large"
+                  allowClear
+                  options={employmentTypeOptions}
+                />
+              </Form.Item>
+
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    label="Client ID"
+                    name="clientId"
+                  >
+                    <Input
+                      placeholder="Enter client ID"
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    label="Project ID"
+                    name="projectId"
+                  >
+                    <Input
+                      placeholder="Enter project ID"
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item
+                label="Contract End Date"
+                name="contractEndDate"
+              >
+                <DatePicker
+                  placeholder="Select date"
+                  size="large"
+                  format="YYYY-MM-DD"
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+
+              <Form.Item className="mt-6">
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<CheckOutlined />}
+                    loading={saving}
+                    size="large"
+                    style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    icon={<CloseOutlined />}
+                    onClick={() => navigate(`/admin/employees/${employeeId}`)}
+                    size="large"
+                  >
+                    Cancel
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

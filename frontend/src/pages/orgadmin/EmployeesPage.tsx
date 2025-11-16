@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Button, Table, Alert, Row, Col, Card } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 import { orgadminApi, Employee } from '../../api/orgadminApi';
 
 export const EmployeesPage = () => {
@@ -27,31 +27,67 @@ export const EmployeesPage = () => {
     }
   };
 
+  const columns: ColumnsType<Employee> = [
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      sorter: (a, b) => a.email.localeCompare(b.email),
+    },
+  ];
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Employees</h1>
-        <Button
-          label="Create Employee"
-          icon="pi pi-plus"
-          onClick={() => navigate('/orgadmin/create-employee')}
-        />
-      </div>
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row gutter={[16, 16]}>
+        <Col span={24}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold" style={{ color: '#0a0d54', margin: 0 }}>
+                Employees
+              </h1>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="large"
+                onClick={() => navigate('/orgadmin/create-employee')}
+                style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+              >
+                Create Employee
+              </Button>
+            </div>
 
-      {error && (
-        <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError('')}
+                className="mb-4"
+              />
+            )}
 
-      <DataTable
-        value={employees}
-        loading={loading}
-        emptyMessage="No employees found"
-        className="p-datatable-sm"
-      >
-        <Column field="email" header="Email" sortable />
-      </DataTable>
+            <Table
+              columns={columns}
+              dataSource={employees}
+              rowKey="email"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} employees`,
+              }}
+              locale={{ emptyText: 'No employees found' }}
+            />
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

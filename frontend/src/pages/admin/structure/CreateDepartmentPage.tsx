@@ -1,72 +1,86 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
-import { Toast } from 'primereact/toast';
-import { useRef } from 'react';
+import { Card, Form, Input, Button, Row, Col, Space } from 'antd';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { message } from 'antd';
 import { createDepartment } from '../../../api/structureApi';
 
 export const CreateDepartmentPage = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const toast = useRef<Toast>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!name.trim()) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Name is required' });
-      return;
-    }
-
+  const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-      await createDepartment(name);
-      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Department created' });
+      await createDepartment(values.name);
+      message.success('Department created successfully');
       setTimeout(() => navigate('/admin/structure/departments'), 1000);
     } catch (err: any) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to create department' });
+      message.error('Failed to create department');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Toast ref={toast} />
-      <Card title="Create Department">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-2">
-              Department Name
-            </label>
-            <InputText
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full"
-              placeholder="Enter department name"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              label="Save"
-              icon="pi pi-check"
-              type="submit"
-              loading={loading}
-            />
-            <Button
-              label="Cancel"
-              icon="pi pi-times"
-              severity="secondary"
-              type="button"
-              onClick={() => navigate('/admin/structure/departments')}
-            />
-          </div>
-        </form>
-      </Card>
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row justify="center">
+        <Col xs={24} sm={20} md={16} lg={12} xl={10}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+            title={
+              <h2 className="text-xl font-bold" style={{ color: '#0a0d54', margin: 0 }}>
+                Create Department
+              </h2>
+            }
+          >
+            <Form
+              form={form}
+              onFinish={handleSubmit}
+              layout="vertical"
+              autoComplete="off"
+            >
+              <Form.Item
+                label="Department Name"
+                name="name"
+                rules={[{ required: true, message: 'Please input department name!' }]}
+              >
+                <Input
+                  placeholder="Enter department name"
+                  size="large"
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<CheckOutlined />}
+                    loading={loading}
+                    size="large"
+                    style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    icon={<CloseOutlined />}
+                    onClick={() => navigate('/admin/structure/departments')}
+                    size="large"
+                  >
+                    Cancel
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

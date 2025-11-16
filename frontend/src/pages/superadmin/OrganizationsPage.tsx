@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
+import { Button, Table, Alert, Row, Col, Card } from 'antd';
+import { PlusOutlined, UserAddOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 import { superadminApi, Organization } from '../../api/superadminApi';
 
 export const OrganizationsPage = () => {
@@ -27,49 +27,88 @@ export const OrganizationsPage = () => {
     }
   };
 
-  const actionBodyTemplate = (rowData: Organization) => {
-    return (
-      <Button
-        label="Add Org Admin"
-        icon="pi pi-user-plus"
-        size="small"
-        onClick={() => navigate(`/superadmin/orgadmin/${rowData.id}`)}
-      />
-    );
-  };
+  const columns: ColumnsType<Organization> = [
+    {
+      title: 'Organization Name',
+      dataIndex: 'name',
+      key: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
+      title: 'Created At',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      sorter: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (date: string) => new Date(date).toLocaleString(),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          icon={<UserAddOutlined />}
+          onClick={() => navigate(`/superadmin/orgadmin/${record.id}`)}
+          style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+        >
+          Add Org Admin
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Organizations</h1>
-        <Button
-          label="Create Organization"
-          icon="pi pi-plus"
-          onClick={() => navigate('/superadmin/create-organization')}
-        />
-      </div>
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row gutter={[16, 16]}>
+        <Col span={24}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold" style={{ color: '#0a0d54', margin: 0 }}>
+                Organizations
+              </h1>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="large"
+                onClick={() => navigate('/superadmin/create-organization')}
+                style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+              >
+                Create Organization
+              </Button>
+            </div>
 
-      {error && (
-        <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError('')}
+                className="mb-4"
+              />
+            )}
 
-      <DataTable
-        value={organizations}
-        loading={loading}
-        emptyMessage="No organizations found"
-        className="p-datatable-sm"
-      >
-        <Column field="name" header="Organization Name" sortable />
-        <Column
-          field="createdAt"
-          header="Created At"
-          sortable
-          body={(rowData) => new Date(rowData.createdAt).toLocaleString()}
-        />
-        <Column header="Actions" body={actionBodyTemplate} />
-      </DataTable>
+            <Table
+              columns={columns}
+              dataSource={organizations}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} organizations`,
+              }}
+              locale={{ emptyText: 'No organizations found' }}
+            />
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

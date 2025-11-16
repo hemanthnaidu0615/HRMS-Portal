@@ -1,31 +1,19 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Password } from 'primereact/password';
-import { Button } from 'primereact/button';
+import { Form, Input, Button, Card, Alert, Row, Col } from 'antd';
+import { LockOutlined } from '@ant-design/icons';
 import { authApi } from '../api/authApi';
 
 export const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const { token } = useParams<{ token: string }>();
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: any) => {
     setError('');
-
-    if (!newPassword || !confirmPassword) {
-      setError('Please fill in both password fields');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
 
     if (!token) {
       setError('Invalid reset token');
@@ -35,7 +23,7 @@ export const ResetPasswordPage = () => {
     setLoading(true);
 
     try {
-      await authApi.resetPassword(token, newPassword);
+      await authApi.resetPassword(token, values.newPassword);
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
@@ -48,65 +36,100 @@ export const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Reset Password</h1>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#dde4eb' }}>
+      <Row justify="center" className="w-full px-4">
+        <Col xs={24} sm={20} md={16} lg={12} xl={8}>
+          <Card
+            className="shadow-lg"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <h1 className="text-2xl font-bold text-center mb-6" style={{ color: '#0a0d54' }}>
+              Reset Password
+            </h1>
 
-        {success ? (
-          <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded text-center">
-            Password updated successfully. Please log in.
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error}
-              </div>
+            {success ? (
+              <Alert
+                message="Password updated successfully. Please log in."
+                type="success"
+                showIcon
+                className="text-center"
+              />
+            ) : (
+              <Form
+                form={form}
+                onFinish={handleSubmit}
+                layout="vertical"
+                autoComplete="off"
+              >
+                {error && (
+                  <Form.Item>
+                    <Alert message={error} type="error" showIcon closable onClose={() => setError('')} />
+                  </Form.Item>
+                )}
+
+                <Form.Item
+                  label="New Password"
+                  name="newPassword"
+                  rules={[
+                    { required: true, message: 'Please input your new password!' },
+                    { min: 6, message: 'Password must be at least 6 characters!' },
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Enter new password"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  dependencies={['newPassword']}
+                  rules={[
+                    { required: true, message: 'Please confirm your password!' },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('newPassword') === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('Passwords do not match!'));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Confirm new password"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    size="large"
+                    block
+                    style={{
+                      background: '#0a0d54',
+                      borderColor: '#0a0d54',
+                      height: '45px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Reset Password
+                  </Button>
+                </Form.Item>
+              </Form>
             )}
-
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium mb-2">
-                New Password
-              </label>
-              <Password
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full"
-                inputClassName="w-full"
-                toggleMask
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
-                Confirm Password
-              </label>
-              <Password
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                className="w-full"
-                inputClassName="w-full"
-                toggleMask
-                feedback={false}
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              label="Reset Password"
-              loading={loading}
-              className="w-full"
-              disabled={loading}
-            />
-          </form>
-        )}
-      </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

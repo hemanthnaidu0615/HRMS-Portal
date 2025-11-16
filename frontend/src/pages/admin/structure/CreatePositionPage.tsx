@@ -1,92 +1,103 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from 'primereact/card';
-import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
-import { Button } from 'primereact/button';
-import { Toast } from 'primereact/toast';
-import { useRef } from 'react';
+import { Card, Form, Input, InputNumber, Button, Row, Col, Space } from 'antd';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { message } from 'antd';
 import { createPosition } from '../../../api/structureApi';
 
 export const CreatePositionPage = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [seniorityLevel, setSeniorityLevel] = useState<number | null>(1);
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const toast = useRef<Toast>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!name.trim()) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Name is required' });
-      return;
-    }
-
-    if (!seniorityLevel || seniorityLevel < 1) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Valid seniority level is required' });
-      return;
-    }
-
+  const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-      await createPosition(name, seniorityLevel);
-      toast.current?.show({ severity: 'success', summary: 'Success', detail: 'Position created' });
+      await createPosition(values.name, values.seniorityLevel);
+      message.success('Position created successfully');
       setTimeout(() => navigate('/admin/structure/positions'), 1000);
     } catch (err: any) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to create position' });
+      message.error('Failed to create position');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 space-y-4">
-      <Toast ref={toast} />
-      <Card title="Create Position">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-2">
-              Position Name
-            </label>
-            <InputText
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full"
-              placeholder="Enter position name"
-            />
-          </div>
-          <div>
-            <label htmlFor="seniorityLevel" className="block text-sm font-medium mb-2">
-              Seniority Level
-            </label>
-            <InputNumber
-              id="seniorityLevel"
-              value={seniorityLevel}
-              onValueChange={(e) => setSeniorityLevel(e.value)}
-              className="w-full"
-              min={1}
-              placeholder="Enter seniority level"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              label="Save"
-              icon="pi pi-check"
-              type="submit"
-              loading={loading}
-            />
-            <Button
-              label="Cancel"
-              icon="pi pi-times"
-              severity="secondary"
-              type="button"
-              onClick={() => navigate('/admin/structure/positions')}
-            />
-          </div>
-        </form>
-      </Card>
+    <div className="p-6" style={{ background: '#dde4eb', minHeight: '100vh' }}>
+      <Row justify="center">
+        <Col xs={24} sm={20} md={16} lg={12} xl={10}>
+          <Card
+            className="shadow-md"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+            title={
+              <h2 className="text-xl font-bold" style={{ color: '#0a0d54', margin: 0 }}>
+                Create Position
+              </h2>
+            }
+          >
+            <Form
+              form={form}
+              onFinish={handleSubmit}
+              layout="vertical"
+              autoComplete="off"
+            >
+              <Form.Item
+                label="Position Name"
+                name="name"
+                rules={[{ required: true, message: 'Please input position name!' }]}
+              >
+                <Input
+                  placeholder="Enter position name"
+                  size="large"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Seniority Level"
+                name="seniorityLevel"
+                rules={[
+                  { required: true, message: 'Please input seniority level!' },
+                  { type: 'number', min: 1, message: 'Seniority level must be at least 1!' },
+                ]}
+                initialValue={1}
+              >
+                <InputNumber
+                  placeholder="Enter seniority level"
+                  size="large"
+                  min={1}
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<CheckOutlined />}
+                    loading={loading}
+                    size="large"
+                    style={{ background: '#0a0d54', borderColor: '#0a0d54' }}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    icon={<CloseOutlined />}
+                    onClick={() => navigate('/admin/structure/positions')}
+                    size="large"
+                  >
+                    Cancel
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

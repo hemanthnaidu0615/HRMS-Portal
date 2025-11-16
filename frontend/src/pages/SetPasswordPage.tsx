@@ -1,32 +1,28 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { InputText } from 'primereact/inputtext';
-import { Password } from 'primereact/password';
-import { Button } from 'primereact/button';
+import { Form, Input, Button, Card, Alert, Row, Col } from 'antd';
+import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { authApi } from '../api/authApi';
 
 export const SetPasswordPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const emailFromState = location.state?.email || '';
+  const [form] = Form.useForm();
 
-  const [email, setEmail] = useState(emailFromState);
-  const [temporaryPassword, setTemporaryPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleSetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSetPassword = async (values: any) => {
     setError('');
     setLoading(true);
 
     try {
       await authApi.setPassword({
-        email,
-        temporaryPassword,
-        newPassword,
+        email: values.email,
+        temporaryPassword: values.temporaryPassword,
+        newPassword: values.newPassword,
       });
 
       setSuccess(true);
@@ -41,80 +37,105 @@ export const SetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Set New Password</h1>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#dde4eb' }}>
+      <Row justify="center" className="w-full px-4">
+        <Col xs={24} sm={20} md={16} lg={12} xl={8}>
+          <Card
+            className="shadow-lg"
+            style={{
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+            }}
+          >
+            <h1 className="text-2xl font-bold text-center mb-6" style={{ color: '#0a0d54' }}>
+              Set New Password
+            </h1>
 
-        {success ? (
-          <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded text-center">
-            Password changed successfully! Redirecting to login...
-          </div>
-        ) : (
-          <form onSubmit={handleSetPassword} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error}
-              </div>
+            {success ? (
+              <Alert
+                message="Password changed successfully! Redirecting to login..."
+                type="success"
+                showIcon
+                className="text-center"
+              />
+            ) : (
+              <Form
+                form={form}
+                onFinish={handleSetPassword}
+                layout="vertical"
+                initialValues={{ email: emailFromState }}
+                autoComplete="off"
+              >
+                {error && (
+                  <Form.Item>
+                    <Alert message={error} type="error" showIcon closable onClose={() => setError('')} />
+                  </Form.Item>
+                )}
+
+                <Form.Item
+                  label="Email"
+                  name="email"
+                  rules={[
+                    { required: true, message: 'Please input your email!' },
+                    { type: 'email', message: 'Please enter a valid email!' },
+                  ]}
+                >
+                  <Input
+                    prefix={<MailOutlined />}
+                    placeholder="Enter your email"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="Temporary Password"
+                  name="temporaryPassword"
+                  rules={[{ required: true, message: 'Please input your temporary password!' }]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Enter temporary password"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="New Password"
+                  name="newPassword"
+                  rules={[
+                    { required: true, message: 'Please input your new password!' },
+                    { min: 6, message: 'Password must be at least 6 characters!' },
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Enter new password"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    size="large"
+                    block
+                    style={{
+                      background: '#0a0d54',
+                      borderColor: '#0a0d54',
+                      height: '45px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Set Password
+                  </Button>
+                </Form.Item>
+              </Form>
             )}
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email
-              </label>
-              <InputText
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="tempPassword" className="block text-sm font-medium mb-2">
-                Temporary Password
-              </label>
-              <Password
-                id="tempPassword"
-                value={temporaryPassword}
-                onChange={(e) => setTemporaryPassword(e.target.value)}
-                placeholder="Enter temporary password"
-                className="w-full"
-                inputClassName="w-full"
-                toggleMask
-                feedback={false}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium mb-2">
-                New Password
-              </label>
-              <Password
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full"
-                inputClassName="w-full"
-                toggleMask
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              label="Set Password"
-              loading={loading}
-              className="w-full"
-              disabled={loading}
-            />
-          </form>
-        )}
-      </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

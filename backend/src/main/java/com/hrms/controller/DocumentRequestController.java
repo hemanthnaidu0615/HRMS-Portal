@@ -194,6 +194,9 @@ public class DocumentRequestController {
     }
 
     private DocumentRequestResponse toDocumentRequestResponse(DocumentRequest request) {
+        UUID fulfilledDocId = request.getFulfilledDocument() != null ?
+            request.getFulfilledDocument().getId() : null;
+
         return new DocumentRequestResponse(
                 request.getId(),
                 request.getRequester().getId(),
@@ -201,7 +204,8 @@ public class DocumentRequestController {
                 request.getMessage(),
                 request.getStatus(),
                 request.getCreatedAt(),
-                request.getCompletedAt()
+                request.getCompletedAt(),
+                fulfilledDocId
         );
     }
 }

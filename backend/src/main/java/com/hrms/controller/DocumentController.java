@@ -12,6 +12,10 @@ import com.hrms.service.FileStorageService;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ContentDisposition;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -32,24 +37,32 @@ public class DocumentController {
     private final EmployeeRepository employeeRepository;
     private final EmployeeService employeeService;
     private final PermissionService permissionService;
+    private final com.hrms.repository.DocumentRepository documentRepository;
+    private final com.hrms.repository.DocumentRequestRepository documentRequestRepository;
 
     public DocumentController(DocumentService documentService,
                              FileStorageService fileStorageService,
                              UserService userService,
                              EmployeeRepository employeeRepository,
                              EmployeeService employeeService,
-                             PermissionService permissionService) {
+                             PermissionService permissionService,
+                             com.hrms.repository.DocumentRepository documentRepository,
+                             com.hrms.repository.DocumentRequestRepository documentRequestRepository) {
         this.documentService = documentService;
         this.fileStorageService = fileStorageService;
         this.userService = userService;
         this.employeeRepository = employeeRepository;
         this.employeeService = employeeService;
         this.permissionService = permissionService;
+        this.documentRepository = documentRepository;
+        this.documentRequestRepository = documentRequestRepository;
     }
 
     @PostMapping("/me/upload")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ORGADMIN', 'SUPERADMIN')")
-    public ResponseEntity<?> uploadForSelf(@RequestParam("file") MultipartFile file, Authentication authentication) {
+    public ResponseEntity<?> uploadForSelf(@RequestParam("file") MultipartFile file,
+                                           @RequestParam(value = "requestId", required = false) UUID requestId,
+                                           Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -69,6 +82,17 @@ public class DocumentController {
                 file.getContentType()
         );
 
+        if (requestId != null) {
+            documentRequestRepository.findById(requestId).ifPresent(req -> {
+                if (req.getTargetEmployee().getId().equals(employee.getId())) {
+                    req.setFulfilledDocument(document);
+                    req.setStatus("COMPLETED");
+                    req.setCompletedAt(LocalDateTime.now());
+                    documentRequestRepository.save(req);
+                }
+            });
+        }
+
         DocumentResponse response = toDocumentResponse(document);
         return ResponseEntity.ok(new DocumentUploadResponse("Document uploaded successfully", response));
     }
@@ -77,6 +101,7 @@ public class DocumentController {
     @PreAuthorize("hasAnyRole('ORGADMIN', 'SUPERADMIN')")
     public ResponseEntity<?> uploadForEmployee(@PathVariable UUID employeeId,
                                               @RequestParam("file") MultipartFile file,
+                                              @RequestParam(value = "requestId", required = false) UUID requestId,
                                               Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)
@@ -103,6 +128,17 @@ public class DocumentController {
                 filePath,
                 file.getContentType()
         );
+
+        if (requestId != null) {
+            documentRequestRepository.findById(requestId).ifPresent(req -> {
+                if (req.getTargetEmployee().getId().equals(employeeId)) {
+                    req.setFulfilledDocument(document);
+                    req.setStatus("COMPLETED");
+                    req.setCompletedAt(LocalDateTime.now());
+                    documentRequestRepository.save(req);
+                }
+            });
+        }
 
         DocumentResponse response = toDocumentResponse(document);
         return ResponseEntity.ok(new DocumentUploadResponse("Document uploaded successfully", response));
@@ -202,6 +238,67 @@ public class DocumentController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{documentId}/download")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> downloadDocument(@PathVariable UUID documentId, Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        Employee currentEmployee = getOrCreateEmployee(user);
+
+        boolean allowed = false;
+
+        // Owner with own-docs permission
+        if (document.getEmployee().getId().equals(currentEmployee.getId()) &&
+                permissionService.has(currentEmployee, "VIEW_OWN_DOCS")) {
+            allowed = true;
+        }
+
+        // Org-wide access
+        if (!allowed && permissionService.has(currentEmployee, "VIEW_ORG_DOCS")) {
+            allowed = true;
+        }
+
+        // Team access (department/subtree)
+        if (!allowed && permissionService.has(currentEmployee, "VIEW_DEPT_DOCS")) {
+            List<Employee> team = employeeService.getReportingTree(currentEmployee.getId());
+            allowed = team.stream().anyMatch(e -> e.getId().equals(document.getEmployee().getId()));
+        }
+
+        // Users with org upload permission typically need to review documents
+        if (!allowed && permissionService.has(currentEmployee, "UPLOAD_FOR_OTHERS")) {
+            allowed = true;
+        }
+
+        // Requester of fulfilled document request
+        if (!allowed) {
+            List<com.hrms.entity.DocumentRequest> reqs =
+                    documentRequestRepository.findByFulfilledDocument_IdAndRequester_Id(documentId, user.getId());
+            allowed = !reqs.isEmpty();
+        }
+
+        if (!allowed) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        InputStreamResource resource = new InputStreamResource(fileStorageService.load(document.getFilePath()));
+
+        String filename = document.getFileName();
+        String contentType = document.getFileType() != null ? document.getFileType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
+        headers.setContentType(MediaType.parseMediaType(contentType));
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource);
     }
 
     private Employee getOrCreateEmployee(User user) {
