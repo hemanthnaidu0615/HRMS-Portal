@@ -199,6 +199,28 @@ CREATE TABLE email_logs (
 );
 
 -- =====================================================
+-- ACTIVITY AUDIT LOGGING
+-- =====================================================
+
+CREATE TABLE audit_logs (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    action_type VARCHAR(50) NOT NULL,
+    entity_type VARCHAR(100) NULL,
+    entity_id VARCHAR(255) NULL,
+    performed_by UNIQUEIDENTIFIER NULL,
+    old_value VARCHAR(MAX) NULL,
+    new_value VARCHAR(MAX) NULL,
+    status VARCHAR(20) NOT NULL,
+    error_message VARCHAR(MAX) NULL,
+    ip_address VARCHAR(50) NULL,
+    metadata VARCHAR(MAX) NULL,
+    performed_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    organization_id UNIQUEIDENTIFIER NULL,
+    FOREIGN KEY (performed_by) REFERENCES users(id),
+    FOREIGN KEY (organization_id) REFERENCES organizations(id)
+);
+
+-- =====================================================
 -- SEED DATA - SYSTEM ROLES
 -- =====================================================
 
@@ -419,3 +441,10 @@ CREATE INDEX idx_email_logs_recipient ON email_logs(recipient_email);
 CREATE INDEX idx_email_logs_type ON email_logs(email_type);
 CREATE INDEX idx_email_logs_sent_at ON email_logs(sent_at DESC);
 CREATE INDEX idx_email_logs_related_entity ON email_logs(related_entity_id, related_entity_type);
+
+CREATE INDEX idx_audit_logs_organization ON audit_logs(organization_id);
+CREATE INDEX idx_audit_logs_performed_by ON audit_logs(performed_by);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action_type);
+CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX idx_audit_logs_performed_at ON audit_logs(performed_at DESC);
+CREATE INDEX idx_audit_logs_org_action ON audit_logs(organization_id, action_type);
