@@ -22,7 +22,7 @@ interface EmploymentTypeStats {
   color: string;
 }
 
-export const AdminDashboardPage = () => {
+export const DashboardPage = () => {
   const [employees, setEmployees] = useState<EmployeeSummaryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -109,7 +109,7 @@ export const AdminDashboardPage = () => {
         {/* Key Metrics */}
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+            <Card>
               <Statistic
                 title="Total Employees"
                 value={totalEmployees}
@@ -119,7 +119,7 @@ export const AdminDashboardPage = () => {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+            <Card>
               <Statistic
                 title="On Probation"
                 value={onProbation}
@@ -130,7 +130,7 @@ export const AdminDashboardPage = () => {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+            <Card>
               <Statistic
                 title="Departments"
                 value={departmentMap.size}
@@ -140,7 +140,7 @@ export const AdminDashboardPage = () => {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+            <Card>
               <Statistic
                 title="Active Employees"
                 value={totalEmployees - onProbation}

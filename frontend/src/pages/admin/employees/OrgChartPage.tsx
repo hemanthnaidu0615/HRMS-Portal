@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card, Alert, Typography, Space, Skeleton, Empty, Tag } from 'antd';
-import { TeamOutlined } from '@ant-design/icons';
+import { TeamOutlined, UserOutlined } from '@ant-design/icons';
 import { getEmployeeTree, EmployeeTreeNodeResponse } from '../../../api/employeeManagementApi';
 import './OrgChart.css';
 
 const { Title } = Typography;
 
-export const EmployeeTreePage = () => {
+export const OrgChartPage = () => {
   const [treeData, setTreeData] = useState<EmployeeTreeNodeResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,18 +28,7 @@ export const EmployeeTreePage = () => {
     }
   };
 
-  const getAvatarColor = (index: number) => {
-    const colors = [
-      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    ];
-    return colors[index % colors.length];
-  };
-
-  const renderEmployeeNode = (employee: EmployeeTreeNodeResponse, index: number = 0) => {
+  const renderEmployeeNode = (employee: EmployeeTreeNodeResponse) => {
     const fullName = `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
     const displayName = fullName || employee.email;
     const initials = fullName
@@ -49,9 +38,7 @@ export const EmployeeTreePage = () => {
     return (
       <div key={employee.employeeId} className="org-chart-node-wrapper">
         <div className="org-chart-node">
-          <div className="employee-avatar" style={{ background: getAvatarColor(index) }}>
-            {initials}
-          </div>
+          <div className="employee-avatar">{initials}</div>
           <div className="employee-info">
             <div className="employee-name">{displayName}</div>
             {employee.positionName && (
@@ -69,7 +56,7 @@ export const EmployeeTreePage = () => {
           <div className="org-chart-children">
             <div className="org-chart-line"></div>
             <div className="org-chart-reports">
-              {employee.reports.map((report, idx) => renderEmployeeNode(report, index + idx + 1))}
+              {employee.reports.map(report => renderEmployeeNode(report))}
             </div>
           </div>
         )}
@@ -104,7 +91,7 @@ export const EmployeeTreePage = () => {
             />
           ) : (
             <div className="org-chart-container">
-              {treeData.map((rootEmployee, idx) => renderEmployeeNode(rootEmployee, idx))}
+              {treeData.map(rootEmployee => renderEmployeeNode(rootEmployee))}
             </div>
           )}
         </Space>

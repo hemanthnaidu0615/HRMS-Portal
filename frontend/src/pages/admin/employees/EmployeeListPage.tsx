@@ -66,13 +66,33 @@ export const EmployeeListPage = () => {
       },
       render: (text: string, record: EmployeeSummaryResponse) => {
         const fullName = `${record.firstName || ''} ${record.lastName || ''}`.trim();
+        const displayName = fullName || text;
+        const initials = fullName
+          ? `${record.firstName?.[0] || ''}${record.lastName?.[0] || ''}`.toUpperCase()
+          : text.substring(0, 2).toUpperCase();
+
         return (
-          <Space direction="vertical" size={0}>
-            <Space>
-              <UserOutlined />
-              {fullName || text}
+          <Space>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              {initials}
+            </div>
+            <Space direction="vertical" size={0}>
+              <span style={{ fontWeight: 500 }}>{displayName}</span>
+              {fullName && <span style={{ fontSize: '12px', color: '#888' }}>{text}</span>}
             </Space>
-            {fullName && <span style={{ fontSize: '12px', color: '#888' }}>{text}</span>}
           </Space>
         );
       },
