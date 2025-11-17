@@ -236,7 +236,7 @@ function App() {
 
         {/* Document Request Routes */}
         <Route
-          path="/document-requests/me"
+          path="/document-requests/incoming"
           element={
             <ProtectedRoute>
               <LayoutWrapper>
@@ -246,7 +246,7 @@ function App() {
           }
         />
         <Route
-          path="/document-requests/my"
+          path="/document-requests/outgoing"
           element={
             <ProtectedRoute>
               <LayoutWrapper>
@@ -255,6 +255,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Legacy redirects */}
+        <Route path="/document-requests/me" element={<Navigate to="/document-requests/incoming" replace />} />
+        <Route path="/document-requests/my" element={<Navigate to="/document-requests/outgoing" replace />} />
         <Route
           path="/document-requests/org"
           element={

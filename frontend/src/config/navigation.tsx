@@ -49,18 +49,19 @@ export const superAdminMenuItems: MenuItem[] = [
 ];
 
 /**
- * OrgAdmin Navigation
+ * Admin Navigation (Organization Administrator)
  */
 export const orgAdminMenuItems: MenuItem[] = [
   getItem('Dashboard', '/admin/dashboard', <DashboardOutlined />),
 
   getItem('Employees', 'employees', <TeamOutlined />, [
-    getItem('All Employees', '/admin/employees'),
-    getItem('Organization Tree', '/admin/employees/tree'),
+    getItem('Employee Directory', '/admin/employees'),
+    getItem('Organization Chart', '/admin/employees/tree'),
     getItem('Add Employee', '/admin/employees/create'),
+    getItem('Bulk Import', '/admin/employees/import'),
   ]),
 
-  getItem('Structure', 'structure', <ApartmentOutlined />, [
+  getItem('Organization', 'structure', <ApartmentOutlined />, [
     getItem('Departments', '/admin/structure/departments'),
     getItem('Positions', '/admin/structure/positions'),
   ]),
@@ -71,7 +72,7 @@ export const orgAdminMenuItems: MenuItem[] = [
   ]),
 
   getItem('Documents', 'documents', <FileTextOutlined />, [
-    getItem('Organization Documents', '/documents/org'),
+    getItem('All Documents', '/documents/org'),
     getItem('Document Requests', '/document-requests/org'),
   ]),
 
@@ -85,14 +86,14 @@ export const employeeMenuItems: MenuItem[] = [
   getItem('Dashboard', '/employee/dashboard', <DashboardOutlined />),
 
   getItem('My Documents', 'my-documents', <FolderOutlined />, [
-    getItem('View Documents', '/documents/me'),
+    getItem('My Documents', '/documents/me'),
     getItem('Upload Document', '/documents/upload'),
-    getItem('Team Documents', '/documents/org'),
+    getItem('Organization Documents', '/documents/org'),
   ]),
 
   getItem('Document Requests', 'document-requests', <InboxOutlined />, [
-    getItem('Incoming Requests', '/document-requests/me'),
-    getItem('My Requests', '/document-requests/my'),
+    getItem('Requests I Received', '/document-requests/incoming'),
+    getItem('Requests I Sent', '/document-requests/outgoing'),
   ]),
 
   getItem('Profile', '/profile', <UserOutlined />),
