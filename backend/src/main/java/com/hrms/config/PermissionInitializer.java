@@ -45,7 +45,18 @@ public class PermissionInitializer implements CommandLineRunner {
             new String[]{"documents", "request", "own", "Request documents from others"},
             new String[]{"documents", "view", "organization", "View organization documents"},
             new String[]{"documents", "upload", "team", "Upload documents for others"},
-            new String[]{"documents", "view", "department", "View department documents"}
+            new String[]{"documents", "view", "department", "View department documents"},
+
+            // Document requests permissions
+            new String[]{"document-requests", "create", "team", "Request documents from direct reports"},
+            new String[]{"document-requests", "create", "department", "Request documents from department members"},
+            new String[]{"document-requests", "create", "organization", "Request documents from anyone"},
+            new String[]{"document-requests", "view", "team", "View team document requests"},
+            new String[]{"document-requests", "view", "department", "View department document requests"},
+            new String[]{"document-requests", "view", "organization", "View all document requests"},
+            new String[]{"document-requests", "approve", "team", "Approve/reject team document requests"},
+            new String[]{"document-requests", "approve", "department", "Approve/reject department document requests"},
+            new String[]{"document-requests", "approve", "organization", "Approve/reject any document requests"}
         );
 
         for (String[] perm : permissions) {
@@ -71,6 +82,20 @@ public class PermissionInitializer implements CommandLineRunner {
         Permission viewDept = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
                 "documents", "view", "department").orElseThrow();
 
+        // Document requests permissions
+        Permission docReqCreateOrg = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "document-requests", "create", "organization").orElseThrow();
+        Permission docReqViewOrg = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "document-requests", "view", "organization").orElseThrow();
+        Permission docReqApproveOrg = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "document-requests", "approve", "organization").orElseThrow();
+        Permission docReqCreateDept = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "document-requests", "create", "department").orElseThrow();
+        Permission docReqViewDept = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "document-requests", "view", "department").orElseThrow();
+        Permission docReqApproveDept = permissionRepository.findByResourceAndActionAndScopeAndOrganizationIsNull(
+                "document-requests", "approve", "department").orElseThrow();
+
         if (permissionGroupRepository.findByName("EMPLOYEE_BASIC").isEmpty()) {
             PermissionGroup employeeBasic = new PermissionGroup("EMPLOYEE_BASIC", "Basic employee permissions");
             employeeBasic.setPermissions(new HashSet<>(Arrays.asList(viewOwn, uploadOwn, requestDocs)));
@@ -79,13 +104,19 @@ public class PermissionInitializer implements CommandLineRunner {
 
         if (permissionGroupRepository.findByName("ORG_HR").isEmpty()) {
             PermissionGroup orgHr = new PermissionGroup("ORG_HR", "HR permissions");
-            orgHr.setPermissions(new HashSet<>(Arrays.asList(viewOwn, uploadOwn, requestDocs, viewDept, uploadForOthers)));
+            orgHr.setPermissions(new HashSet<>(Arrays.asList(
+                viewOwn, uploadOwn, requestDocs, viewDept, uploadForOthers,
+                docReqCreateDept, docReqViewDept, docReqApproveDept
+            )));
             permissionGroupRepository.save(orgHr);
         }
 
         if (permissionGroupRepository.findByName("ORG_ADMIN_FULL").isEmpty()) {
             PermissionGroup orgAdminFull = new PermissionGroup("ORG_ADMIN_FULL", "Full organization admin permissions");
-            orgAdminFull.setPermissions(new HashSet<>(Arrays.asList(viewOwn, uploadOwn, requestDocs, viewOrg, uploadForOthers)));
+            orgAdminFull.setPermissions(new HashSet<>(Arrays.asList(
+                viewOwn, uploadOwn, requestDocs, viewOrg, uploadForOthers,
+                docReqCreateOrg, docReqViewOrg, docReqApproveOrg
+            )));
             permissionGroupRepository.save(orgAdminFull);
         }
 
