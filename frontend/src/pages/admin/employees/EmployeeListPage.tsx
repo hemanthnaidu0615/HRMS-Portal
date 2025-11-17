@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select } from 'antd';
-import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
+import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { getEmployees, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
 
 const { Title } = Typography;
@@ -333,6 +333,13 @@ export const EmployeeListPage = () => {
                 style={{ borderRadius: 6 }}
               >
                 Export CSV
+              </Button>
+              <Button
+                icon={<UploadOutlined />}
+                onClick={() => navigate('/admin/employees/import')}
+                style={{ borderRadius: 6 }}
+              >
+                Import Employees
               </Button>
               <Button
                 type="primary"

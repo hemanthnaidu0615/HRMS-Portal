@@ -52,6 +52,7 @@ import { EmployeeDetailPage } from './pages/admin/employees/EmployeeDetailPage';
 import { EmployeeAssignmentPage } from './pages/admin/employees/EmployeeAssignmentPage';
 import { EmployeeHistoryPage } from './pages/admin/employees/EmployeeHistoryPage';
 import { EmployeeTreePage } from './pages/admin/employees/EmployeeTreePage';
+import { BulkImportPage } from './pages/admin/employees/BulkImportPage';
 
 // Admin Pages - Permissions
 import { PermissionGroupsPage } from './pages/admin/permissions/PermissionGroupsPage';
@@ -324,6 +325,16 @@ function App() {
             <ProtectedRoute requiredRole="orgadmin">
               <LayoutWrapper>
                 <CreateEmployeePage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/employees/import"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <BulkImportPage />
               </LayoutWrapper>
             </ProtectedRoute>
           }

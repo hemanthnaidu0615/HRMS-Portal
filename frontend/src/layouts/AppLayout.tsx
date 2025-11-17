@@ -8,6 +8,7 @@ import {
   Space,
   Button,
   Drawer,
+  Breadcrumb,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -18,6 +19,7 @@ import {
   SettingOutlined,
   BellOutlined,
   MenuOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
@@ -83,6 +85,73 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const handleMenuClick = (e: { key: string }) => {
   navigate(e.key);
 };
+
+  // Generate breadcrumb items from current path
+  const generateBreadcrumbs = () => {
+    const pathSnippets = location.pathname.split('/').filter(i => i);
+
+    // Path name mappings for better display
+    const pathNameMap: Record<string, string> = {
+      'admin': 'Admin',
+      'superadmin': 'Super Admin',
+      'employee': 'Employee',
+      'employees': 'Employees',
+      'create': 'Create',
+      'import': 'Import',
+      'tree': 'Organization Chart',
+      'assignment': 'Assignment',
+      'history': 'History',
+      'dashboard': 'Dashboard',
+      'profile': 'Profile',
+      'permissions': 'Permissions',
+      'documents': 'Documents',
+      'me': 'My Documents',
+      'org': 'Organization',
+      'upload': 'Upload',
+      'document-requests': 'Document Requests',
+      'my': 'My Requests',
+      'structure': 'Structure',
+      'departments': 'Departments',
+      'positions': 'Positions',
+      'new': 'New',
+      'groups': 'Groups',
+      'roles': 'Roles',
+      'edit': 'Edit',
+      'organizations': 'Organizations',
+    };
+
+    const breadcrumbItems = [
+      {
+        title: (
+          <a onClick={() => navigate('/')}>
+            <HomeOutlined />
+          </a>
+        ),
+      },
+    ];
+
+    pathSnippets.forEach((snippet, index) => {
+      const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
+      const isLast = index === pathSnippets.length - 1;
+
+      // Skip UUIDs and other technical IDs
+      if (snippet.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        return;
+      }
+
+      const title = pathNameMap[snippet] || snippet.charAt(0).toUpperCase() + snippet.slice(1);
+
+      breadcrumbItems.push({
+        title: isLast ? (
+          <span>{title}</span>
+        ) : (
+          <a onClick={() => navigate(url)}>{title}</a>
+        ),
+      });
+    });
+
+    return breadcrumbItems;
+  };
 
   // Desktop sidebar
   const DesktopSidebar = (
@@ -363,6 +432,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </Dropdown>
           </Space>
         </Header>
+
+        {/* Breadcrumb */}
+        {location.pathname !== '/' && location.pathname !== '/login' && (
+          <div
+            style={{
+              padding: "16px 24px",
+              background: "#ffffff",
+              borderBottom: "1px solid #e8edf2",
+            }}
+          >
+            <Breadcrumb items={generateBreadcrumbs()} />
+          </div>
+        )}
 
         {/* Content */}
         <Content
