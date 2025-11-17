@@ -169,10 +169,17 @@ public class DocumentRequestController {
             }
 
             requests = documentRequestService.getRequestsForOrganization(user.getOrganization()).stream()
-                    .filter(req -> (req.getTargetEmployee().getDepartment() != null &&
-                                   req.getTargetEmployee().getDepartment().getId().equals(currentEmployee.getDepartment().getId())) ||
-                                  (req.getRequester().getDepartment() != null &&
-                                   req.getRequester().getDepartment().getId().equals(currentEmployee.getDepartment().getId())))
+                    .filter(req -> {
+                        boolean targetMatches = req.getTargetEmployee().getDepartment() != null &&
+                                req.getTargetEmployee().getDepartment().getId().equals(currentEmployee.getDepartment().getId());
+
+                        Employee requesterEmployee = getEmployeeForUser(req.getRequester());
+                        boolean requesterMatches = requesterEmployee != null &&
+                                requesterEmployee.getDepartment() != null &&
+                                requesterEmployee.getDepartment().getId().equals(currentEmployee.getDepartment().getId());
+
+                        return targetMatches || requesterMatches;
+                    })
                     .collect(Collectors.toList());
         } else if ("team".equals(highestScope)) {
             // Team/subtree access only
@@ -259,12 +266,19 @@ public class DocumentRequestController {
                 });
     }
 
+    private Employee getEmployeeForUser(User user) {
+        if (user == null || user.getId() == null) {
+            return null;
+        }
+        return employeeRepository.findByUser_Id(user.getId()).orElse(null);
+    }
+
     private DocumentRequestResponse toDocumentRequestResponse(DocumentRequest request) {
         UUID fulfilledDocId = request.getFulfilledDocument() != null ?
             request.getFulfilledDocument().getId() : null;
 
         // Get requester employee info
-        Employee requesterEmployee = request.getRequester().getEmployee();
+        Employee requesterEmployee = getEmployeeForUser(request.getRequester());
         String requesterFirstName = requesterEmployee != null ? requesterEmployee.getFirstName() : null;
         String requesterLastName = requesterEmployee != null ? requesterEmployee.getLastName() : null;
 
