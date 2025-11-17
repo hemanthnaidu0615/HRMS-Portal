@@ -9,14 +9,16 @@ import {
   UndoOutlined,
   LockOutlined,
   TeamOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { SafetyCertificateOutlined } from '@ant-design/icons';
 import { getEmployeeDetails, EmployeeDetailResponse } from '../../../api/employeeManagementApi';
 import { orgadminApi } from '../../../api/orgadminApi';
 import { roleApi } from '../../../api/roleApi';
+import { createDocumentRequest } from '../../../api/documentRequestsApi';
 import dayjs from 'dayjs';
 
-const { Title } = Typography;
+const { Title, TextArea } = Typography;
 
 interface Role {
   id: string;
@@ -43,6 +45,10 @@ export const EmployeeDetailPage = () => {
   // Probation extend modal
   const [extendProbationModalVisible, setExtendProbationModalVisible] = useState(false);
   const [newProbationEndDate, setNewProbationEndDate] = useState<dayjs.Dayjs | null>(null);
+
+  // Request document modal
+  const [requestDocumentModalVisible, setRequestDocumentModalVisible] = useState(false);
+  const [documentRequestMessage, setDocumentRequestMessage] = useState('');
 
   useEffect(() => {
     if (employeeId) {
@@ -212,6 +218,30 @@ export const EmployeeDetailPage = () => {
     }
   };
 
+  const openRequestDocumentModal = () => {
+    setDocumentRequestMessage('');
+    setRequestDocumentModalVisible(true);
+  };
+
+  const handleRequestDocument = async () => {
+    if (!employeeId || !documentRequestMessage.trim()) {
+      message.error('Please enter a message for the document request');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await createDocumentRequest(employeeId, documentRequestMessage.trim());
+      message.success('Document request sent successfully');
+      setRequestDocumentModalVisible(false);
+      setDocumentRequestMessage('');
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to create document request');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const employmentTypeColors: Record<string, string> = {
     internal: 'green',
     client: 'blue',
@@ -270,6 +300,19 @@ export const EmployeeDetailPage = () => {
             <Space wrap>
               {!isDeleted && (
                 <>
+                  <Button
+                    type="primary"
+                    icon={<FileTextOutlined />}
+                    onClick={openRequestDocumentModal}
+                    style={{
+                      background: '#52c41a',
+                      borderColor: '#52c41a',
+                      borderRadius: 8,
+                      fontWeight: 600
+                    }}
+                  >
+                    Request Document
+                  </Button>
                   <Button
                     icon={<EditOutlined />}
                     onClick={() => navigate(`/admin/employees/${employeeId}/assignment`)}
@@ -534,6 +577,54 @@ export const EmployeeDetailPage = () => {
                 if (employee?.probationEndDate && current <= dayjs(employee.probationEndDate)) return true;
                 return false;
               }}
+            />
+          </div>
+        </Space>
+      </Modal>
+
+      {/* Request Document Modal */}
+      <Modal
+        title={
+          <Space>
+            <FileTextOutlined style={{ color: '#52c41a' }} />
+            <span>Request Document from {employee?.firstName} {employee?.lastName || employee?.email}</span>
+          </Space>
+        }
+        open={requestDocumentModalVisible}
+        onOk={handleRequestDocument}
+        onCancel={() => {
+          setRequestDocumentModalVisible(false);
+          setDocumentRequestMessage('');
+        }}
+        confirmLoading={actionLoading}
+        okText="Send Request"
+        okButtonProps={{
+          style: {
+            background: '#52c41a',
+            borderColor: '#52c41a'
+          }
+        }}
+        width={600}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Alert
+            message="What document do you need?"
+            description="The employee will receive this request and can upload the requested document."
+            type="info"
+            showIcon
+          />
+          <div>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+              Request Message *
+            </label>
+            <Input.TextArea
+              placeholder="e.g., Please upload your ID proof, passport copy, or latest address proof"
+              value={documentRequestMessage}
+              onChange={(e) => setDocumentRequestMessage(e.target.value)}
+              rows={4}
+              style={{ borderRadius: 8 }}
+              maxLength={500}
+              showCount
             />
           </div>
         </Space>
