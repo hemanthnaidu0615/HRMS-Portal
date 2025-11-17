@@ -259,6 +259,7 @@ export const CreateEmployeePage = () => {
                 <Form.Item
                   name="firstName"
                   label="First Name"
+                  rules={[{ required: true, message: 'First name is required' }]}
                   initialValue={formData.firstName}
                 >
                   <Input
@@ -272,6 +273,7 @@ export const CreateEmployeePage = () => {
                 <Form.Item
                   name="lastName"
                   label="Last Name"
+                  rules={[{ required: true, message: 'Last name is required' }]}
                   initialValue={formData.lastName}
                 >
                   <Input

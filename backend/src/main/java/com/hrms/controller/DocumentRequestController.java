@@ -263,10 +263,25 @@ public class DocumentRequestController {
         UUID fulfilledDocId = request.getFulfilledDocument() != null ?
             request.getFulfilledDocument().getId() : null;
 
+        // Get requester employee info
+        Employee requesterEmployee = request.getRequester().getEmployee();
+        String requesterFirstName = requesterEmployee != null ? requesterEmployee.getFirstName() : null;
+        String requesterLastName = requesterEmployee != null ? requesterEmployee.getLastName() : null;
+
+        // Get target employee info
+        String targetFirstName = request.getTargetEmployee().getFirstName();
+        String targetLastName = request.getTargetEmployee().getLastName();
+
         return new DocumentRequestResponse(
                 request.getId(),
                 request.getRequester().getId(),
+                request.getRequester().getEmail(),
+                requesterFirstName,
+                requesterLastName,
                 request.getTargetEmployee().getId(),
+                request.getTargetEmployee().getUser().getEmail(),
+                targetFirstName,
+                targetLastName,
                 request.getMessage(),
                 request.getStatus(),
                 request.getCreatedAt(),

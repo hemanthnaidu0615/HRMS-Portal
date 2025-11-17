@@ -9,7 +9,13 @@ const { Title } = Typography;
 interface DocumentRequest {
   id: string;
   requesterUserId: string;
+  requesterEmail: string;
+  requesterFirstName: string | null;
+  requesterLastName: string | null;
   targetEmployeeId: string;
+  targetEmployeeEmail: string;
+  targetEmployeeFirstName: string | null;
+  targetEmployeeLastName: string | null;
   message: string;
   status: string;
   createdAt: string;
@@ -97,11 +103,19 @@ export const OrgDocumentRequestsPage = () => {
       title: 'Requester',
       dataIndex: 'requesterUserId',
       key: 'requesterUserId',
+      render: (_: string, record: DocumentRequest) => {
+        const fullName = `${record.requesterFirstName || ''} ${record.requesterLastName || ''}`.trim();
+        return fullName || record.requesterEmail;
+      },
     },
     {
       title: 'Target Employee',
       dataIndex: 'targetEmployeeId',
       key: 'targetEmployeeId',
+      render: (_: string, record: DocumentRequest) => {
+        const fullName = `${record.targetEmployeeFirstName || ''} ${record.targetEmployeeLastName || ''}`.trim();
+        return fullName || record.targetEmployeeEmail;
+      },
     },
     {
       title: 'Message',
@@ -279,7 +293,7 @@ export const OrgDocumentRequestsPage = () => {
               dataSource={requests}
               loading={loading}
               rowKey="id"
-              locale={{ emptyText: 'No requests found' }}
+              locale={{ emptyText: 'No document requests yet. Create one using the form above to request documents from employees.' }}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,

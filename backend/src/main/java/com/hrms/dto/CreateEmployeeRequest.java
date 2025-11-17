@@ -16,7 +16,10 @@ public class CreateEmployeeRequest {
     private String temporaryPassword;
 
     // Personal details
+    @NotBlank(message = "First name is required")
     private String firstName;
+
+    @NotBlank(message = "Last name is required")
     private String lastName;
 
     // Organization assignment
