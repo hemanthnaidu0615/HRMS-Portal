@@ -162,10 +162,14 @@ export const EmployeeAssignmentPage = () => {
                   <Select
                     value={reportsToEmployeeId}
                     onChange={setReportsToEmployeeId}
-                    options={employees.map(emp => ({
-                      label: `${emp.email}${emp.positionName ? ` (${emp.positionName})` : ''}`,
-                      value: emp.employeeId
-                    }))}
+                    options={employees.map(emp => {
+                      const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+                      const displayName = fullName || emp.email;
+                      return {
+                        label: `${displayName}${emp.positionName ? ` (${emp.positionName})` : ''}`,
+                        value: emp.employeeId
+                      };
+                    })}
                     placeholder="Select manager"
                     allowClear
                     size="large"

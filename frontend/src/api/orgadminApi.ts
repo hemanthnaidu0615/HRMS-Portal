@@ -4,6 +4,8 @@ export interface Employee {
   employeeId: string;
   userId: string;
   email: string;
+  firstName?: string | null;
+  lastName?: string | null;
   departmentName?: string;
   positionName?: string;
   reportsToEmployeeId?: string;
@@ -42,5 +44,24 @@ export const orgadminApi = {
 
   resetEmployeePassword: async (employeeId: string, newPassword: string): Promise<void> => {
     await http.post(`/api/orgadmin/employees/${employeeId}/reset-password`, { newPassword });
+  },
+
+  extendProbation: async (employeeId: string, newEndDate: string): Promise<void> => {
+    await http.post(`/api/orgadmin/employees/${employeeId}/probation/extend`, {
+      action: 'extend',
+      newEndDate
+    });
+  },
+
+  completeProbation: async (employeeId: string): Promise<void> => {
+    await http.post(`/api/orgadmin/employees/${employeeId}/probation/complete`, {
+      action: 'complete'
+    });
+  },
+
+  terminateProbation: async (employeeId: string): Promise<void> => {
+    await http.post(`/api/orgadmin/employees/${employeeId}/probation/terminate`, {
+      action: 'terminate'
+    });
   },
 };

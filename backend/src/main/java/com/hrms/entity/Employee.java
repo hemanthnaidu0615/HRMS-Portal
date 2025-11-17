@@ -35,6 +35,13 @@ public class Employee {
     @JoinColumn(name = "reports_to")
     private Employee reportsTo;
 
+    // Personal details
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
     // Employment details
     @Column(name = "employment_type", nullable = false, length = 50)
     private String employmentType = "internal";  // internal, contract, client
@@ -47,6 +54,19 @@ public class Employee {
 
     @Column(name = "contract_end_date")
     private LocalDate contractEndDate;  // For contract employees
+
+    // Probation period tracking
+    @Column(name = "is_probation", nullable = false)
+    private Boolean isProbation = false;
+
+    @Column(name = "probation_start_date")
+    private LocalDate probationStartDate;
+
+    @Column(name = "probation_end_date")
+    private LocalDate probationEndDate;
+
+    @Column(name = "probation_status", length = 20)
+    private String probationStatus;  // active, completed, extended, terminated
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -121,6 +141,22 @@ public class Employee {
         this.reportsTo = reportsTo;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     public String getEmploymentType() {
         return employmentType;
     }
@@ -151,6 +187,38 @@ public class Employee {
 
     public void setContractEndDate(LocalDate contractEndDate) {
         this.contractEndDate = contractEndDate;
+    }
+
+    public Boolean getIsProbation() {
+        return isProbation;
+    }
+
+    public void setIsProbation(Boolean isProbation) {
+        this.isProbation = isProbation;
+    }
+
+    public LocalDate getProbationStartDate() {
+        return probationStartDate;
+    }
+
+    public void setProbationStartDate(LocalDate probationStartDate) {
+        this.probationStartDate = probationStartDate;
+    }
+
+    public LocalDate getProbationEndDate() {
+        return probationEndDate;
+    }
+
+    public void setProbationEndDate(LocalDate probationEndDate) {
+        this.probationEndDate = probationEndDate;
+    }
+
+    public String getProbationStatus() {
+        return probationStatus;
+    }
+
+    public void setProbationStatus(String probationStatus) {
+        this.probationStatus = probationStatus;
     }
 
     public LocalDateTime getCreatedAt() {

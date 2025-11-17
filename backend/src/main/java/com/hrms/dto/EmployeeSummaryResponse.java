@@ -14,10 +14,15 @@ public class EmployeeSummaryResponse {
     private UUID employeeId;
     private UUID userId;
     private String email;
+    private String firstName;
+    private String lastName;
     private String departmentName;
     private String positionName;
     private UUID reportsToEmployeeId;
     private String reportsToEmail;
     private String employmentType;
     private LocalDate contractEndDate;
+    private Boolean isProbation;
+    private LocalDate probationEndDate;
+    private String probationStatus;
 }

@@ -59,7 +59,7 @@ public class OrgAdminController {
                 orgAdmin.getOrganization()
         );
 
-        employeeService.createEmployee(employee, orgAdmin.getOrganization());
+        employeeService.createEmployee(employee, orgAdmin.getOrganization(), request);
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", employee.getId());

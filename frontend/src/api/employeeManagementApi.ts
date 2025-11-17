@@ -4,28 +4,42 @@ export interface EmployeeSummaryResponse {
   employeeId: string;
   userId: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   departmentName: string | null;
   positionName: string | null;
   reportsToEmployeeId: string | null;
   reportsToEmail: string | null;
   employmentType: string | null;
   contractEndDate: string | null;
+  isProbation: boolean;
+  probationEndDate: string | null;
+  probationStatus: string | null;
 }
 
 export interface EmployeeDetailResponse {
   employeeId: string;
   userId: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   departmentId: string | null;
   departmentName: string | null;
   positionId: string | null;
   positionName: string | null;
   reportsToEmployeeId: string | null;
   reportsToEmail: string | null;
+  reportsToFirstName: string | null;
+  reportsToLastName: string | null;
   employmentType: string | null;
   clientName: string | null;
   projectId: string | null;
   contractEndDate: string | null;
+  isProbation: boolean;
+  probationStartDate: string | null;
+  probationEndDate: string | null;
+  probationStatus: string | null;
+  deletedAt?: string | null;
 }
 
 export interface EmployeeAssignmentUpdateRequest {
@@ -50,6 +64,8 @@ export interface EmployeeHistoryResponse {
 export interface EmployeeTreeNodeResponse {
   employeeId: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   positionName: string | null;
   departmentName: string | null;
   reports?: EmployeeTreeNodeResponse[];

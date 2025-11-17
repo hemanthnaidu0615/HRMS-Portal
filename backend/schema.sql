@@ -125,11 +125,21 @@ CREATE TABLE employees (
     position_id UNIQUEIDENTIFIER NULL,
     reports_to UNIQUEIDENTIFIER NULL,
 
+    -- Personal details
+    first_name VARCHAR(100) NULL,
+    last_name VARCHAR(100) NULL,
+
     -- Employment details
     employment_type VARCHAR(50) NOT NULL DEFAULT 'internal',  -- internal, contract, client
     client_name VARCHAR(255) NULL,                            -- for client employees
     project_id VARCHAR(100) NULL,                             -- for contract/project employees
     contract_end_date DATE NULL,                              -- for contract employees
+
+    -- Probation period tracking
+    is_probation BIT NOT NULL DEFAULT 0,                      -- whether employee is on probation
+    probation_start_date DATE NULL,                           -- probation start date
+    probation_end_date DATE NULL,                             -- probation end date
+    probation_status VARCHAR(20) NULL,                        -- active, completed, extended, terminated
 
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     deleted_at DATETIME2 NULL,
@@ -272,7 +282,10 @@ INSERT INTO permissions (resource, action, scope, organization_id, description) 
 ('employees', 'edit', 'organization', NULL, 'Edit all employees'),
 
 ('employees', 'create', 'organization', NULL, 'Create new employees'),
-('employees', 'delete', 'organization', NULL, 'Delete employees');
+('employees', 'delete', 'organization', NULL, 'Delete employees'),
+
+('employees', 'probation', 'view', NULL, 'View employee probation status'),
+('employees', 'probation', 'manage', NULL, 'Manage probation periods (extend, complete, terminate)');
 
 -- DOCUMENTS permissions
 INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
@@ -288,7 +301,22 @@ INSERT INTO permissions (resource, action, scope, organization_id, description) 
 ('documents', 'delete', 'own', NULL, 'Delete own documents'),
 ('documents', 'delete', 'organization', NULL, 'Delete any documents'),
 
-('documents', 'request', 'organization', NULL, 'Request documents from others');
+('documents', 'approve', 'organization', NULL, 'Approve/reject document submissions');
+
+-- DOCUMENT REQUESTS permissions
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('document-requests', 'create', 'team', NULL, 'Request documents from direct reports'),
+('document-requests', 'create', 'department', NULL, 'Request documents from department members'),
+('document-requests', 'create', 'organization', NULL, 'Request documents from anyone'),
+
+('document-requests', 'view', 'own', NULL, 'View requests you created or received'),
+('document-requests', 'view', 'team', NULL, 'View team document requests'),
+('document-requests', 'view', 'department', NULL, 'View department document requests'),
+('document-requests', 'view', 'organization', NULL, 'View all document requests'),
+
+('document-requests', 'approve', 'team', NULL, 'Approve/reject team document requests'),
+('document-requests', 'approve', 'department', NULL, 'Approve/reject department document requests'),
+('document-requests', 'approve', 'organization', NULL, 'Approve/reject any document requests');
 
 -- DEPARTMENTS & POSITIONS permissions
 INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
@@ -360,12 +388,7 @@ WHERE scope = 'organization' AND organization_id IS NULL;
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT @EmployeeRoleId, id FROM permissions
 WHERE scope = 'own' AND organization_id IS NULL
-AND resource IN ('employees', 'documents', 'leaves', 'timesheets', 'payroll');
-
--- Employee: Can request documents
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT @EmployeeRoleId, id FROM permissions
-WHERE resource = 'documents' AND action = 'request';
+AND resource IN ('employees', 'documents', 'leaves', 'timesheets', 'payroll', 'document-requests');
 
 -- =====================================================
 -- PERMISSION GROUPS FOR UI ORGANIZATION

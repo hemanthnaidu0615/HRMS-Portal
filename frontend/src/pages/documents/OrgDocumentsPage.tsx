@@ -318,7 +318,19 @@ export const OrgDocumentsPage = () => {
           }}
         >
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Title level={3}>Organization Documents</Title>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Title level={3} style={{ margin: 0 }}>Organization Documents</Title>
+              {roles.includes('orgadmin') && (
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<UploadOutlined />}
+                  onClick={() => navigate('/documents/upload')}
+                >
+                  Upload Document
+                </Button>
+              )}
+            </div>
 
             {error && (
               <Alert message={error} type="error" showIcon closable />

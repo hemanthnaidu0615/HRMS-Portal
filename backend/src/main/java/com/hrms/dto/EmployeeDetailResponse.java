@@ -14,6 +14,8 @@ public class EmployeeDetailResponse {
     private UUID employeeId;
     private UUID userId;
     private String email;
+    private String firstName;
+    private String lastName;
 
     private UUID departmentId;
     private String departmentName;
@@ -23,9 +25,17 @@ public class EmployeeDetailResponse {
 
     private UUID reportsToEmployeeId;
     private String reportsToEmail;
+    private String reportsToFirstName;
+    private String reportsToLastName;
 
     private String employmentType;
     private String clientName;  // For client employees
     private String projectId;   // For contract/project employees
     private LocalDate contractEndDate;
+
+    // Probation period
+    private Boolean isProbation;
+    private LocalDate probationStartDate;
+    private LocalDate probationEndDate;
+    private String probationStatus;
 }

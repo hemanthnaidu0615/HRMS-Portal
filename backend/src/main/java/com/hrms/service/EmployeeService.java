@@ -1,9 +1,12 @@
 package com.hrms.service;
 
+import com.hrms.dto.CreateEmployeeRequest;
 import com.hrms.entity.*;
+import com.hrms.repository.DepartmentRepository;
 import com.hrms.repository.EmployeeHistoryRepository;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PermissionGroupRepository;
+import com.hrms.repository.PositionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -20,13 +23,19 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeHistoryRepository employeeHistoryRepository;
     private final PermissionGroupRepository permissionGroupRepository;
+    private final DepartmentRepository departmentRepository;
+    private final PositionRepository positionRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository,
                           EmployeeHistoryRepository employeeHistoryRepository,
-                          PermissionGroupRepository permissionGroupRepository) {
+                          PermissionGroupRepository permissionGroupRepository,
+                          DepartmentRepository departmentRepository,
+                          PositionRepository positionRepository) {
         this.employeeRepository = employeeRepository;
         this.employeeHistoryRepository = employeeHistoryRepository;
         this.permissionGroupRepository = permissionGroupRepository;
+        this.departmentRepository = departmentRepository;
+        this.positionRepository = positionRepository;
     }
 
     @Transactional
@@ -44,6 +53,91 @@ public class EmployeeService {
             PermissionGroup employeeBasic = permissionGroupRepository.findByName("EMPLOYEE_BASIC")
                     .orElseThrow(() -> new RuntimeException("EMPLOYEE_BASIC group not found"));
             employee.getPermissionGroups().add(employeeBasic);
+        }
+
+        return employeeRepository.save(employee);
+    }
+
+    @Transactional
+    public Employee createEmployee(User user, Organization org, CreateEmployeeRequest request) {
+        Employee employee = new Employee(user, org);
+
+        // Set personal details
+        if (request.getFirstName() != null) {
+            employee.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            employee.setLastName(request.getLastName());
+        }
+
+        // Set department if provided
+        if (request.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(request.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
+            employee.setDepartment(department);
+        }
+
+        // Set position if provided
+        if (request.getPositionId() != null) {
+            Position position = positionRepository.findById(request.getPositionId())
+                    .orElseThrow(() -> new RuntimeException("Position not found"));
+            employee.setPosition(position);
+        }
+
+        // Set manager if provided
+        if (request.getReportsToId() != null) {
+            Employee manager = employeeRepository.findById(request.getReportsToId())
+                    .orElseThrow(() -> new RuntimeException("Manager not found"));
+            employee.setReportsTo(manager);
+        }
+
+        // Set employment details
+        if (request.getEmploymentType() != null) {
+            employee.setEmploymentType(request.getEmploymentType());
+        }
+        if (request.getClientName() != null) {
+            employee.setClientName(request.getClientName());
+        }
+        if (request.getProjectId() != null) {
+            employee.setProjectId(request.getProjectId());
+        }
+        if (request.getContractEndDate() != null) {
+            employee.setContractEndDate(request.getContractEndDate());
+        }
+
+        // Set probation details
+        if (request.getIsProbation() != null && request.getIsProbation()) {
+            // Validate probation dates
+            if (request.getProbationStartDate() != null && request.getProbationEndDate() != null) {
+                if (request.getProbationEndDate().isBefore(request.getProbationStartDate())) {
+                    throw new IllegalArgumentException("Probation end date must be after start date");
+                }
+            }
+
+            employee.setIsProbation(true);
+            employee.setProbationStartDate(request.getProbationStartDate());
+            employee.setProbationEndDate(request.getProbationEndDate());
+            employee.setProbationStatus(request.getProbationStatus() != null ? request.getProbationStatus() : "active");
+        }
+
+        // Set permission groups if provided, otherwise use defaults
+        if (request.getPermissionGroupIds() != null && !request.getPermissionGroupIds().isEmpty()) {
+            List<PermissionGroup> groups = permissionGroupRepository.findAllById(request.getPermissionGroupIds());
+            employee.getPermissionGroups().addAll(groups);
+        } else {
+            // Apply default permission groups
+            boolean isAdmin = user.getRoles().stream()
+                    .anyMatch(role -> role.getName().equals("orgadmin") || role.getName().equals("superadmin"));
+
+            if (isAdmin) {
+                PermissionGroup orgAdminFull = permissionGroupRepository.findByName("ORG_ADMIN_FULL")
+                        .orElseThrow(() -> new RuntimeException("ORG_ADMIN_FULL group not found"));
+                employee.getPermissionGroups().add(orgAdminFull);
+            } else {
+                PermissionGroup employeeBasic = permissionGroupRepository.findByName("EMPLOYEE_BASIC")
+                        .orElseThrow(() -> new RuntimeException("EMPLOYEE_BASIC group not found"));
+                employee.getPermissionGroups().add(employeeBasic);
+            }
         }
 
         return employeeRepository.save(employee);
@@ -231,5 +325,56 @@ public class EmployeeService {
         employee.getPermissionGroups().clear();
         employee.getPermissionGroups().addAll(groups);
         employeeRepository.save(employee);
+    }
+
+    @Transactional
+    public Employee extendProbation(Employee employee, LocalDate newEndDate, User changedBy) {
+        // Validate new end date
+        if (newEndDate == null) {
+            throw new IllegalArgumentException("New probation end date cannot be null");
+        }
+        if (newEndDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("New probation end date cannot be in the past");
+        }
+        if (employee.getProbationEndDate() != null && newEndDate.isBefore(employee.getProbationEndDate())) {
+            throw new IllegalArgumentException("New probation end date must be after the current end date");
+        }
+
+        String oldValue = employee.getProbationEndDate() != null ? employee.getProbationEndDate().toString() : null;
+        String newValue = newEndDate.toString();
+
+        employee.setProbationEndDate(newEndDate);
+        employee.setProbationStatus("extended");
+        Employee updated = employeeRepository.save(employee);
+
+        recordHistory(employee, "probation_end_date", oldValue, newValue, changedBy);
+        recordHistory(employee, "probation_status", "active", "extended", changedBy);
+        return updated;
+    }
+
+    @Transactional
+    public Employee completeProbation(Employee employee, User changedBy) {
+        String oldStatus = employee.getProbationStatus();
+
+        employee.setProbationStatus("completed");
+        employee.setIsProbation(false);
+        Employee updated = employeeRepository.save(employee);
+
+        recordHistory(employee, "probation_status", oldStatus, "completed", changedBy);
+        recordHistory(employee, "is_probation", "true", "false", changedBy);
+        return updated;
+    }
+
+    @Transactional
+    public Employee terminateProbation(Employee employee, User changedBy) {
+        String oldStatus = employee.getProbationStatus();
+
+        employee.setProbationStatus("terminated");
+        employee.setIsProbation(false);
+        Employee updated = employeeRepository.save(employee);
+
+        recordHistory(employee, "probation_status", oldStatus, "terminated", changedBy);
+        recordHistory(employee, "is_probation", "true", "false", changedBy);
+        return updated;
     }
 }

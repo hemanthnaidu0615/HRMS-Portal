@@ -84,6 +84,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const getMenuItems = (): MenuProps['items'] => {
     const items: MenuProps['items'] = [];
 
+    // Superadmin: Organizations (role-based, not permission-based)
     if (roles.includes('superadmin')) {
       items.push({
         key: '/superadmin/organizations',
@@ -93,6 +94,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       });
     }
 
+    // Dashboard (for all employees)
     if (roles.includes('employee')) {
       items.push({
         key: '/employee/dashboard',
@@ -102,7 +104,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       });
     }
 
-    if (roles.includes('orgadmin')) {
+    // Employee Management (permission-based)
+    if (hasPermission('employees:view:organization') ||
+        hasPermission('employees:view:department') ||
+        hasPermission('employees:view:team')) {
       items.push({
         key: 'employees',
         icon: <TeamOutlined />,
@@ -120,79 +125,109 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           },
         ],
       });
+    }
 
-      items.push({
-        key: 'structure',
-        icon: <ApartmentOutlined />,
-        label: 'Organization Structure',
-        children: [
-          {
-            key: '/admin/structure/departments',
-            label: 'Departments',
-            onClick: () => navigate('/admin/structure/departments'),
-          },
-          {
-            key: '/admin/structure/positions',
-            label: 'Positions',
-            onClick: () => navigate('/admin/structure/positions'),
-          },
-        ],
+    // Organization Structure (permission-based)
+    if (hasPermission('departments:view:organization') ||
+        hasPermission('positions:view:organization')) {
+      const structureChildren = [];
+
+      if (hasPermission('departments:view:organization')) {
+        structureChildren.push({
+          key: '/admin/structure/departments',
+          label: 'Departments',
+          onClick: () => navigate('/admin/structure/departments'),
+        });
+      }
+
+      if (hasPermission('positions:view:organization')) {
+        structureChildren.push({
+          key: '/admin/structure/positions',
+          label: 'Positions',
+          onClick: () => navigate('/admin/structure/positions'),
+        });
+      }
+
+      if (structureChildren.length > 0) {
+        items.push({
+          key: 'structure',
+          icon: <ApartmentOutlined />,
+          label: 'Organization Structure',
+          children: structureChildren,
+        });
+      }
+    }
+
+    // Organization Documents (permission-based)
+    if (hasPermission('documents:view:organization') ||
+        hasPermission('documents:view:department') ||
+        hasPermission('documents:view:team')) {
+      const docChildren = [];
+
+      docChildren.push({
+        key: '/documents/org',
+        label: 'Organization Documents',
+        onClick: () => navigate('/documents/org'),
       });
+
+      // Document Requests creation (permission-based)
+      if (hasPermission('document-requests:create:organization') ||
+          hasPermission('document-requests:create:department') ||
+          hasPermission('document-requests:create:team')) {
+        docChildren.push({
+          key: '/document-requests/org',
+          label: 'Document Requests',
+          onClick: () => navigate('/document-requests/org'),
+        });
+      }
 
       items.push({
         key: 'documents',
         icon: <FileTextOutlined />,
         label: 'Documents',
-        children: [
-          {
-            key: '/documents/org',
-            label: 'Organization Documents',
-            onClick: () => navigate('/documents/org'),
-          },
-          {
-            key: '/document-requests/org',
-            label: 'Document Requests',
-            onClick: () => navigate('/document-requests/org'),
-          },
-        ],
+        children: docChildren,
+      });
+    }
+
+    // Access Control (permission-based)
+    if (hasPermission('roles:view:organization')) {
+      const accessChildren = [];
+
+      if (hasPermission('roles:view:organization')) {
+        accessChildren.push({
+          key: '/admin/roles',
+          label: 'Roles',
+          onClick: () => navigate('/admin/roles'),
+        });
+      }
+
+      accessChildren.push({
+        key: '/admin/permissions/groups',
+        label: 'Permission Groups',
+        onClick: () => navigate('/admin/permissions/groups'),
       });
 
       items.push({
         key: 'access-control',
         icon: <SafetyCertificateOutlined />,
         label: 'Access Control',
-        children: [
-          {
-            key: '/admin/roles',
-            label: 'Roles',
-            onClick: () => navigate('/admin/roles'),
-          },
-          {
-            key: '/admin/permissions/groups',
-            label: 'Permission Groups',
-            onClick: () => navigate('/admin/permissions/groups'),
-          },
-        ],
+        children: accessChildren,
       });
-    } else if (roles.includes('employee')) {
+    }
+
+    // My Documents (for regular employees or those without org-level access)
+    if (hasPermission('documents:view:own') &&
+        !hasPermission('documents:view:organization')) {
       items.push({
-        key: 'my-documents',
+        key: '/documents/me',
         icon: <FileTextOutlined />,
         label: 'My Documents',
-        children: [
-          {
-            key: '/documents/me',
-            label: 'View Documents',
-            onClick: () => navigate('/documents/me'),
-          },
-          {
-            key: '/documents/upload',
-            label: 'Upload Document',
-            onClick: () => navigate('/documents/upload'),
-          },
-        ],
+        onClick: () => navigate('/documents/me'),
       });
+    }
 
+    // Document Requests (for regular employees)
+    if (hasPermission('document-requests:view:own')) {
       items.push({
         key: 'my-requests',
         icon: <FileTextOutlined />,
@@ -200,12 +235,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         children: [
           {
             key: '/document-requests/me',
-            label: 'Incoming Requests',
+            label: 'Requests for Me',
             onClick: () => navigate('/document-requests/me'),
           },
           {
             key: '/document-requests/my',
-            label: 'My Requests',
+            label: 'Requests I Sent',
             onClick: () => navigate('/document-requests/my'),
           },
         ],
@@ -222,8 +257,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     if (location.pathname.startsWith('/admin/employees')) return ['employees'];
     if (location.pathname.startsWith('/admin/structure')) return ['structure'];
     if (location.pathname.startsWith('/admin/roles') || location.pathname.startsWith('/admin/permissions')) return ['access-control'];
-    if (location.pathname.startsWith('/documents')) return ['documents', 'my-documents'];
-    if (location.pathname.startsWith('/document-requests')) return ['documents', 'my-requests'];
+    if (location.pathname.startsWith('/documents')) return ['documents'];
+    if (location.pathname.startsWith('/document-requests')) return ['my-requests'];
     return [];
   };
 

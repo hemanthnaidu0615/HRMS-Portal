@@ -104,7 +104,7 @@ export const EmployeeHistoryPage = () => {
               columns={columns}
               dataSource={history}
               rowKey={(record) => `${record.changedField}-${record.changedAt}`}
-              locale={{ emptyText: 'No history found' }}
+              locale={{ emptyText: 'No changes recorded yet. History will appear here when employee information is updated.' }}
               pagination={{
                 pageSize: 20,
                 showSizeChanger: true,
