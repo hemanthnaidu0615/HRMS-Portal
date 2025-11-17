@@ -7,6 +7,7 @@ import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PermissionGroupRepository;
 import com.hrms.repository.PositionRepository;
 import com.hrms.repository.RoleRepository;
+import com.hrms.service.AuditLogService;
 import com.hrms.service.EmployeeService;
 import com.hrms.service.PermissionService;
 import com.hrms.service.UserService;
@@ -37,6 +38,7 @@ public class EmployeeManagementController {
     private final RoleRepository roleRepository;
     private final PermissionService permissionService;
     private final UserService userService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     public ResponseEntity<Page<EmployeeSummaryResponse>> getEmployees(
@@ -273,9 +275,9 @@ public class EmployeeManagementController {
     }
 
     @PutMapping("/{employeeId}/permission-groups")
-    public ResponseEntity<EmployeePermissionOverviewResponse> updateEmployeePermissionGroups(@PathVariable UUID employeeId,
-                                                                                              @Valid @RequestBody EmployeePermissionUpdateRequest request,
-                                                                                              Authentication authentication) {
+    public ResponseEntity<?> updateEmployeePermissionGroups(@PathVariable UUID employeeId,
+                                                            @Valid @RequestBody EmployeePermissionUpdateRequest request,
+                                                            Authentication authentication) {
         User currentUser = userService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -288,8 +290,25 @@ public class EmployeeManagementController {
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
         if (!employee.getOrganization().getId().equals(organization.getId())) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied - different organization"));
         }
+
+        // SECURITY CHECK: Prevent privilege escalation
+        if (!permissionService.canModifyPermissions(currentUser, employee)) {
+            // Check if they're trying to modify their own permissions
+            com.hrms.entity.Employee currentEmployee = employeeService.getByUserId(currentUser.getId())
+                    .orElse(null);
+            if (currentEmployee != null && currentEmployee.getId().equals(employeeId)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Cannot modify your own permissions"));
+            }
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied - insufficient permissions"));
+        }
+
+        // Get old permission groups for audit log
+        List<PermissionGroup> oldGroups = employeeService.getPermissionGroupsForEmployee(employee);
+        List<String> oldGroupNames = oldGroups.stream()
+                .map(PermissionGroup::getName)
+                .collect(Collectors.toList());
 
         List<UUID> groupIds = request.getGroupIds();
         if (groupIds == null) {
@@ -303,7 +322,30 @@ public class EmployeeManagementController {
             groups.add(group);
         }
 
+        // Update permission groups
         employeeService.setPermissionGroupsForEmployee(employee, groups);
+
+        // Get new permission groups for audit log
+        List<String> newGroupNames = groups.stream()
+                .map(PermissionGroup::getName)
+                .collect(Collectors.toList());
+
+        // AUDIT LOG: Log permission changes
+        String oldGroupsStr = String.join(", ", oldGroupNames);
+        String newGroupsStr = String.join(", ", newGroupNames);
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("employeeId", employeeId.toString());
+        metadata.put("employeeEmail", employee.getUser().getEmail());
+        metadata.put("removedGroups", oldGroupNames.stream()
+                .filter(name -> !newGroupNames.contains(name))
+                .collect(Collectors.toList()));
+        metadata.put("addedGroups", newGroupNames.stream()
+                .filter(name -> !oldGroupNames.contains(name))
+                .collect(Collectors.toList()));
+
+        auditLogService.logSuccess("PERMISSION_GROUPS_UPDATE", "Employee", employeeId.toString(),
+                currentUser, organization, oldGroupsStr, newGroupsStr, metadata);
 
         Employee updated = employeeService.getById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
