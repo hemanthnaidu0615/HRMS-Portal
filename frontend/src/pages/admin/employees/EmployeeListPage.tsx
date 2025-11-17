@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input } from 'antd';
-import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select } from 'antd';
+import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import { getEmployees, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
 
 const { Title } = Typography;
@@ -13,6 +13,9 @@ export const EmployeeListPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>(undefined);
+  const [selectedPosition, setSelectedPosition] = useState<string | undefined>(undefined);
+  const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadEmployees();
@@ -33,19 +36,139 @@ export const EmployeeListPage = () => {
     }
   };
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-    const lowercasedValue = value.toLowerCase();
-    const filtered = employees.filter(emp =>
-      emp.email.toLowerCase().includes(lowercasedValue) ||
-      emp.firstName?.toLowerCase().includes(lowercasedValue) ||
-      emp.lastName?.toLowerCase().includes(lowercasedValue) ||
-      emp.departmentName?.toLowerCase().includes(lowercasedValue) ||
-      emp.positionName?.toLowerCase().includes(lowercasedValue) ||
-      emp.employmentType?.toLowerCase().includes(lowercasedValue)
-    );
+  const applyFilters = (
+    searchValue?: string,
+    department?: string,
+    position?: string,
+    status?: string
+  ) => {
+    let filtered = [...employees];
+
+    // Apply search filter
+    if (searchValue) {
+      const lowercasedValue = searchValue.toLowerCase();
+      filtered = filtered.filter(emp =>
+        emp.email.toLowerCase().includes(lowercasedValue) ||
+        emp.firstName?.toLowerCase().includes(lowercasedValue) ||
+        emp.lastName?.toLowerCase().includes(lowercasedValue) ||
+        emp.departmentName?.toLowerCase().includes(lowercasedValue) ||
+        emp.positionName?.toLowerCase().includes(lowercasedValue) ||
+        emp.employmentType?.toLowerCase().includes(lowercasedValue)
+      );
+    }
+
+    // Apply department filter
+    if (department) {
+      filtered = filtered.filter(emp => emp.departmentName === department);
+    }
+
+    // Apply position filter
+    if (position) {
+      filtered = filtered.filter(emp => emp.positionName === position);
+    }
+
+    // Apply status filter
+    if (status === 'probation') {
+      filtered = filtered.filter(emp => emp.isProbation);
+    } else if (status === 'active') {
+      filtered = filtered.filter(emp => !emp.isProbation);
+    }
+
     setFilteredEmployees(filtered);
   };
+
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+    applyFilters(value, selectedDepartment, selectedPosition, selectedStatus);
+  };
+
+  const handleDepartmentChange = (value: string | undefined) => {
+    setSelectedDepartment(value);
+    applyFilters(searchText, value, selectedPosition, selectedStatus);
+  };
+
+  const handlePositionChange = (value: string | undefined) => {
+    setSelectedPosition(value);
+    applyFilters(searchText, selectedDepartment, value, selectedStatus);
+  };
+
+  const handleStatusChange = (value: string | undefined) => {
+    setSelectedStatus(value);
+    applyFilters(searchText, selectedDepartment, selectedPosition, value);
+  };
+
+  const handleClearFilters = () => {
+    setSearchText('');
+    setSelectedDepartment(undefined);
+    setSelectedPosition(undefined);
+    setSelectedStatus(undefined);
+    setFilteredEmployees(employees);
+  };
+
+  const handleExportToCSV = () => {
+    // Prepare CSV headers
+    const headers = [
+      'Employee ID',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Department',
+      'Position',
+      'Employment Type',
+      'Status',
+      'Probation End Date',
+      'Contract End Date',
+    ];
+
+    // Prepare CSV rows
+    const rows = filteredEmployees.map(emp => [
+      emp.employeeId,
+      emp.firstName || '',
+      emp.lastName || '',
+      emp.email,
+      emp.departmentName || '',
+      emp.positionName || '',
+      emp.employmentType || '',
+      emp.isProbation ? 'Probation' : 'Active',
+      emp.probationEndDate || '',
+      emp.contractEndDate || '',
+    ]);
+
+    // Convert to CSV string
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row =>
+        row.map(cell => {
+          // Escape cells containing commas, quotes, or newlines
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      ),
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `employees_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Extract unique departments and positions for filters
+  const uniqueDepartments = Array.from(
+    new Set(employees.filter(emp => emp.departmentName).map(emp => emp.departmentName))
+  ).sort();
+
+  const uniquePositions = Array.from(
+    new Set(employees.filter(emp => emp.positionName).map(emp => emp.positionName))
+  ).sort();
 
   const employmentTypeColors: Record<string, string> = {
     internal: 'green',
@@ -204,6 +327,14 @@ export const EmployeeListPage = () => {
                 allowClear
               />
               <Button
+                icon={<DownloadOutlined />}
+                onClick={handleExportToCSV}
+                disabled={filteredEmployees.length === 0}
+                style={{ borderRadius: 6 }}
+              >
+                Export CSV
+              </Button>
+              <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => navigate('/admin/employees/create')}
@@ -216,6 +347,63 @@ export const EmployeeListPage = () => {
                 Add Employee
               </Button>
             </Space>
+          </div>
+
+          {/* Advanced Filters */}
+          <div style={{
+            background: '#f5f5f5',
+            padding: '16px',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <span style={{ fontWeight: 500, color: '#666' }}>Filters:</span>
+            <Select
+              placeholder="Department"
+              value={selectedDepartment}
+              onChange={handleDepartmentChange}
+              allowClear
+              style={{ width: 180, borderRadius: 6 }}
+            >
+              {uniqueDepartments.map(dept => (
+                <Select.Option key={dept} value={dept}>
+                  {dept}
+                </Select.Option>
+              ))}
+            </Select>
+            <Select
+              placeholder="Position"
+              value={selectedPosition}
+              onChange={handlePositionChange}
+              allowClear
+              style={{ width: 180, borderRadius: 6 }}
+            >
+              {uniquePositions.map(pos => (
+                <Select.Option key={pos} value={pos}>
+                  {pos}
+                </Select.Option>
+              ))}
+            </Select>
+            <Select
+              placeholder="Status"
+              value={selectedStatus}
+              onChange={handleStatusChange}
+              allowClear
+              style={{ width: 150, borderRadius: 6 }}
+            >
+              <Select.Option value="active">Active</Select.Option>
+              <Select.Option value="probation">Probation</Select.Option>
+            </Select>
+            {(selectedDepartment || selectedPosition || selectedStatus || searchText) && (
+              <Button onClick={handleClearFilters} style={{ borderRadius: 6 }}>
+                Clear All Filters
+              </Button>
+            )}
+            <span style={{ marginLeft: 'auto', color: '#666' }}>
+              Showing {filteredEmployees.length} of {employees.length} employees
+            </span>
           </div>
 
           {error && (
