@@ -61,16 +61,32 @@ public class DocumentRequestController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Employee currentEmployee = getOrCreateEmployee(user);
-
-        if (!permissionService.has(currentEmployee, "REQUEST_DOCS")) {
-            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
-        }
-
         Employee targetEmployee = employeeRepository.findById(request.getTargetEmployeeId())
                 .orElseThrow(() -> new RuntimeException("Target employee not found"));
 
         if (user.getOrganization() == null || !user.getOrganization().getId().equals(targetEmployee.getOrganization().getId())) {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        // Check permission based on scope
+        boolean hasPermission = false;
+        String highestScope = permissionService.getHighestScope(user, "document-requests", "create");
+
+        if ("organization".equals(highestScope)) {
+            hasPermission = true;
+        } else if ("department".equals(highestScope)) {
+            // Can request from department members
+            hasPermission = currentEmployee.getDepartment() != null &&
+                           targetEmployee.getDepartment() != null &&
+                           currentEmployee.getDepartment().getId().equals(targetEmployee.getDepartment().getId());
+        } else if ("team".equals(highestScope)) {
+            // Can request from direct reports
+            List<Employee> teamMembers = employeeService.getReportingTree(currentEmployee.getId());
+            hasPermission = teamMembers.stream().anyMatch(e -> e.getId().equals(targetEmployee.getId()));
+        }
+
+        if (!hasPermission) {
+            return ResponseEntity.status(403).body(Map.of("error", "You don't have permission to request documents from this employee"));
         }
 
         DocumentRequest docRequest = documentRequestService.createRequest(user, targetEmployee, request.getMessage());
@@ -128,7 +144,7 @@ public class DocumentRequestController {
     }
 
     @GetMapping("/org")
-    @PreAuthorize("hasRole('ORGADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getOrganizationRequests(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findByEmail(email)
@@ -141,16 +157,24 @@ public class DocumentRequestController {
         }
 
         List<DocumentRequest> requests;
+        String highestScope = permissionService.getHighestScope(user, "document-requests", "view");
 
-        // Check if user has full org access or only team access
-        boolean hasFullOrgAccess = permissionService.has(currentEmployee, "VIEW_ORG_DOCS") ||
-                                    permissionService.has(currentEmployee, "UPLOAD_FOR_OTHERS");
-        boolean hasTeamAccess = permissionService.has(currentEmployee, "VIEW_DEPT_DOCS");
-
-        if (hasFullOrgAccess) {
-            // Full org access (e.g., org admin)
+        if ("organization".equals(highestScope)) {
+            // Full org access
             requests = documentRequestService.getRequestsForOrganization(user.getOrganization());
-        } else if (hasTeamAccess) {
+        } else if ("department".equals(highestScope)) {
+            // Department access only
+            if (currentEmployee.getDepartment() == null) {
+                return ResponseEntity.status(403).body(Map.of("error", "You are not assigned to a department"));
+            }
+
+            requests = documentRequestService.getRequestsForOrganization(user.getOrganization()).stream()
+                    .filter(req -> (req.getTargetEmployee().getDepartment() != null &&
+                                   req.getTargetEmployee().getDepartment().getId().equals(currentEmployee.getDepartment().getId())) ||
+                                  (req.getRequester().getDepartment() != null &&
+                                   req.getRequester().getDepartment().getId().equals(currentEmployee.getDepartment().getId())))
+                    .collect(Collectors.toList());
+        } else if ("team".equals(highestScope)) {
             // Team/subtree access only
             List<Employee> teamMembers = employeeService.getReportingTree(currentEmployee.getId());
             teamMembers.add(currentEmployee); // Include self
@@ -175,7 +199,7 @@ public class DocumentRequestController {
     }
 
     @PatchMapping("/{requestId}/status")
-    @PreAuthorize("hasRole('ORGADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> updateRequestStatus(@PathVariable UUID requestId,
                                                  @Valid @RequestBody DocumentRequestStatusUpdateRequest request,
                                                  Authentication authentication) {
@@ -184,15 +208,33 @@ public class DocumentRequestController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Employee currentEmployee = getOrCreateEmployee(user);
+        String highestScope = permissionService.getHighestScope(user, "document-requests", "approve");
 
-        if (!permissionService.has(currentEmployee, "UPLOAD_FOR_OTHERS")) {
-            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        if (highestScope == null) {
+            return ResponseEntity.status(403).body(Map.of("error", "You don't have permission to approve/reject document requests"));
         }
 
         DocumentRequest docRequest = documentRequestService.getRequestsForOrganization(user.getOrganization()).stream()
                 .filter(r -> r.getId().equals(requestId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Request not found or access denied"));
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+
+        // Verify user has permission to approve this specific request based on scope
+        boolean hasPermission = false;
+        if ("organization".equals(highestScope)) {
+            hasPermission = true;
+        } else if ("department".equals(highestScope)) {
+            hasPermission = currentEmployee.getDepartment() != null &&
+                           docRequest.getTargetEmployee().getDepartment() != null &&
+                           currentEmployee.getDepartment().getId().equals(docRequest.getTargetEmployee().getDepartment().getId());
+        } else if ("team".equals(highestScope)) {
+            List<Employee> teamMembers = employeeService.getReportingTree(currentEmployee.getId());
+            hasPermission = teamMembers.stream().anyMatch(e -> e.getId().equals(docRequest.getTargetEmployee().getId()));
+        }
+
+        if (!hasPermission) {
+            return ResponseEntity.status(403).body(Map.of("error", "You don't have permission to approve/reject this request"));
+        }
 
         DocumentRequest updated;
         if ("COMPLETED".equals(request.getStatus())) {
