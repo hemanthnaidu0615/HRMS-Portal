@@ -211,6 +211,8 @@ public class EmployeeManagementController {
             EmployeeTreeNodeResponse node = new EmployeeTreeNodeResponse();
             node.setEmployeeId(emp.getId());
             node.setEmail(emp.getUser().getEmail());
+            node.setFirstName(emp.getFirstName());
+            node.setLastName(emp.getLastName());
             node.setPositionName(emp.getPosition() != null ? emp.getPosition().getName() : null);
             node.setDepartmentName(emp.getDepartment() != null ? emp.getDepartment().getName() : null);
             node.setReports(new ArrayList<>());
@@ -592,6 +594,8 @@ public class EmployeeManagementController {
                 employee.getPosition() != null ? employee.getPosition().getName() : null,
                 employee.getReportsTo() != null ? employee.getReportsTo().getId() : null,
                 employee.getReportsTo() != null ? employee.getReportsTo().getUser().getEmail() : null,
+                employee.getReportsTo() != null ? employee.getReportsTo().getFirstName() : null,
+                employee.getReportsTo() != null ? employee.getReportsTo().getLastName() : null,
                 employee.getEmploymentType(),
                 employee.getClientId(),
                 employee.getProjectId(),

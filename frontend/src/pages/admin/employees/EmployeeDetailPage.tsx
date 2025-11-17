@@ -384,7 +384,13 @@ export const EmployeeDetailPage = () => {
                 '—'
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="Reports To">{employee.reportsToEmail || '—'}</Descriptions.Item>
+            <Descriptions.Item label="Reports To">
+              {(() => {
+                if (!employee.reportsToEmployeeId) return '—';
+                const fullName = `${employee.reportsToFirstName || ''} ${employee.reportsToLastName || ''}`.trim();
+                return fullName || employee.reportsToEmail || '—';
+              })()}
+            </Descriptions.Item>
             <Descriptions.Item label="Client ID">{employee.clientId || '—'}</Descriptions.Item>
             <Descriptions.Item label="Project ID">{employee.projectId || '—'}</Descriptions.Item>
             <Descriptions.Item label="Contract End Date">{employee.contractEndDate || '—'}</Descriptions.Item>

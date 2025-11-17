@@ -29,6 +29,8 @@ export interface EmployeeDetailResponse {
   positionName: string | null;
   reportsToEmployeeId: string | null;
   reportsToEmail: string | null;
+  reportsToFirstName: string | null;
+  reportsToLastName: string | null;
   employmentType: string | null;
   clientName: string | null;
   projectId: string | null;
@@ -62,6 +64,8 @@ export interface EmployeeHistoryResponse {
 export interface EmployeeTreeNodeResponse {
   employeeId: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   positionName: string | null;
   departmentName: string | null;
   reports?: EmployeeTreeNodeResponse[];

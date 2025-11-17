@@ -4,6 +4,8 @@ export interface Employee {
   employeeId: string;
   userId: string;
   email: string;
+  firstName?: string | null;
+  lastName?: string | null;
   departmentName?: string;
   positionName?: string;
   reportsToEmployeeId?: string;

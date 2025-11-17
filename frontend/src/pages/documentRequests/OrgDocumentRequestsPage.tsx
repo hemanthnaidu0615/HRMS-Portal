@@ -224,13 +224,21 @@ export const OrgDocumentRequestsPage = () => {
                   <Select
                     value={selectedEmployeeId}
                     onChange={setSelectedEmployeeId}
-                    options={employees.map(emp => ({
-                      label: emp.email,
-                      value: emp.employeeId
-                    }))}
+                    options={employees.map(emp => {
+                      const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+                      const displayName = fullName || emp.email;
+                      return {
+                        label: displayName,
+                        value: emp.employeeId
+                      };
+                    })}
                     placeholder="Select employee"
                     style={{ width: '100%', borderRadius: 8 }}
                     size="large"
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
                   />
                 </div>
                 <div>

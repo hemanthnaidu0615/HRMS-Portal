@@ -48,6 +48,8 @@ interface Employee {
   user: {
     email: string;
   };
+  firstName?: string | null;
+  lastName?: string | null;
   department?: {
     name: string;
   };
@@ -358,12 +360,16 @@ export const CreateEmployeePage = () => {
                     .includes(input.toLowerCase())
                 }
               >
-                {employees.map((emp) => (
-                  <Option key={emp.id} value={emp.id}>
-                    {emp.user.email}
-                    {emp.position && ` - ${emp.position.name}`}
-                  </Option>
-                ))}
+                {employees.map((emp) => {
+                  const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+                  const displayName = fullName || emp.user.email;
+                  return (
+                    <Option key={emp.id} value={emp.id}>
+                      {displayName}
+                      {emp.position && ` - ${emp.position.name}`}
+                    </Option>
+                  );
+                })}
               </Select>
             </Form.Item>
           </Space>
@@ -565,7 +571,12 @@ export const CreateEmployeePage = () => {
               </p>
               <p>
                 <strong>Reports To:</strong>{' '}
-                {employees.find((e) => e.id === reviewData.reportsToId)?.user.email || 'Not assigned'}
+                {(() => {
+                  const manager = employees.find((e) => e.id === reviewData.reportsToId);
+                  if (!manager) return 'Not assigned';
+                  const fullName = `${manager.firstName || ''} ${manager.lastName || ''}`.trim();
+                  return fullName || manager.user.email;
+                })()}
               </p>
             </Card>
 

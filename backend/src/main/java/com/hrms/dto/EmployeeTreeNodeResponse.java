@@ -14,6 +14,8 @@ import java.util.UUID;
 public class EmployeeTreeNodeResponse {
     private UUID employeeId;
     private String email;
+    private String firstName;
+    private String lastName;
     private String positionName;
     private String departmentName;
     private List<EmployeeTreeNodeResponse> reports = new ArrayList<>();

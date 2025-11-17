@@ -25,6 +25,8 @@ public class EmployeeDetailResponse {
 
     private UUID reportsToEmployeeId;
     private String reportsToEmail;
+    private String reportsToFirstName;
+    private String reportsToLastName;
 
     private String employmentType;
     private String clientName;  // For client employees
