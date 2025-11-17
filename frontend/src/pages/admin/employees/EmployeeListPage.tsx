@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select } from 'antd';
-import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select, Modal, message } from 'antd';
+import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined, DownloadOutlined, UploadOutlined, FileTextOutlined } from '@ant-design/icons';
 import { getEmployees, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
+import { createDocumentRequest } from '../../../api/documentRequestsApi';
 
-const { Title } = Typography;
+const { Title, TextArea } = Typography;
 
 export const EmployeeListPage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,11 @@ export const EmployeeListPage = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>(undefined);
   const [selectedPosition, setSelectedPosition] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [requestModalVisible, setRequestModalVisible] = useState(false);
+  const [documentRequestMessage, setDocumentRequestMessage] = useState('');
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [singleEmployeeId, setSingleEmployeeId] = useState<string | null>(null);
 
   useEffect(() => {
     loadEmployees();
@@ -103,6 +109,51 @@ export const EmployeeListPage = () => {
     setSelectedPosition(undefined);
     setSelectedStatus(undefined);
     setFilteredEmployees(employees);
+  };
+
+  const openRequestModal = (employeeId?: string) => {
+    if (employeeId) {
+      setSingleEmployeeId(employeeId);
+    } else {
+      setSingleEmployeeId(null);
+    }
+    setDocumentRequestMessage('');
+    setRequestModalVisible(true);
+  };
+
+  const handleBulkRequestDocument = async () => {
+    const targetEmployees = singleEmployeeId ? [singleEmployeeId] : selectedRowKeys as string[];
+
+    if (targetEmployees.length === 0) {
+      message.error('Please select at least one employee');
+      return;
+    }
+
+    if (!documentRequestMessage.trim()) {
+      message.error('Please enter a message for the document request');
+      return;
+    }
+
+    try {
+      setRequestLoading(true);
+
+      // Send request to each selected employee
+      await Promise.all(
+        targetEmployees.map(employeeId =>
+          createDocumentRequest(employeeId, documentRequestMessage.trim())
+        )
+      );
+
+      message.success(`Document request sent to ${targetEmployees.length} employee(s)`);
+      setRequestModalVisible(false);
+      setDocumentRequestMessage('');
+      setSelectedRowKeys([]);
+      setSingleEmployeeId(null);
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to send document requests');
+    } finally {
+      setRequestLoading(false);
+    }
   };
 
   const handleExportToCSV = () => {
@@ -270,8 +321,22 @@ export const EmployeeListPage = () => {
     {
       title: 'Actions',
       key: 'actions',
+      width: 450,
       render: (record: EmployeeSummaryResponse) => (
-        <Space size="small">
+        <Space size="small" wrap>
+          <Button
+            type="primary"
+            size="small"
+            icon={<FileTextOutlined />}
+            onClick={() => openRequestModal(record.employeeId)}
+            style={{
+              background: '#52c41a',
+              borderColor: '#52c41a',
+              borderRadius: 6
+            }}
+          >
+            Request Doc
+          </Button>
           <Button
             type="primary"
             size="small"
@@ -306,6 +371,13 @@ export const EmployeeListPage = () => {
     },
   ];
 
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedRowKeys: React.Key[]) => {
+      setSelectedRowKeys(newSelectedRowKeys);
+    },
+  };
+
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
       <Card
@@ -316,8 +388,30 @@ export const EmployeeListPage = () => {
       >
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-            <Title level={3} style={{ margin: 0 }}>Employees</Title>
-            <Space>
+            <div>
+              <Title level={3} style={{ margin: 0 }}>Employees</Title>
+              {selectedRowKeys.length > 0 && (
+                <span style={{ color: '#52c41a', fontWeight: 500, fontSize: 14 }}>
+                  {selectedRowKeys.length} employee(s) selected
+                </span>
+              )}
+            </div>
+            <Space wrap>
+              {selectedRowKeys.length > 0 && (
+                <Button
+                  type="primary"
+                  icon={<FileTextOutlined />}
+                  onClick={() => openRequestModal()}
+                  style={{
+                    background: '#52c41a',
+                    borderColor: '#52c41a',
+                    borderRadius: 6,
+                    fontWeight: 600
+                  }}
+                >
+                  Request Documents from {selectedRowKeys.length} Selected
+                </Button>
+              )}
               <Input
                 placeholder="Search employees..."
                 prefix={<SearchOutlined />}
@@ -428,6 +522,7 @@ export const EmployeeListPage = () => {
             <Skeleton active paragraph={{ rows: 8 }} />
           ) : (
             <Table
+              rowSelection={rowSelection}
               columns={columns}
               dataSource={filteredEmployees}
               rowKey="employeeId"
@@ -445,6 +540,63 @@ export const EmployeeListPage = () => {
           )}
         </Space>
       </Card>
+
+      {/* Request Document Modal */}
+      <Modal
+        title={
+          <Space>
+            <FileTextOutlined style={{ color: '#52c41a' }} />
+            <span>
+              {singleEmployeeId
+                ? 'Request Document from Employee'
+                : `Request Documents from ${selectedRowKeys.length} Employees`}
+            </span>
+          </Space>
+        }
+        open={requestModalVisible}
+        onOk={handleBulkRequestDocument}
+        onCancel={() => {
+          setRequestModalVisible(false);
+          setDocumentRequestMessage('');
+          setSingleEmployeeId(null);
+        }}
+        confirmLoading={requestLoading}
+        okText="Send Request"
+        okButtonProps={{
+          style: {
+            background: '#52c41a',
+            borderColor: '#52c41a'
+          }
+        }}
+        width={600}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Alert
+            message="What document do you need?"
+            description={
+              singleEmployeeId
+                ? 'The employee will receive this request and can upload the requested document.'
+                : `All ${selectedRowKeys.length} selected employees will receive this request.`
+            }
+            type="info"
+            showIcon
+          />
+          <div>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+              Request Message *
+            </label>
+            <TextArea
+              placeholder="e.g., Please upload your ID proof, passport copy, or latest address proof"
+              value={documentRequestMessage}
+              onChange={(e) => setDocumentRequestMessage(e.target.value)}
+              rows={4}
+              style={{ borderRadius: 8 }}
+              maxLength={500}
+              showCount
+            />
+          </div>
+        </Space>
+      </Modal>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout, Menu, Dropdown, Avatar, Typography, Space, Button, Grid } from 'antd';
+import { Layout, Menu, Dropdown, Avatar, Typography, Space, Button, Grid, Badge, Popover, List, Empty } from 'antd';
 import {
   UserOutlined,
   LogoutOutlined,
@@ -11,10 +11,15 @@ import {
   DashboardOutlined,
   BankOutlined,
   SafetyCertificateOutlined,
+  BellOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { authApi } from '../api/authApi';
+import { Breadcrumbs } from './Breadcrumbs';
+import { QuickActionButton } from './QuickActionButton';
+import { CommandPalette } from './CommandPalette';
 import type { MenuProps } from 'antd';
 
 const { Header, Content, Sider } = Layout;
@@ -31,6 +36,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { roles, user, hasPermission } = useAuth();
   const screens = useBreakpoint();
   const [collapsed, setCollapsed] = useState(!screens.lg);
+  const [notificationsVisible, setNotificationsVisible] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -40,6 +46,61 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     }
     navigate('/login');
   };
+
+  // Mock notifications - in real app, fetch from API
+  const notifications = [
+    // { id: 1, title: 'Document request approved', time: '2 hours ago', type: 'success' },
+    // { id: 2, title: 'New employee added', time: '5 hours ago', type: 'info' },
+  ];
+
+  const notificationContent = (
+    <div style={{ width: 320 }}>
+      <div style={{
+        padding: '12px 16px',
+        borderBottom: '1px solid #f0f0f0',
+        fontWeight: 600,
+        fontSize: 16
+      }}>
+        Notifications
+      </div>
+      <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+        {notifications.length > 0 ? (
+          <List
+            dataSource={notifications}
+            renderItem={(item: any) => (
+              <List.Item
+                style={{
+                  padding: '12px 16px',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                <List.Item.Meta
+                  title={item.title}
+                  description={item.time}
+                />
+              </List.Item>
+            )}
+          />
+        ) : (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="No notifications"
+            style={{ padding: '32px 16px' }}
+          />
+        )}
+      </div>
+      <div style={{
+        padding: '8px 16px',
+        borderTop: '1px solid #f0f0f0',
+        textAlign: 'center'
+      }}>
+        <Button type="link" size="small">View all notifications</Button>
+      </div>
+    </div>
+  );
 
   const userMenuItems: MenuProps['items'] = [
     {
@@ -285,9 +346,49 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             </Text>
           </div>
         </div>
-        <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
-          <Space style={{ cursor: 'pointer' }}>
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#15195c' }} />
+        <Space size={16}>
+          {/* Help Button */}
+          <Button
+            type="text"
+            icon={<QuestionCircleOutlined style={{ fontSize: 20, color: '#fff' }} />}
+            onClick={() => window.open('https://docs.example.com/hrms', '_blank')}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              boxShadow: 'none',
+              height: 'auto',
+              padding: '4px 8px'
+            }}
+            title="Help & Documentation"
+          />
+
+          {/* Notifications */}
+          <Popover
+            content={notificationContent}
+            trigger="click"
+            placement="bottomRight"
+            open={notificationsVisible}
+            onOpenChange={setNotificationsVisible}
+          >
+            <Badge count={notifications.length} overflowCount={9} offset={[-5, 5]}>
+              <Button
+                type="text"
+                icon={<BellOutlined style={{ fontSize: 20, color: '#fff' }} />}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  boxShadow: 'none',
+                  height: 'auto',
+                  padding: '4px 8px'
+                }}
+              />
+            </Badge>
+          </Popover>
+
+          {/* User Menu */}
+          <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
+            <Space style={{ cursor: 'pointer' }}>
+              <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#15195c' }} />
             {screens.sm && (
               <Text
                 style={{
@@ -301,8 +402,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 {user?.email?.split('@')[0]}
               </Text>
             )}
-          </Space>
-        </Dropdown>
+            </Space>
+          </Dropdown>
+        </Space>
       </Header>
       <Layout>
         <Sider
@@ -323,8 +425,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             style={{ height: '100%', borderRight: 0, paddingTop: 8 }}
           />
         </Sider>
-        <Content className="p-4 lg:p-6" style={{ background: '#dde4eb', minHeight: 'calc(100vh - 64px)' }}>
-          {children}
+        <Content style={{ background: '#dde4eb', minHeight: 'calc(100vh - 64px)' }}>
+          <Breadcrumbs />
+          <div className="p-4 lg:p-6">
+            {children}
+          </div>
+          <QuickActionButton />
+          <CommandPalette />
         </Content>
       </Layout>
     </Layout>
