@@ -14,6 +14,8 @@ public class EmployeeDetailResponse {
     private UUID employeeId;
     private UUID userId;
     private String email;
+    private String firstName;
+    private String lastName;
 
     private UUID departmentId;
     private String departmentName;

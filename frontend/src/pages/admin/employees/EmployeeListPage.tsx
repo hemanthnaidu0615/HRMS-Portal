@@ -38,6 +38,8 @@ export const EmployeeListPage = () => {
     const lowercasedValue = value.toLowerCase();
     const filtered = employees.filter(emp =>
       emp.email.toLowerCase().includes(lowercasedValue) ||
+      emp.firstName?.toLowerCase().includes(lowercasedValue) ||
+      emp.lastName?.toLowerCase().includes(lowercasedValue) ||
       emp.departmentName?.toLowerCase().includes(lowercasedValue) ||
       emp.positionName?.toLowerCase().includes(lowercasedValue) ||
       emp.employmentType?.toLowerCase().includes(lowercasedValue)
@@ -54,16 +56,26 @@ export const EmployeeListPage = () => {
 
   const columns = [
     {
-      title: 'Email',
+      title: 'Employee',
       dataIndex: 'email',
       key: 'email',
-      sorter: (a: EmployeeSummaryResponse, b: EmployeeSummaryResponse) => a.email.localeCompare(b.email),
-      render: (text: string) => (
-        <Space>
-          <UserOutlined />
-          {text}
-        </Space>
-      ),
+      sorter: (a: EmployeeSummaryResponse, b: EmployeeSummaryResponse) => {
+        const aName = `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email;
+        const bName = `${b.firstName || ''} ${b.lastName || ''}`.trim() || b.email;
+        return aName.localeCompare(bName);
+      },
+      render: (text: string, record: EmployeeSummaryResponse) => {
+        const fullName = `${record.firstName || ''} ${record.lastName || ''}`.trim();
+        return (
+          <Space direction="vertical" size={0}>
+            <Space>
+              <UserOutlined />
+              {fullName || text}
+            </Space>
+            {fullName && <span style={{ fontSize: '12px', color: '#888' }}>{text}</span>}
+          </Space>
+        );
+      },
     },
     {
       title: 'Department',

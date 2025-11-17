@@ -173,7 +173,8 @@ export const EmployeeDetailPage = () => {
       setNewProbationEndDate(null);
       await loadEmployee();
     } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to extend probation');
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to extend probation';
+      message.error(errorMsg);
     } finally {
       setActionLoading(false);
     }
@@ -188,7 +189,8 @@ export const EmployeeDetailPage = () => {
       message.success('Probation completed successfully');
       await loadEmployee();
     } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to complete probation');
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to complete probation';
+      message.error(errorMsg);
     } finally {
       setActionLoading(false);
     }
@@ -203,7 +205,8 @@ export const EmployeeDetailPage = () => {
       message.success('Probation terminated');
       await loadEmployee();
     } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to terminate probation');
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to terminate probation';
+      message.error(errorMsg);
     } finally {
       setActionLoading(false);
     }
@@ -352,6 +355,11 @@ export const EmployeeDetailPage = () => {
           </div>
 
           <Descriptions bordered column={2}>
+            {(employee.firstName || employee.lastName) && (
+              <Descriptions.Item label="Name">
+                {employee.firstName} {employee.lastName}
+              </Descriptions.Item>
+            )}
             <Descriptions.Item label="Email">{employee.email}</Descriptions.Item>
             <Descriptions.Item label="Employment Type">
               {employee.employmentType ? (
@@ -512,7 +520,14 @@ export const EmployeeDetailPage = () => {
               style={{ width: '100%' }}
               size="large"
               placeholder="Select new end date"
-              disabledDate={(current) => current && current < dayjs().endOf('day')}
+              disabledDate={(current) => {
+                if (!current) return false;
+                // Disable past dates
+                if (current < dayjs().startOf('day')) return true;
+                // Disable dates before or equal to current end date
+                if (employee?.probationEndDate && current <= dayjs(employee.probationEndDate)) return true;
+                return false;
+              }}
             />
           </div>
         </Space>

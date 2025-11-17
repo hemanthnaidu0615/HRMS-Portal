@@ -15,6 +15,10 @@ public class CreateEmployeeRequest {
     @NotBlank(message = "Temporary password is required")
     private String temporaryPassword;
 
+    // Personal details
+    private String firstName;
+    private String lastName;
+
     // Organization assignment
     private UUID departmentId;
     private UUID positionId;
@@ -58,6 +62,22 @@ public class CreateEmployeeRequest {
 
     public void setTemporaryPassword(String temporaryPassword) {
         this.temporaryPassword = temporaryPassword;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public UUID getDepartmentId() {

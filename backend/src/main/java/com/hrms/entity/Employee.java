@@ -35,6 +35,13 @@ public class Employee {
     @JoinColumn(name = "reports_to")
     private Employee reportsTo;
 
+    // Personal details
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
     // Employment details
     @Column(name = "employment_type", nullable = false, length = 50)
     private String employmentType = "internal";  // internal, contract, client
@@ -132,6 +139,22 @@ public class Employee {
 
     public void setReportsTo(Employee reportsTo) {
         this.reportsTo = reportsTo;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmploymentType() {

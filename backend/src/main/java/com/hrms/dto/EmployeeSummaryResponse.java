@@ -14,6 +14,8 @@ public class EmployeeSummaryResponse {
     private UUID employeeId;
     private UUID userId;
     private String email;
+    private String firstName;
+    private String lastName;
     private String departmentName;
     private String positionName;
     private UUID reportsToEmployeeId;

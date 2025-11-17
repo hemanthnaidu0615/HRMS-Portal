@@ -125,6 +125,10 @@ CREATE TABLE employees (
     position_id UNIQUEIDENTIFIER NULL,
     reports_to UNIQUEIDENTIFIER NULL,
 
+    -- Personal details
+    first_name VARCHAR(100) NULL,
+    last_name VARCHAR(100) NULL,
+
     -- Employment details
     employment_type VARCHAR(50) NOT NULL DEFAULT 'internal',  -- internal, contract, client
     client_name VARCHAR(255) NULL,                            -- for client employees

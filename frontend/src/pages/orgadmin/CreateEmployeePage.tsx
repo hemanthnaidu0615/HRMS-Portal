@@ -74,6 +74,8 @@ export const CreateEmployeePage = () => {
   const [formData, setFormData] = useState<any>({
     email: '',
     temporaryPassword: '',
+    firstName: '',
+    lastName: '',
     departmentId: null,
     positionId: null,
     reportsToId: null,
@@ -157,6 +159,8 @@ export const CreateEmployeePage = () => {
       const payload = {
         email: finalData.email,
         temporaryPassword: finalData.temporaryPassword,
+        firstName: finalData.firstName || null,
+        lastName: finalData.lastName || null,
         departmentId: finalData.departmentId || null,
         positionId: finalData.positionId || null,
         reportsToId: finalData.reportsToId || null,
@@ -178,7 +182,25 @@ export const CreateEmployeePage = () => {
         navigate('/admin/employees');
       }, 2000);
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to create employee';
+      let errorMsg = 'Failed to create employee';
+
+      if (err.response) {
+        // Extract error message from backend response
+        const backendError = err.response.data?.message || err.response.data?.error;
+
+        if (backendError) {
+          errorMsg = backendError;
+        } else if (err.response.status === 409) {
+          errorMsg = 'Email already exists. Please use a different email address.';
+        } else if (err.response.status === 400) {
+          errorMsg = 'Invalid input. Please check all fields and try again.';
+        } else if (err.response.status === 500) {
+          errorMsg = 'Server error. Please try again later.';
+        }
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+
       setError(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -229,6 +251,35 @@ export const CreateEmployeePage = () => {
                 size="large"
               />
             </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="firstName"
+                  label="First Name"
+                  initialValue={formData.firstName}
+                >
+                  <Input
+                    prefix={<UserOutlined />}
+                    placeholder="John"
+                    size="large"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="lastName"
+                  label="Last Name"
+                  initialValue={formData.lastName}
+                >
+                  <Input
+                    prefix={<UserOutlined />}
+                    placeholder="Doe"
+                    size="large"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
             <Form.Item
               name="temporaryPassword"
@@ -394,17 +445,45 @@ export const CreateEmployeePage = () => {
                           rules={[{ required: true, message: 'Start date is required' }]}
                           initialValue={formData.probationStartDate}
                         >
-                          <DatePicker size="large" style={{ width: '100%' }} />
+                          <DatePicker
+                            size="large"
+                            style={{ width: '100%' }}
+                            disabledDate={(current) => current && current < dayjs().startOf('day')}
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={12}>
                         <Form.Item
                           name="probationEndDate"
                           label="End Date"
-                          rules={[{ required: true, message: 'End date is required' }]}
+                          rules={[
+                            { required: true, message: 'End date is required' },
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const startDate = getFieldValue('probationStartDate');
+                                if (!value || !startDate) {
+                                  return Promise.resolve();
+                                }
+                                if (value.isBefore(startDate)) {
+                                  return Promise.reject(new Error('End date must be after start date'));
+                                }
+                                return Promise.resolve();
+                              },
+                            }),
+                          ]}
                           initialValue={formData.probationEndDate}
                         >
-                          <DatePicker size="large" style={{ width: '100%' }} />
+                          <DatePicker
+                            size="large"
+                            style={{ width: '100%' }}
+                            disabledDate={(current) => {
+                              const startDate = getFieldValue('probationStartDate');
+                              if (!current) return false;
+                              if (current < dayjs().startOf('day')) return true;
+                              if (startDate && current <= startDate) return true;
+                              return false;
+                            }}
+                          />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -468,6 +547,9 @@ export const CreateEmployeePage = () => {
         return (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <Card title="Basic Information" size="small">
+              {(reviewData.firstName || reviewData.lastName) && (
+                <p><strong>Name:</strong> {reviewData.firstName} {reviewData.lastName}</p>
+              )}
               <p><strong>Email:</strong> {reviewData.email}</p>
               <p><strong>Temporary Password:</strong> ••••••••</p>
             </Card>

@@ -62,6 +62,14 @@ public class EmployeeService {
     public Employee createEmployee(User user, Organization org, CreateEmployeeRequest request) {
         Employee employee = new Employee(user, org);
 
+        // Set personal details
+        if (request.getFirstName() != null) {
+            employee.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            employee.setLastName(request.getLastName());
+        }
+
         // Set department if provided
         if (request.getDepartmentId() != null) {
             Department department = departmentRepository.findById(request.getDepartmentId())
@@ -99,6 +107,13 @@ public class EmployeeService {
 
         // Set probation details
         if (request.getIsProbation() != null && request.getIsProbation()) {
+            // Validate probation dates
+            if (request.getProbationStartDate() != null && request.getProbationEndDate() != null) {
+                if (request.getProbationEndDate().isBefore(request.getProbationStartDate())) {
+                    throw new IllegalArgumentException("Probation end date must be after start date");
+                }
+            }
+
             employee.setIsProbation(true);
             employee.setProbationStartDate(request.getProbationStartDate());
             employee.setProbationEndDate(request.getProbationEndDate());
@@ -314,8 +329,19 @@ public class EmployeeService {
 
     @Transactional
     public Employee extendProbation(Employee employee, LocalDate newEndDate, User changedBy) {
+        // Validate new end date
+        if (newEndDate == null) {
+            throw new IllegalArgumentException("New probation end date cannot be null");
+        }
+        if (newEndDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("New probation end date cannot be in the past");
+        }
+        if (employee.getProbationEndDate() != null && newEndDate.isBefore(employee.getProbationEndDate())) {
+            throw new IllegalArgumentException("New probation end date must be after the current end date");
+        }
+
         String oldValue = employee.getProbationEndDate() != null ? employee.getProbationEndDate().toString() : null;
-        String newValue = newEndDate != null ? newEndDate.toString() : null;
+        String newValue = newEndDate.toString();
 
         employee.setProbationEndDate(newEndDate);
         employee.setProbationStatus("extended");

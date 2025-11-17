@@ -4,18 +4,25 @@ export interface EmployeeSummaryResponse {
   employeeId: string;
   userId: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   departmentName: string | null;
   positionName: string | null;
   reportsToEmployeeId: string | null;
   reportsToEmail: string | null;
   employmentType: string | null;
   contractEndDate: string | null;
+  isProbation: boolean;
+  probationEndDate: string | null;
+  probationStatus: string | null;
 }
 
 export interface EmployeeDetailResponse {
   employeeId: string;
   userId: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   departmentId: string | null;
   departmentName: string | null;
   positionId: string | null;
@@ -26,6 +33,11 @@ export interface EmployeeDetailResponse {
   clientName: string | null;
   projectId: string | null;
   contractEndDate: string | null;
+  isProbation: boolean;
+  probationStartDate: string | null;
+  probationEndDate: string | null;
+  probationStatus: string | null;
+  deletedAt?: string | null;
 }
 
 export interface EmployeeAssignmentUpdateRequest {
