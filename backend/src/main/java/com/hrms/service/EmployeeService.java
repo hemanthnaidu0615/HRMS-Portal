@@ -306,6 +306,10 @@ public class EmployeeService {
         return employeeRepository.findById(employeeId);
     }
 
+    public Optional<Employee> getByUserId(UUID userId) {
+        return employeeRepository.findByUser_Id(userId);
+    }
+
     public List<EmployeeHistory> getHistoryForEmployee(Employee employee) {
         return employeeHistoryRepository.findByEmployeeOrderByChangedAtDesc(employee);
     }
