@@ -176,21 +176,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       });
     } else if (roles.includes('employee')) {
       items.push({
-        key: 'my-documents',
+        key: '/documents/me',
         icon: <FileTextOutlined />,
         label: 'My Documents',
-        children: [
-          {
-            key: '/documents/me',
-            label: 'View Documents',
-            onClick: () => navigate('/documents/me'),
-          },
-          {
-            key: '/documents/upload',
-            label: 'Upload Document',
-            onClick: () => navigate('/documents/upload'),
-          },
-        ],
+        onClick: () => navigate('/documents/me'),
       });
 
       items.push({
@@ -200,12 +189,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         children: [
           {
             key: '/document-requests/me',
-            label: 'Incoming Requests',
+            label: 'Requests for Me',
             onClick: () => navigate('/document-requests/me'),
           },
           {
             key: '/document-requests/my',
-            label: 'My Requests',
+            label: 'Requests I Sent',
             onClick: () => navigate('/document-requests/my'),
           },
         ],
@@ -222,8 +211,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     if (location.pathname.startsWith('/admin/employees')) return ['employees'];
     if (location.pathname.startsWith('/admin/structure')) return ['structure'];
     if (location.pathname.startsWith('/admin/roles') || location.pathname.startsWith('/admin/permissions')) return ['access-control'];
-    if (location.pathname.startsWith('/documents')) return ['documents', 'my-documents'];
-    if (location.pathname.startsWith('/document-requests')) return ['documents', 'my-requests'];
+    if (location.pathname.startsWith('/documents')) return ['documents'];
+    if (location.pathname.startsWith('/document-requests')) return ['my-requests'];
     return [];
   };
 

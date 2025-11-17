@@ -48,6 +48,19 @@ public class Employee {
     @Column(name = "contract_end_date")
     private LocalDate contractEndDate;  // For contract employees
 
+    // Probation period tracking
+    @Column(name = "is_probation", nullable = false)
+    private Boolean isProbation = false;
+
+    @Column(name = "probation_start_date")
+    private LocalDate probationStartDate;
+
+    @Column(name = "probation_end_date")
+    private LocalDate probationEndDate;
+
+    @Column(name = "probation_status", length = 20)
+    private String probationStatus;  // active, completed, extended, terminated
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "employee_permission_groups",
@@ -151,6 +164,38 @@ public class Employee {
 
     public void setContractEndDate(LocalDate contractEndDate) {
         this.contractEndDate = contractEndDate;
+    }
+
+    public Boolean getIsProbation() {
+        return isProbation;
+    }
+
+    public void setIsProbation(Boolean isProbation) {
+        this.isProbation = isProbation;
+    }
+
+    public LocalDate getProbationStartDate() {
+        return probationStartDate;
+    }
+
+    public void setProbationStartDate(LocalDate probationStartDate) {
+        this.probationStartDate = probationStartDate;
+    }
+
+    public LocalDate getProbationEndDate() {
+        return probationEndDate;
+    }
+
+    public void setProbationEndDate(LocalDate probationEndDate) {
+        this.probationEndDate = probationEndDate;
+    }
+
+    public String getProbationStatus() {
+        return probationStatus;
+    }
+
+    public void setProbationStatus(String probationStatus) {
+        this.probationStatus = probationStatus;
     }
 
     public LocalDateTime getCreatedAt() {
