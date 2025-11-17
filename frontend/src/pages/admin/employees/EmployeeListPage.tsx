@@ -5,7 +5,8 @@ import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined,
 import { getEmployees, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
 import { createDocumentRequest } from '../../../api/documentRequestsApi';
 
-const { Title, TextArea } = Typography;
+const { Title } = Typography;
+const { TextArea } = Input;
 
 export const EmployeeListPage = () => {
   const navigate = useNavigate();
