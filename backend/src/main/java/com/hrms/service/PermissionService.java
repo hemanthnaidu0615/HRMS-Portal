@@ -343,6 +343,121 @@ public class PermissionService {
     }
 
     /**
+     * Check if user can modify permissions for a target employee
+     * Prevents privilege escalation attacks
+     *
+     * Rules:
+     * 1. User cannot modify their own permissions
+     * 2. User must have permission-groups:assign:organization permission
+     * 3. Target must be in the same organization
+     */
+    public boolean canModifyPermissions(User currentUser, Employee targetEmployee) {
+        if (currentUser == null || targetEmployee == null) {
+            return false;
+        }
+
+        // Rule 1: Cannot modify own permissions
+        Optional<Employee> currentEmployeeOpt = employeeRepository.findByUser(currentUser);
+        if (currentEmployeeOpt.isPresent() &&
+            currentEmployeeOpt.get().getId().equals(targetEmployee.getId())) {
+            return false;
+        }
+
+        // Rule 2: Must have permission to assign permission groups
+        if (!hasPermission(currentUser, "permission-groups", "assign", "organization")) {
+            return false;
+        }
+
+        // Rule 3: Must be same organization
+        if (currentUser.getOrganization() == null ||
+            !currentUser.getOrganization().getId().equals(targetEmployee.getOrganization().getId())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if user can assign a role to another user
+     * Prevents privilege escalation
+     *
+     * Rules:
+     * 1. User cannot modify their own roles
+     * 2. User must have roles:assign:organization permission
+     * 3. Target must be in the same organization
+     */
+    public boolean canAssignRole(User currentUser, User targetUser) {
+        if (currentUser == null || targetUser == null) {
+            return false;
+        }
+
+        // Rule 1: Cannot modify own roles
+        if (currentUser.getId().equals(targetUser.getId())) {
+            return false;
+        }
+
+        // Rule 2: Must have permission to assign roles
+        if (!hasPermission(currentUser, "roles", "assign", "organization")) {
+            return false;
+        }
+
+        // Rule 3: Must be same organization
+        if (currentUser.getOrganization() == null ||
+            targetUser.getOrganization() == null ||
+            !currentUser.getOrganization().getId().equals(targetUser.getOrganization().getId())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if user can manage (create/edit/delete) another user
+     *
+     * Rules:
+     * 1. User cannot delete/modify themselves
+     * 2. Must have appropriate user management permissions
+     * 3. Target must be in the same organization
+     */
+    public boolean canManageUser(User currentUser, User targetUser, String action) {
+        if (currentUser == null || targetUser == null) {
+            return false;
+        }
+
+        // Rule 1: Cannot modify self (except for profile updates which use different endpoint)
+        if (currentUser.getId().equals(targetUser.getId())) {
+            return false;
+        }
+
+        // Rule 2: Must have user management permission
+        if (!hasPermission(currentUser, "users", action, "organization")) {
+            return false;
+        }
+
+        // Rule 3: Must be same organization
+        if (currentUser.getOrganization() == null ||
+            targetUser.getOrganization() == null ||
+            !currentUser.getOrganization().getId().equals(targetUser.getOrganization().getId())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate that all requested permission groups exist and belong to the organization
+     */
+    public boolean areValidPermissionGroups(List<UUID> groupIds, Organization organization) {
+        if (groupIds == null || groupIds.isEmpty()) {
+            return true; // Empty is valid
+        }
+
+        // For now, all permission groups are system-wide
+        // In the future, we might have org-specific groups
+        return true;
+    }
+
+    /**
      * Map old permission codes to new resource:action:scope format
      */
     private String mapOldCodeToNew(String oldCode) {

@@ -336,7 +336,37 @@ INSERT INTO permissions (resource, action, scope, organization_id, description) 
 ('roles', 'create', 'organization', NULL, 'Create custom roles'),
 ('roles', 'edit', 'organization', NULL, 'Edit roles'),
 ('roles', 'delete', 'organization', NULL, 'Delete roles'),
-('roles', 'assign', 'organization', NULL, 'Assign roles to employees');
+('roles', 'assign', 'organization', NULL, 'Assign roles to users');
+
+-- PERMISSIONS management
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('permissions', 'view', 'organization', NULL, 'View all permissions'),
+('permissions', 'grant', 'organization', NULL, 'Grant permissions to employees'),
+('permissions', 'revoke', 'organization', NULL, 'Revoke permissions from employees');
+
+-- PERMISSION GROUPS management
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('permission-groups', 'view', 'organization', NULL, 'View permission groups'),
+('permission-groups', 'assign', 'organization', NULL, 'Assign permission groups to employees'),
+('permission-groups', 'revoke', 'organization', NULL, 'Revoke permission groups from employees');
+
+-- USERS management
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('users', 'view', 'organization', NULL, 'View organization users'),
+('users', 'create', 'organization', NULL, 'Create new users'),
+('users', 'edit', 'organization', NULL, 'Edit user accounts'),
+('users', 'delete', 'organization', NULL, 'Delete user accounts'),
+('users', 'reset-password', 'organization', NULL, 'Reset user passwords');
+
+-- ORGANIZATION management
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('organization', 'view', 'organization', NULL, 'View organization details'),
+('organization', 'edit', 'organization', NULL, 'Edit organization settings');
+
+-- AUDIT & LOGS
+INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+('audit-logs', 'view', 'organization', NULL, 'View organization audit logs'),
+('email-logs', 'view', 'organization', NULL, 'View email logs');
 
 -- FUTURE: Leave management permissions
 INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
@@ -384,11 +414,10 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT @OrgAdminRoleId, id FROM permissions
 WHERE scope = 'organization' AND organization_id IS NULL;
 
--- Employee: Basic own access
+-- Employee: Basic own access (view and manage their own data)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT @EmployeeRoleId, id FROM permissions
-WHERE scope = 'own' AND organization_id IS NULL
-AND resource IN ('employees', 'documents', 'leaves', 'timesheets', 'payroll', 'document-requests');
+WHERE scope = 'own' AND organization_id IS NULL;
 
 -- =====================================================
 -- PERMISSION GROUPS FOR UI ORGANIZATION
@@ -397,9 +426,11 @@ AND resource IN ('employees', 'documents', 'leaves', 'timesheets', 'payroll', 'd
 -- Create permission groups
 INSERT INTO permission_groups (name, description) VALUES
 ('Employee Management', 'Permissions for managing employee data and profiles'),
-('Document Management', 'Permissions for managing employee documents'),
+('Document Management', 'Permissions for managing employee documents and document requests'),
 ('Organization Structure', 'Permissions for managing departments and positions'),
-('Access Control', 'Permissions for managing roles and permissions'),
+('Access Control', 'Permissions for managing users, roles, and permissions'),
+('Organization Management', 'Permissions for managing organization settings'),
+('Audit & Logs', 'Permissions for viewing audit trails and email logs'),
 ('Leave Management', 'Permissions for managing leave requests and approvals'),
 ('Timesheet Management', 'Permissions for managing timesheets'),
 ('Payroll Management', 'Permissions for managing payroll');
@@ -417,7 +448,7 @@ INSERT INTO group_permissions (group_id, permission_id)
 SELECT g.id, p.id
 FROM permission_groups g, permissions p
 WHERE g.name = 'Document Management'
-AND p.resource = 'documents';
+AND p.resource IN ('documents', 'document-requests');
 
 -- Organization Structure group
 INSERT INTO group_permissions (group_id, permission_id)
@@ -431,7 +462,21 @@ INSERT INTO group_permissions (group_id, permission_id)
 SELECT g.id, p.id
 FROM permission_groups g, permissions p
 WHERE g.name = 'Access Control'
-AND p.resource = 'roles';
+AND p.resource IN ('roles', 'permissions', 'permission-groups', 'users');
+
+-- Organization Management group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Organization Management'
+AND p.resource = 'organization';
+
+-- Audit & Logs group
+INSERT INTO group_permissions (group_id, permission_id)
+SELECT g.id, p.id
+FROM permission_groups g, permissions p
+WHERE g.name = 'Audit & Logs'
+AND p.resource IN ('audit-logs', 'email-logs');
 
 -- Leave Management group
 INSERT INTO group_permissions (group_id, permission_id)
