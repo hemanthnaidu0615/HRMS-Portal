@@ -472,8 +472,109 @@ public class EmployeeManagementController {
                 employee.getReportsTo() != null ? employee.getReportsTo().getId() : null,
                 employee.getReportsTo() != null ? employee.getReportsTo().getUser().getEmail() : null,
                 employee.getEmploymentType(),
-                employee.getContractEndDate()
+                employee.getContractEndDate(),
+                employee.getIsProbation(),
+                employee.getProbationEndDate(),
+                employee.getProbationStatus()
         );
+    }
+
+    @PostMapping("/{employeeId}/probation/extend")
+    public ResponseEntity<Map<String, Object>> extendProbation(@PathVariable UUID employeeId,
+                                                                @RequestBody ProbationManagementRequest request,
+                                                                Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            return ResponseEntity.status(403).body(Map.of("error", "User has no organization"));
+        }
+
+        Employee employee = employeeService.getById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        if (!employee.getOrganization().getId().equals(organization.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        if (!employee.getIsProbation()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Employee is not on probation"));
+        }
+
+        if (request.getNewEndDate() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "New end date is required"));
+        }
+
+        employeeService.extendProbation(employee, request.getNewEndDate(), currentUser);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Probation period extended successfully");
+        response.put("newEndDate", request.getNewEndDate());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{employeeId}/probation/complete")
+    public ResponseEntity<Map<String, Object>> completeProbation(@PathVariable UUID employeeId,
+                                                                  Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            return ResponseEntity.status(403).body(Map.of("error", "User has no organization"));
+        }
+
+        Employee employee = employeeService.getById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        if (!employee.getOrganization().getId().equals(organization.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        if (!employee.getIsProbation()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Employee is not on probation"));
+        }
+
+        employeeService.completeProbation(employee, currentUser);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Probation completed successfully");
+        response.put("status", "completed");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{employeeId}/probation/terminate")
+    public ResponseEntity<Map<String, Object>> terminateProbation(@PathVariable UUID employeeId,
+                                                                   Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            return ResponseEntity.status(403).body(Map.of("error", "User has no organization"));
+        }
+
+        Employee employee = employeeService.getById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        if (!employee.getOrganization().getId().equals(organization.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        if (!employee.getIsProbation()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Employee is not on probation"));
+        }
+
+        employeeService.terminateProbation(employee, currentUser);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Probation terminated");
+        response.put("status", "terminated");
+
+        return ResponseEntity.ok(response);
     }
 
     private EmployeeDetailResponse mapToDetail(Employee employee) {
@@ -490,7 +591,11 @@ public class EmployeeManagementController {
                 employee.getEmploymentType(),
                 employee.getClientId(),
                 employee.getProjectId(),
-                employee.getContractEndDate()
+                employee.getContractEndDate(),
+                employee.getIsProbation(),
+                employee.getProbationStartDate(),
+                employee.getProbationEndDate(),
+                employee.getProbationStatus()
         );
     }
 }

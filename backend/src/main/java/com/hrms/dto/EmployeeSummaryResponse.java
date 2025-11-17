@@ -20,4 +20,7 @@ public class EmployeeSummaryResponse {
     private String reportsToEmail;
     private String employmentType;
     private LocalDate contractEndDate;
+    private Boolean isProbation;
+    private LocalDate probationEndDate;
+    private String probationStatus;
 }

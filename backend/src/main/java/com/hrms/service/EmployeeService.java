@@ -311,4 +311,44 @@ public class EmployeeService {
         employee.getPermissionGroups().addAll(groups);
         employeeRepository.save(employee);
     }
+
+    @Transactional
+    public Employee extendProbation(Employee employee, LocalDate newEndDate, User changedBy) {
+        String oldValue = employee.getProbationEndDate() != null ? employee.getProbationEndDate().toString() : null;
+        String newValue = newEndDate != null ? newEndDate.toString() : null;
+
+        employee.setProbationEndDate(newEndDate);
+        employee.setProbationStatus("extended");
+        Employee updated = employeeRepository.save(employee);
+
+        recordHistory(employee, "probation_end_date", oldValue, newValue, changedBy);
+        recordHistory(employee, "probation_status", "active", "extended", changedBy);
+        return updated;
+    }
+
+    @Transactional
+    public Employee completeProbation(Employee employee, User changedBy) {
+        String oldStatus = employee.getProbationStatus();
+
+        employee.setProbationStatus("completed");
+        employee.setIsProbation(false);
+        Employee updated = employeeRepository.save(employee);
+
+        recordHistory(employee, "probation_status", oldStatus, "completed", changedBy);
+        recordHistory(employee, "is_probation", "true", "false", changedBy);
+        return updated;
+    }
+
+    @Transactional
+    public Employee terminateProbation(Employee employee, User changedBy) {
+        String oldStatus = employee.getProbationStatus();
+
+        employee.setProbationStatus("terminated");
+        employee.setIsProbation(false);
+        Employee updated = employeeRepository.save(employee);
+
+        recordHistory(employee, "probation_status", oldStatus, "terminated", changedBy);
+        recordHistory(employee, "is_probation", "true", "false", changedBy);
+        return updated;
+    }
 }

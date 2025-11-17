@@ -93,6 +93,20 @@ export const EmployeeListPage = () => {
         ),
     },
     {
+      title: 'Status',
+      key: 'status',
+      render: (record: EmployeeSummaryResponse) => (
+        record.isProbation ? (
+          <Tag color="orange" style={{ borderRadius: 6 }}>
+            Probation
+            {record.probationEndDate && ` (ends ${new Date(record.probationEndDate).toLocaleDateString()})`}
+          </Tag>
+        ) : (
+          <Tag color="green" style={{ borderRadius: 6 }}>Active</Tag>
+        )
+      ),
+    },
+    {
       title: 'Contract End',
       dataIndex: 'contractEndDate',
       key: 'contractEndDate',

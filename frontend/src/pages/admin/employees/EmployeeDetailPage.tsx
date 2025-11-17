@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Button, Tag, Skeleton, Alert, Typography, Space, Descriptions, Popconfirm, Modal, Input, message, Select } from 'antd';
+import { Card, Button, Tag, Skeleton, Alert, Typography, Space, Descriptions, Popconfirm, Modal, Input, message, Select, DatePicker } from 'antd';
 import {
   EditOutlined,
   HistoryOutlined,
@@ -14,6 +14,7 @@ import { SafetyCertificateOutlined } from '@ant-design/icons';
 import { getEmployeeDetails, EmployeeDetailResponse } from '../../../api/employeeManagementApi';
 import { orgadminApi } from '../../../api/orgadminApi';
 import { roleApi } from '../../../api/roleApi';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
@@ -38,6 +39,10 @@ export const EmployeeDetailPage = () => {
   const [updateRolesModalVisible, setUpdateRolesModalVisible] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+
+  // Probation extend modal
+  const [extendProbationModalVisible, setExtendProbationModalVisible] = useState(false);
+  const [newProbationEndDate, setNewProbationEndDate] = useState<dayjs.Dayjs | null>(null);
 
   useEffect(() => {
     if (employeeId) {
@@ -144,6 +149,61 @@ export const EmployeeDetailPage = () => {
       await loadEmployee();
     } catch (err: any) {
       message.error(err.response?.data?.error || 'Failed to update roles');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openExtendProbationModal = () => {
+    setNewProbationEndDate(null);
+    setExtendProbationModalVisible(true);
+  };
+
+  const handleExtendProbation = async () => {
+    if (!employeeId || !newProbationEndDate) {
+      message.error('Please select a new end date');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await orgadminApi.extendProbation(employeeId, newProbationEndDate.format('YYYY-MM-DD'));
+      message.success('Probation period extended successfully');
+      setExtendProbationModalVisible(false);
+      setNewProbationEndDate(null);
+      await loadEmployee();
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to extend probation');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCompleteProbation = async () => {
+    if (!employeeId) return;
+
+    try {
+      setActionLoading(true);
+      await orgadminApi.completeProbation(employeeId);
+      message.success('Probation completed successfully');
+      await loadEmployee();
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to complete probation');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleTerminateProbation = async () => {
+    if (!employeeId) return;
+
+    try {
+      setActionLoading(true);
+      await orgadminApi.terminateProbation(employeeId);
+      message.success('Probation terminated');
+      await loadEmployee();
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to terminate probation');
     } finally {
       setActionLoading(false);
     }
@@ -321,6 +381,63 @@ export const EmployeeDetailPage = () => {
             <Descriptions.Item label="Project ID">{employee.projectId || '—'}</Descriptions.Item>
             <Descriptions.Item label="Contract End Date">{employee.contractEndDate || '—'}</Descriptions.Item>
           </Descriptions>
+
+          {/* Probation Section */}
+          {employee.isProbation && (
+            <Card
+              title="Probation Period"
+              extra={<Tag color="orange">Active</Tag>}
+              style={{ borderRadius: 8, border: '1px solid #fa8c16' }}
+            >
+              <Descriptions bordered column={2}>
+                <Descriptions.Item label="Start Date">
+                  {employee.probationStartDate ? new Date(employee.probationStartDate).toLocaleDateString() : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="End Date">
+                  {employee.probationEndDate ? new Date(employee.probationEndDate).toLocaleDateString() : '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Status">
+                  <Tag color={employee.probationStatus === 'extended' ? 'orange' : 'blue'}>
+                    {employee.probationStatus}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Actions">
+                  <Space>
+                    <Button
+                      size="small"
+                      onClick={openExtendProbationModal}
+                      style={{ borderRadius: 6 }}
+                    >
+                      Extend
+                    </Button>
+                    <Popconfirm
+                      title="Complete probation?"
+                      description="This will mark the probation as successfully completed."
+                      onConfirm={handleCompleteProbation}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Button type="primary" size="small" style={{ borderRadius: 6 }}>
+                        Complete
+                      </Button>
+                    </Popconfirm>
+                    <Popconfirm
+                      title="Terminate probation?"
+                      description="This will terminate the probation period."
+                      onConfirm={handleTerminateProbation}
+                      okText="Yes"
+                      cancelText="No"
+                      okButtonProps={{ danger: true }}
+                    >
+                      <Button danger size="small" style={{ borderRadius: 6 }}>
+                        Terminate
+                      </Button>
+                    </Popconfirm>
+                  </Space>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          )}
         </Space>
       </Card>
 
@@ -370,6 +487,34 @@ export const EmployeeDetailPage = () => {
             }))}
             size="large"
           />
+        </Space>
+      </Modal>
+
+      {/* Extend Probation Modal */}
+      <Modal
+        title="Extend Probation Period"
+        open={extendProbationModalVisible}
+        onOk={handleExtendProbation}
+        onCancel={() => {
+          setExtendProbationModalVisible(false);
+          setNewProbationEndDate(null);
+        }}
+        confirmLoading={actionLoading}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+              New End Date
+            </label>
+            <DatePicker
+              value={newProbationEndDate}
+              onChange={setNewProbationEndDate}
+              style={{ width: '100%' }}
+              size="large"
+              placeholder="Select new end date"
+              disabledDate={(current) => current && current < dayjs().endOf('day')}
+            />
+          </div>
         </Space>
       </Modal>
     </div>
