@@ -40,4 +40,12 @@ export const superadminApi = {
     );
     return response.data;
   },
+
+  deleteOrganization: async (orgId: string): Promise<void> => {
+    await http.delete(`/api/superadmin/organizations/${orgId}`);
+  },
+
+  reactivateOrganization: async (orgId: string): Promise<void> => {
+    await http.post(`/api/superadmin/organizations/${orgId}/reactivate`);
+  },
 };

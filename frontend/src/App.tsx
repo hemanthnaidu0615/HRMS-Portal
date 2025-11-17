@@ -20,6 +20,15 @@ import { EmployeePermissionsPage } from './pages/orgadmin/EmployeePermissionsPag
 // Employee Pages
 import { DashboardPage } from './pages/employee/DashboardPage';
 
+// Dashboard Pages
+import { EmployeeDashboardPage } from './pages/dashboards/EmployeeDashboardPage';
+import { AdminDashboardPage } from './pages/dashboards/AdminDashboardPage';
+import { SuperAdminDashboardPage } from './pages/dashboards/SuperAdminDashboardPage';
+
+// Profile Pages
+import { ProfilePage } from './pages/profile/ProfilePage';
+import { PermissionsPage } from './pages/profile/PermissionsPage';
+
 // Document Pages
 import { MyDocumentsPage } from './pages/documents/MyDocumentsPage';
 import { UploadMyDocumentPage } from './pages/documents/UploadMyDocumentPage';
@@ -82,6 +91,16 @@ function App() {
         {/* Protected Routes with AppLayout */}
         {/* SuperAdmin Routes */}
         <Route
+          path="/superadmin/dashboard"
+          element={
+            <ProtectedRoute requiredRole="superadmin">
+              <LayoutWrapper>
+                <SuperAdminDashboardPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/superadmin/organizations"
           element={
             <ProtectedRoute requiredRole="superadmin">
@@ -132,7 +151,41 @@ function App() {
           element={
             <ProtectedRoute requiredRole="employee">
               <LayoutWrapper>
-                <DashboardPage />
+                <EmployeeDashboardPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin Dashboard */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <AdminDashboardPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Profile Routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <LayoutWrapper>
+                <ProfilePage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/permissions"
+          element={
+            <ProtectedRoute>
+              <LayoutWrapper>
+                <PermissionsPage />
               </LayoutWrapper>
             </ProtectedRoute>
           }

@@ -42,20 +42,22 @@ function getItem(
  * SuperAdmin Navigation
  */
 export const superAdminMenuItems: MenuItem[] = [
-  getItem('Dashboard', '/superadmin/organizations', <DashboardOutlined />),
+  getItem('Dashboard', '/superadmin/dashboard', <DashboardOutlined />),
   getItem('Organizations', '/superadmin/organizations', <BankOutlined />),
+  getItem('Profile', '/profile', <UserOutlined />),
+  getItem('My Permissions', '/permissions', <SafetyCertificateOutlined />),
 ];
 
 /**
  * OrgAdmin Navigation
  */
 export const orgAdminMenuItems: MenuItem[] = [
-  getItem('Dashboard', '/admin/employees', <DashboardOutlined />),
+  getItem('Dashboard', '/admin/dashboard', <DashboardOutlined />),
 
   getItem('Employees', 'employees', <TeamOutlined />, [
     getItem('All Employees', '/admin/employees'),
     getItem('Organization Tree', '/admin/employees/tree'),
-    getItem('Add Employee', '/orgadmin/create-employee'),
+    getItem('Add Employee', '/admin/employees/create'),
   ]),
 
   getItem('Structure', 'structure', <ApartmentOutlined />, [
@@ -72,6 +74,8 @@ export const orgAdminMenuItems: MenuItem[] = [
     getItem('Organization Documents', '/documents/org'),
     getItem('Document Requests', '/document-requests/org'),
   ]),
+
+  getItem('Profile', '/profile', <UserOutlined />),
 ];
 
 /**
@@ -92,6 +96,7 @@ export const employeeMenuItems: MenuItem[] = [
   ]),
 
   getItem('Profile', '/profile', <UserOutlined />),
+  getItem('My Permissions', '/permissions', <SafetyCertificateOutlined />),
 ];
 
 /**
@@ -113,9 +118,9 @@ export const getMenuItemsByRole = (roles: string[]): MenuItem[] => {
  */
 export const getDefaultRoute = (roles: string[]): string => {
   if (roles.includes('superadmin')) {
-    return '/superadmin/organizations';
+    return '/superadmin/dashboard';
   } else if (roles.includes('orgadmin')) {
-    return '/admin/employees';
+    return '/admin/dashboard';
   } else if (roles.includes('employee')) {
     return '/employee/dashboard';
   }

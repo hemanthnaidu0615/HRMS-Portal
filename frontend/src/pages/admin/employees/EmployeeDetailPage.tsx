@@ -1,11 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Button, Tag, Skeleton, Alert, Typography, Space, Descriptions } from 'antd';
-import { EditOutlined, HistoryOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Card, Button, Tag, Skeleton, Alert, Typography, Space, Descriptions, Popconfirm, Modal, Input, message, Select } from 'antd';
+import {
+  EditOutlined,
+  HistoryOutlined,
+  ArrowLeftOutlined,
+  DeleteOutlined,
+  UndoOutlined,
+  LockOutlined,
+  TeamOutlined,
+} from '@ant-design/icons';
 import { SafetyCertificateOutlined } from '@ant-design/icons';
 import { getEmployeeDetails, EmployeeDetailResponse } from '../../../api/employeeManagementApi';
+import { orgadminApi } from '../../../api/orgadminApi';
+import { roleApi } from '../../../api/roleApi';
 
 const { Title } = Typography;
+
+interface Role {
+  id: string;
+  name: string;
+}
 
 export const EmployeeDetailPage = () => {
   const { employeeId } = useParams<{ employeeId: string }>();
@@ -13,6 +28,16 @@ export const EmployeeDetailPage = () => {
   const [employee, setEmployee] = useState<EmployeeDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Reset password modal
+  const [resetPasswordModalVisible, setResetPasswordModalVisible] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+
+  // Update roles modal
+  const [updateRolesModalVisible, setUpdateRolesModalVisible] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (employeeId) {
@@ -33,12 +58,105 @@ export const EmployeeDetailPage = () => {
     }
   };
 
+  const loadRoles = async () => {
+    try {
+      const data = await roleApi.getRoles();
+      setRoles(data);
+    } catch (err: any) {
+      message.error('Failed to load roles');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!employeeId) return;
+
+    try {
+      setActionLoading(true);
+      await orgadminApi.deleteEmployee(employeeId);
+      message.success('Employee deleted successfully');
+      navigate('/admin/employees');
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to delete employee');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReactivate = async () => {
+    if (!employeeId) return;
+
+    try {
+      setActionLoading(true);
+      await orgadminApi.reactivateEmployee(employeeId);
+      message.success('Employee reactivated successfully');
+      await loadEmployee();
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to reactivate employee');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openResetPasswordModal = () => {
+    setNewPassword('');
+    setResetPasswordModalVisible(true);
+  };
+
+  const handleResetPassword = async () => {
+    if (!employeeId || !newPassword.trim()) {
+      message.error('Please enter a new password');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      message.error('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await orgadminApi.resetEmployeePassword(employeeId, newPassword);
+      message.success('Password reset successfully');
+      setResetPasswordModalVisible(false);
+      setNewPassword('');
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to reset password');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openUpdateRolesModal = async () => {
+    await loadRoles();
+    setSelectedRoleIds([]);
+    setUpdateRolesModalVisible(true);
+  };
+
+  const handleUpdateRoles = async () => {
+    if (!employeeId) return;
+
+    try {
+      setActionLoading(true);
+      await orgadminApi.updateEmployeeRoles(employeeId, selectedRoleIds);
+      message.success('Employee roles updated successfully');
+      setUpdateRolesModalVisible(false);
+      setSelectedRoleIds([]);
+      await loadEmployee();
+    } catch (err: any) {
+      message.error(err.response?.data?.error || 'Failed to update roles');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const employmentTypeColors: Record<string, string> = {
     internal: 'green',
     client: 'blue',
     contract: 'orange',
     bench: 'red'
   };
+
+  const isDeleted = employee?.deletedAt != null;
 
   if (loading) {
     return (
@@ -80,15 +198,38 @@ export const EmployeeDetailPage = () => {
       >
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={3} style={{ margin: 0 }}>Employee Details</Title>
-            <Space>
-              <Button
-                icon={<EditOutlined />}
-                onClick={() => navigate(`/admin/employees/${employeeId}/assignment`)}
-                style={{ borderRadius: 8 }}
-              >
-                Edit Assignment
-              </Button>
+            <div>
+              <Title level={3} style={{ margin: 0 }}>
+                Employee Details
+                {isDeleted && <Tag color="error" style={{ marginLeft: 8 }}>Deleted</Tag>}
+              </Title>
+            </div>
+            <Space wrap>
+              {!isDeleted && (
+                <>
+                  <Button
+                    icon={<EditOutlined />}
+                    onClick={() => navigate(`/admin/employees/${employeeId}/assignment`)}
+                    style={{ borderRadius: 8 }}
+                  >
+                    Edit Assignment
+                  </Button>
+                  <Button
+                    icon={<TeamOutlined />}
+                    onClick={openUpdateRolesModal}
+                    style={{ borderRadius: 8 }}
+                  >
+                    Update Roles
+                  </Button>
+                  <Button
+                    icon={<LockOutlined />}
+                    onClick={openResetPasswordModal}
+                    style={{ borderRadius: 8 }}
+                  >
+                    Reset Password
+                  </Button>
+                </>
+              )}
               <Button
                 icon={<HistoryOutlined />}
                 onClick={() => navigate(`/admin/employees/${employeeId}/history`)}
@@ -96,13 +237,45 @@ export const EmployeeDetailPage = () => {
               >
                 View History
               </Button>
-              <Button
-                icon={<SafetyCertificateOutlined />}
-                onClick={() => navigate(`/orgadmin/employees/${employeeId}/permissions`)}
-                style={{ borderRadius: 8 }}
-              >
-                Manage Permissions
-              </Button>
+              {!isDeleted && (
+                <Button
+                  icon={<SafetyCertificateOutlined />}
+                  onClick={() => navigate(`/orgadmin/employees/${employeeId}/permissions`)}
+                  style={{ borderRadius: 8 }}
+                >
+                  Permissions
+                </Button>
+              )}
+
+              {!isDeleted ? (
+                <Popconfirm
+                  title="Delete employee"
+                  description="Are you sure you want to delete this employee?"
+                  onConfirm={handleDelete}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    loading={actionLoading}
+                    style={{ borderRadius: 8 }}
+                  >
+                    Delete
+                  </Button>
+                </Popconfirm>
+              ) : (
+                <Button
+                  type="primary"
+                  icon={<UndoOutlined />}
+                  onClick={handleReactivate}
+                  loading={actionLoading}
+                  style={{ background: '#52c41a', borderColor: '#52c41a', borderRadius: 8 }}
+                >
+                  Reactivate
+                </Button>
+              )}
+
               <Button
                 icon={<ArrowLeftOutlined />}
                 type="primary"
@@ -150,6 +323,55 @@ export const EmployeeDetailPage = () => {
           </Descriptions>
         </Space>
       </Card>
+
+      {/* Reset Password Modal */}
+      <Modal
+        title="Reset Employee Password"
+        open={resetPasswordModalVisible}
+        onOk={handleResetPassword}
+        onCancel={() => {
+          setResetPasswordModalVisible(false);
+          setNewPassword('');
+        }}
+        confirmLoading={actionLoading}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Input.Password
+            placeholder="Enter new password (min 6 characters)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            size="large"
+            style={{ borderRadius: 8 }}
+          />
+        </Space>
+      </Modal>
+
+      {/* Update Roles Modal */}
+      <Modal
+        title="Update Employee Roles"
+        open={updateRolesModalVisible}
+        onOk={handleUpdateRoles}
+        onCancel={() => {
+          setUpdateRolesModalVisible(false);
+          setSelectedRoleIds([]);
+        }}
+        confirmLoading={actionLoading}
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Select
+            mode="multiple"
+            placeholder="Select roles"
+            value={selectedRoleIds}
+            onChange={setSelectedRoleIds}
+            style={{ width: '100%' }}
+            options={roles.map(role => ({
+              label: role.name,
+              value: role.id,
+            }))}
+            size="large"
+          />
+        </Space>
+      </Modal>
     </div>
   );
 };

@@ -27,4 +27,20 @@ export const orgadminApi = {
     const response = await http.post<Employee>('/api/orgadmin/employees', data);
     return response.data;
   },
+
+  updateEmployeeRoles: async (employeeId: string, roleIds: string[]): Promise<void> => {
+    await http.put(`/api/orgadmin/employees/${employeeId}/roles`, { roleIds });
+  },
+
+  deleteEmployee: async (employeeId: string): Promise<void> => {
+    await http.delete(`/api/orgadmin/employees/${employeeId}`);
+  },
+
+  reactivateEmployee: async (employeeId: string): Promise<void> => {
+    await http.post(`/api/orgadmin/employees/${employeeId}/reactivate`);
+  },
+
+  resetEmployeePassword: async (employeeId: string, newPassword: string): Promise<void> => {
+    await http.post(`/api/orgadmin/employees/${employeeId}/reset-password`, { newPassword });
+  },
 };

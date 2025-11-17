@@ -22,3 +22,8 @@ export async function getPermissionGroup(id: string) {
   const response = await http.get<PermissionGroupResponse>(`/api/orgadmin/permissions/groups/${id}`);
   return response.data;
 }
+
+export async function getMyPermissions() {
+  const res = await http.get<string[]>('/api/me/permissions');
+  return res.data;
+}

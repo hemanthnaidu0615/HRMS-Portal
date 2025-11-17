@@ -56,3 +56,27 @@ export async function getDownloadUrl(documentId: string) {
   const token = localStorage.getItem('token');
   return `${http.defaults.baseURL}/api/documents/${documentId}/download?t=${timestamp}&token=${token}`;
 }
+
+// Document Approval
+export async function approveDocument(documentId: string) {
+  const res = await http.post(`/api/documents/${documentId}/approve`);
+  return res.data;
+}
+
+export async function rejectDocument(documentId: string, reason: string) {
+  const res = await http.post(`/api/documents/${documentId}/reject`, { reason });
+  return res.data;
+}
+
+// Document Management
+export async function deleteDocument(documentId: string) {
+  const res = await http.delete(`/api/documents/${documentId}`);
+  return res.data;
+}
+
+export async function replaceDocument(documentId: string, file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await http.put(`/api/documents/${documentId}/replace`, form);
+  return res.data;
+}
