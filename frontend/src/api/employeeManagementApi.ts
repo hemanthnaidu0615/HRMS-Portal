@@ -95,3 +95,28 @@ export async function getEmployeeTree() {
   const response = await http.get<EmployeeTreeNodeResponse[]>(`/api/orgadmin/employees/tree`);
   return response.data;
 }
+
+export interface CreateEmployeeRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  temporaryPassword: string;
+  employmentType?: string;
+  isProbation?: boolean;
+  probationEndDate?: string;
+  contractEndDate?: string;
+}
+
+export interface CreateEmployeeResponse {
+  id: string;
+  email: string;
+  organizationId: string;
+  mustChangePassword: boolean;
+  emailStatus?: string;
+  warning?: string;
+}
+
+export async function createEmployee(payload: CreateEmployeeRequest) {
+  const response = await http.post<CreateEmployeeResponse>("/api/orgadmin/employees", payload);
+  return response.data;
+}

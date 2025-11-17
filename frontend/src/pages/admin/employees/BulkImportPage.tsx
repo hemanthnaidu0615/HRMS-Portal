@@ -155,6 +155,16 @@ export const BulkImportPage = () => {
     return false; // Prevent auto upload
   };
 
+  const generateTemporaryPassword = () => {
+    // Generate a random 12-character password
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
   const handleImport = async () => {
     setImporting(true);
     setCurrentStep(2);
@@ -169,6 +179,7 @@ export const BulkImportPage = () => {
           firstName: employee.firstName,
           lastName: employee.lastName,
           email: employee.email,
+          temporaryPassword: generateTemporaryPassword(),
           employmentType: employee.employmentType,
           isProbation: employee.isProbation,
           probationEndDate: employee.probationEndDate,
@@ -188,7 +199,7 @@ export const BulkImportPage = () => {
           firstName: employee.firstName,
           lastName: employee.lastName,
           status: 'error',
-          message: error.response?.data?.message || 'Failed to create employee',
+          message: error.response?.data?.message || error.response?.data?.error || 'Failed to create employee',
         });
       }
     }
