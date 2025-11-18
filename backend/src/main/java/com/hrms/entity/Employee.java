@@ -43,9 +43,15 @@ public class Employee {
     @JoinColumn(name = "client_id")
     private Client client;
 
+    @Column(name = "client_name", length = 255)
+    private String clientName;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private Project project;
+
+    @Column(name = "project_id_string", length = 255)
+    private String projectId;
 
     // Employee Identification
     @Column(name = "employee_code", length = 50, unique = true, nullable = false)
@@ -146,6 +152,9 @@ public class Employee {
     @Column(name = "alternate_emergency_contact_name", length = 255)
     private String alternateEmergencyContactName;
 
+    @Column(name = "alternate_emergency_contact_relationship", length = 100)
+    private String alternateEmergencyContactRelationship;
+
     @Column(name = "alternate_emergency_contact_phone", length = 50)
     private String alternateEmergencyContactPhone;
 
@@ -179,6 +188,9 @@ public class Employee {
 
     @Column(name = "notice_period_days")
     private Integer noticePeriodDays = 30;
+
+    @Column(name = "contract_start_date")
+    private LocalDate contractStartDate;
 
     @Column(name = "contract_end_date")
     private LocalDate contractEndDate;
@@ -317,6 +329,9 @@ public class Employee {
     @Column(name = "linkedin_profile", length = 255)
     private String linkedinProfile;
 
+    @Column(name = "github_profile", length = 255)
+    private String githubProfile;
+
     @Column(name = "skills", length = 1000)
     private String skills;
 
@@ -359,6 +374,10 @@ public class Employee {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deleted_by")
+    private User deletedBy;
+
     public Employee() {
         this.createdAt = LocalDateTime.now();
     }
@@ -394,8 +413,14 @@ public class Employee {
     public Client getClient() { return client; }
     public void setClient(Client client) { this.client = client; }
 
+    public String getClientName() { return clientName; }
+    public void setClientName(String clientName) { this.clientName = clientName; }
+
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
+
+    public String getProjectId() { return projectId; }
+    public void setProjectId(String projectId) { this.projectId = projectId; }
 
     public String getEmployeeCode() { return employeeCode; }
     public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
@@ -490,6 +515,9 @@ public class Employee {
     public String getAlternateEmergencyContactName() { return alternateEmergencyContactName; }
     public void setAlternateEmergencyContactName(String alternateEmergencyContactName) { this.alternateEmergencyContactName = alternateEmergencyContactName; }
 
+    public String getAlternateEmergencyContactRelationship() { return alternateEmergencyContactRelationship; }
+    public void setAlternateEmergencyContactRelationship(String alternateEmergencyContactRelationship) { this.alternateEmergencyContactRelationship = alternateEmergencyContactRelationship; }
+
     public String getAlternateEmergencyContactPhone() { return alternateEmergencyContactPhone; }
     public void setAlternateEmergencyContactPhone(String alternateEmergencyContactPhone) { this.alternateEmergencyContactPhone = alternateEmergencyContactPhone; }
 
@@ -522,6 +550,9 @@ public class Employee {
 
     public Integer getNoticePeriodDays() { return noticePeriodDays; }
     public void setNoticePeriodDays(Integer noticePeriodDays) { this.noticePeriodDays = noticePeriodDays; }
+
+    public LocalDate getContractStartDate() { return contractStartDate; }
+    public void setContractStartDate(LocalDate contractStartDate) { this.contractStartDate = contractStartDate; }
 
     public LocalDate getContractEndDate() { return contractEndDate; }
     public void setContractEndDate(LocalDate contractEndDate) { this.contractEndDate = contractEndDate; }
@@ -652,6 +683,9 @@ public class Employee {
     public String getLinkedinProfile() { return linkedinProfile; }
     public void setLinkedinProfile(String linkedinProfile) { this.linkedinProfile = linkedinProfile; }
 
+    public String getGithubProfile() { return githubProfile; }
+    public void setGithubProfile(String githubProfile) { this.githubProfile = githubProfile; }
+
     public String getSkills() { return skills; }
     public void setSkills(String skills) { this.skills = skills; }
 
@@ -685,8 +719,49 @@ public class Employee {
     public LocalDateTime getDeletedAt() { return deletedAt; }
     public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 
+    public User getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(User deletedBy) { this.deletedBy = deletedBy; }
+
     public boolean isDeleted() {
         return deletedAt != null;
+    }
+
+    // Convenience methods (aliases for compatibility)
+    public String getCurrency() { return salaryCurrency; }
+    public void setCurrency(String currency) { this.salaryCurrency = currency; }
+
+    public String getIfscCode() { return bankIfscCode; }
+    public void setIfscCode(String ifscCode) { this.bankIfscCode = ifscCode; }
+
+    public String getSwiftCode() { return bankSwiftCode; }
+    public void setSwiftCode(String swiftCode) { this.bankSwiftCode = swiftCode; }
+
+    public String getTaxIdentificationNumber() { return taxId; }
+    public void setTaxIdentificationNumber(String taxIdentificationNumber) { this.taxId = taxIdentificationNumber; }
+
+    public String getAadharNumber() { return aadharNumberLastFour; }
+    public void setAadharNumber(String aadharNumber) { this.aadharNumberLastFour = aadharNumber; }
+
+    public String getSsnNumber() { return ssnLastFour; }
+    public void setSsnNumber(String ssnNumber) { this.ssnLastFour = ssnNumber; }
+
+    public String getLinkedInProfile() { return linkedinProfile; }
+    public void setLinkedInProfile(String linkedInProfile) { this.linkedinProfile = linkedInProfile; }
+
+    public String getFullName() {
+        StringBuilder fullName = new StringBuilder();
+        if (firstName != null && !firstName.isEmpty()) {
+            fullName.append(firstName);
+        }
+        if (middleName != null && !middleName.isEmpty()) {
+            if (fullName.length() > 0) fullName.append(" ");
+            fullName.append(middleName);
+        }
+        if (lastName != null && !lastName.isEmpty()) {
+            if (fullName.length() > 0) fullName.append(" ");
+            fullName.append(lastName);
+        }
+        return fullName.toString();
     }
 
     @Override
