@@ -17,6 +17,7 @@ import {
   TeamOutlined,
   BankOutlined,
   UserOutlined,
+  ExportOutlined,
 } from '@ant-design/icons';
 import {
   getMyDocuments,
@@ -29,6 +30,7 @@ import {
 } from '../../api/documentsApi';
 import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 import { useAuth } from '../../auth/useAuth';
+import { exportToExcelCSV, formatDateForExport } from '../../utils/exportUtils';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -215,6 +217,34 @@ export const OrgDocumentsPage = () => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleExportToCSV = () => {
+    const documentsToExport = activeTab === 'my' ? myDocuments : orgDocuments;
+
+    if (documentsToExport.length === 0) {
+      message.warning('No documents to export');
+      return;
+    }
+
+    // Define field mapping for export
+    const fieldMapping: Record<string, string | ((doc: Document) => any)> = {
+      'Document ID': 'id',
+      'Employee ID': 'employeeId',
+      'File Name': 'fileName',
+      'File Type': 'fileType',
+      'Uploaded At': (doc: Document) => formatDateForExport(doc.createdAt),
+      'Approval Status': (doc: Document) => doc.approvalStatus || 'PENDING',
+      'Approved By': (doc: Document) => doc.approvedBy || '',
+      'Approved At': (doc: Document) => formatDateForExport(doc.approvedAt),
+      'Rejection Reason': (doc: Document) => doc.rejectionReason || '',
+    };
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `${activeTab === 'my' ? 'my' : 'organization'}-documents-${timestamp}.csv`;
+
+    exportToExcelCSV(documentsToExport, filename, fieldMapping);
+    message.success(`Exported ${documentsToExport.length} documents to CSV`);
   };
 
   const getApprovalStatusTag = (status?: string, reason?: string) => {
@@ -494,6 +524,16 @@ export const OrgDocumentsPage = () => {
                 Documents
               </Title>
               <Space>
+                <Button
+                  icon={<ExportOutlined />}
+                  onClick={handleExportToCSV}
+                  disabled={
+                    (activeTab === 'my' && myDocuments.length === 0) ||
+                    (activeTab === 'org' && orgDocuments.length === 0)
+                  }
+                >
+                  Export CSV
+                </Button>
                 <Button
                   type="default"
                   icon={<UploadOutlined />}

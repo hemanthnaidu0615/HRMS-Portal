@@ -64,6 +64,9 @@ import { RolesPage } from './pages/admin/roles/RolesPage';
 import { CreateRolePage } from './pages/admin/roles/CreateRolePage';
 import { EditRolePage } from './pages/admin/roles/EditRolePage';
 
+// Admin Pages - Audit Logs
+import { AuditLogsPage } from './pages/admin/AuditLogsPage';
+
 // Admin Pages - Vendors
 import { VendorListPage } from './pages/admin/vendors/VendorListPage';
 import { VendorFormPage } from './pages/admin/vendors/VendorFormPage';
@@ -455,6 +458,18 @@ function App() {
             <ProtectedRoute requiredRole="orgadmin">
               <LayoutWrapper>
                 <EditRolePage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Audit Logs Route */}
+        <Route
+          path="/admin/audit-logs"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <AuditLogsPage />
               </LayoutWrapper>
             </ProtectedRoute>
           }

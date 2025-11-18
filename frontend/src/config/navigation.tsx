@@ -15,6 +15,7 @@ import {
   ShopOutlined,
   IdcardOutlined,
   ProjectOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -88,6 +89,8 @@ export const orgAdminMenuItems: MenuItem[] = [
     getItem('Roles', '/admin/roles'),
     getItem('Permission Groups', '/admin/permissions/groups'),
   ]),
+
+  getItem('Audit Logs', '/admin/audit-logs', <HistoryOutlined />),
 
   getItem('Documents', 'documents', <FileTextOutlined />, [
     getItem('All Documents', '/documents/org'),
