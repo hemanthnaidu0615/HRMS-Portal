@@ -1,6 +1,7 @@
 package com.hrms.repository;
 
 import com.hrms.entity.Document;
+import com.hrms.entity.Organization;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,5 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
     List<Document> findByEmployeeId(UUID employeeId);
     List<Document> findByEmployeeOrganizationId(UUID organizationId);
     Page<Document> findByEmployeeOrganizationId(UUID organizationId, Pageable pageable);
+    long countByEmployee_Organization(Organization organization);
 }
