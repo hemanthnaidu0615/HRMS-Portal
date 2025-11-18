@@ -64,6 +64,18 @@ import { RolesPage } from './pages/admin/roles/RolesPage';
 import { CreateRolePage } from './pages/admin/roles/CreateRolePage';
 import { EditRolePage } from './pages/admin/roles/EditRolePage';
 
+// Admin Pages - Vendors
+import { VendorListPage } from './pages/admin/vendors/VendorListPage';
+import { VendorFormPage } from './pages/admin/vendors/VendorFormPage';
+
+// Admin Pages - Clients
+import { ClientListPage } from './pages/admin/clients/ClientListPage';
+import { ClientFormPage } from './pages/admin/clients/ClientFormPage';
+
+// Admin Pages - Projects
+import { ProjectListPage } from './pages/admin/projects/ProjectListPage';
+import { ProjectFormPage } from './pages/admin/projects/ProjectFormPage';
+
 /**
  * Layout Wrapper Component
  * Wraps authenticated routes with AppLayout and role-based navigation
@@ -443,6 +455,102 @@ function App() {
             <ProtectedRoute requiredRole="orgadmin">
               <LayoutWrapper>
                 <EditRolePage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Vendor Management Routes */}
+        <Route
+          path="/admin/vendors"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <VendorListPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/vendors/create"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <VendorFormPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/vendors/:id/edit"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <VendorFormPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Client Management Routes */}
+        <Route
+          path="/admin/clients"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <ClientListPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/clients/create"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <ClientFormPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/clients/:id/edit"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <ClientFormPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Project Management Routes */}
+        <Route
+          path="/admin/projects"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <ProjectListPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/projects/create"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <ProjectFormPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/projects/:id/edit"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <ProjectFormPage />
               </LayoutWrapper>
             </ProtectedRoute>
           }

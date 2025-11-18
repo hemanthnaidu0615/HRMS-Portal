@@ -12,6 +12,9 @@ import {
   InboxOutlined,
   SendOutlined,
   BankOutlined,
+  ShopOutlined,
+  IdcardOutlined,
+  ProjectOutlined,
 } from '@ant-design/icons';
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -64,6 +67,21 @@ export const orgAdminMenuItems: MenuItem[] = [
   getItem('Organization', 'structure', <ApartmentOutlined />, [
     getItem('Departments', '/admin/structure/departments'),
     getItem('Positions', '/admin/structure/positions'),
+  ]),
+
+  getItem('Vendors', 'vendors', <ShopOutlined />, [
+    getItem('All Vendors', '/admin/vendors'),
+    getItem('Add Vendor', '/admin/vendors/create'),
+  ]),
+
+  getItem('Clients', 'clients', <IdcardOutlined />, [
+    getItem('All Clients', '/admin/clients'),
+    getItem('Add Client', '/admin/clients/create'),
+  ]),
+
+  getItem('Projects', 'projects', <ProjectOutlined />, [
+    getItem('All Projects', '/admin/projects'),
+    getItem('Add Project', '/admin/projects/create'),
   ]),
 
   getItem('Access Control', 'permissions', <SafetyCertificateOutlined />, [
