@@ -167,6 +167,191 @@ CREATE TABLE positions (
 );
 
 -- =====================================================
+-- ENTERPRISE VENDOR & CLIENT MANAGEMENT SYSTEM
+-- Must be created before employees table due to FK dependencies
+-- =====================================================
+
+-- =====================================================
+-- VENDOR MANAGEMENT
+-- =====================================================
+
+-- Vendors table: Companies that provide resources to your organization
+CREATE TABLE vendors (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Vendor Information
+    name VARCHAR(255) NOT NULL,
+    vendor_code VARCHAR(50) UNIQUE NOT NULL,
+    vendor_type VARCHAR(50) NOT NULL,  -- staffing, consulting, contractor, freelance
+
+    -- Contact Information
+    primary_contact_name VARCHAR(255),
+    primary_contact_email VARCHAR(255),
+    primary_contact_phone VARCHAR(50),
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    postal_code VARCHAR(20),
+
+    -- Business Details
+    tax_id VARCHAR(50),
+    business_registration_number VARCHAR(100),
+    website VARCHAR(255),
+
+    -- Contract Details
+    contract_start_date DATE,
+    contract_end_date DATE,
+    contract_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, expired, terminated, suspended
+    contract_document_id UNIQUEIDENTIFIER,  -- Link to documents table
+
+    -- Billing Configuration
+    billing_type VARCHAR(50) NOT NULL,  -- hourly, daily, monthly, project, fixed
+    default_billing_rate DECIMAL(10,2),
+    billing_currency VARCHAR(10) DEFAULT 'USD',
+    payment_terms VARCHAR(100),  -- Net 30, Net 60, etc.
+
+    -- Multi-tier Support
+    parent_vendor_id UNIQUEIDENTIFIER NULL,  -- For sub-vendor relationships
+    tier_level INT DEFAULT 1,  -- 1 = direct vendor, 2 = sub-vendor, etc.
+
+    -- Performance Tracking
+    performance_rating DECIMAL(3,2),  -- 0.00 to 5.00
+    total_resources_supplied INT DEFAULT 0,
+    active_resources_count INT DEFAULT 0,
+
+    -- Status
+    is_active BIT NOT NULL DEFAULT 1,
+    is_preferred BIT NOT NULL DEFAULT 0,
+    blacklisted BIT NOT NULL DEFAULT 0,
+    blacklist_reason VARCHAR(500),
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (parent_vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
+-- CLIENT MANAGEMENT
+-- =====================================================
+
+-- Clients table: End clients where employees are placed
+CREATE TABLE clients (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Client Information
+    name VARCHAR(255) NOT NULL,
+    client_code VARCHAR(50) UNIQUE NOT NULL,
+    client_type VARCHAR(50) NOT NULL,  -- corporate, government, nonprofit, individual
+    industry VARCHAR(100),
+
+    -- Contact Information
+    primary_contact_name VARCHAR(255),
+    primary_contact_email VARCHAR(255),
+    primary_contact_phone VARCHAR(50),
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    postal_code VARCHAR(20),
+
+    -- Business Details
+    tax_id VARCHAR(50),
+    website VARCHAR(255),
+
+    -- Relationship Details
+    relationship_start_date DATE,
+    relationship_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, inactive, prospect
+    account_manager_id UNIQUEIDENTIFIER,  -- Employee managing this client (FK added later)
+
+    -- Business Metrics
+    total_active_projects INT DEFAULT 0,
+    total_active_resources INT DEFAULT 0,
+    lifetime_revenue DECIMAL(15,2) DEFAULT 0,
+
+    -- Status
+    is_active BIT NOT NULL DEFAULT 1,
+    is_strategic BIT NOT NULL DEFAULT 0,  -- Strategic/key client flag
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    -- Note: FK for account_manager_id added after employees table
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
+-- PROJECTS
+-- =====================================================
+
+-- Projects table: Client projects where resources are assigned
+CREATE TABLE projects (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    client_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Project Information
+    project_name VARCHAR(255) NOT NULL,
+    project_code VARCHAR(50) UNIQUE NOT NULL,
+    project_type VARCHAR(50),  -- fixed-price, time-material, retainer
+    description VARCHAR(2000),
+
+    -- Timeline
+    start_date DATE NOT NULL,
+    end_date DATE,
+    estimated_duration_months INT,
+    project_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, completed, on-hold, cancelled
+
+    -- Financial
+    project_budget DECIMAL(15,2),
+    billing_rate_type VARCHAR(50),  -- hourly, daily, monthly, fixed
+    default_billing_rate DECIMAL(10,2),
+    currency VARCHAR(10) DEFAULT 'USD',
+
+    -- Management
+    project_manager_id UNIQUEIDENTIFIER,  -- FK added later
+
+    -- Metrics
+    total_allocated_resources INT DEFAULT 0,
+    total_hours_logged DECIMAL(10,2) DEFAULT 0,
+    total_revenue DECIMAL(15,2) DEFAULT 0,
+
+    -- Status
+    is_billable BIT NOT NULL DEFAULT 1,
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (client_id) REFERENCES clients(id),
+    -- Note: FK for project_manager_id added after employees table
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
 -- EMPLOYEE MANAGEMENT - COMPLETE PROFESSIONAL SCHEMA
 -- =====================================================
 
@@ -349,6 +534,19 @@ CREATE TABLE employee_permission_groups (
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES permission_groups(id) ON DELETE CASCADE
 );
+
+-- =====================================================
+-- ADD FOREIGN KEY CONSTRAINTS TO CLIENTS AND PROJECTS
+-- (These reference employees table, so must be added after employees is created)
+-- =====================================================
+
+ALTER TABLE clients
+ADD CONSTRAINT FK_clients_account_manager
+FOREIGN KEY (account_manager_id) REFERENCES employees(id);
+
+ALTER TABLE projects
+ADD CONSTRAINT FK_projects_project_manager
+FOREIGN KEY (project_manager_id) REFERENCES employees(id);
 
 -- =====================================================
 -- DOCUMENT MANAGEMENT
@@ -656,191 +854,6 @@ CREATE INDEX idx_email_logs_sent_at ON email_logs(sent_at DESC);
 CREATE INDEX idx_audit_logs_org ON audit_logs(organization_id);
 CREATE INDEX idx_audit_logs_performed_by ON audit_logs(performed_by);
 CREATE INDEX idx_audit_logs_performed_at ON audit_logs(performed_at DESC);
-
--- =====================================================
--- ENTERPRISE VENDOR & CLIENT MANAGEMENT SYSTEM
--- Multi-tier vendor support with full contract tracking
--- =====================================================
-
--- =====================================================
--- VENDOR MANAGEMENT
--- =====================================================
-
--- Vendors table: Companies that provide resources to your organization
-CREATE TABLE vendors (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Vendor Information
-    name VARCHAR(255) NOT NULL,
-    vendor_code VARCHAR(50) UNIQUE NOT NULL,
-    vendor_type VARCHAR(50) NOT NULL,  -- staffing, consulting, contractor, freelance
-
-    -- Contact Information
-    primary_contact_name VARCHAR(255),
-    primary_contact_email VARCHAR(255),
-    primary_contact_phone VARCHAR(50),
-    address_line1 VARCHAR(255),
-    address_line2 VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(100),
-    country VARCHAR(100),
-    postal_code VARCHAR(20),
-
-    -- Business Details
-    tax_id VARCHAR(50),
-    business_registration_number VARCHAR(100),
-    website VARCHAR(255),
-
-    -- Contract Details
-    contract_start_date DATE,
-    contract_end_date DATE,
-    contract_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, expired, terminated, suspended
-    contract_document_id UNIQUEIDENTIFIER,  -- Link to documents table
-
-    -- Billing Configuration
-    billing_type VARCHAR(50) NOT NULL,  -- hourly, daily, monthly, project, fixed
-    default_billing_rate DECIMAL(10,2),
-    billing_currency VARCHAR(10) DEFAULT 'USD',
-    payment_terms VARCHAR(100),  -- Net 30, Net 60, etc.
-
-    -- Multi-tier Support
-    parent_vendor_id UNIQUEIDENTIFIER NULL,  -- For sub-vendor relationships
-    tier_level INT DEFAULT 1,  -- 1 = direct vendor, 2 = sub-vendor, etc.
-
-    -- Performance Tracking
-    performance_rating DECIMAL(3,2),  -- 0.00 to 5.00
-    total_resources_supplied INT DEFAULT 0,
-    active_resources_count INT DEFAULT 0,
-
-    -- Status
-    is_active BIT NOT NULL DEFAULT 1,
-    is_preferred BIT NOT NULL DEFAULT 0,
-    blacklisted BIT NOT NULL DEFAULT 0,
-    blacklist_reason VARCHAR(500),
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2 NULL,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (parent_vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
--- CLIENT MANAGEMENT
--- =====================================================
-
--- Clients table: End clients where employees are placed
-CREATE TABLE clients (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Client Information
-    name VARCHAR(255) NOT NULL,
-    client_code VARCHAR(50) UNIQUE NOT NULL,
-    client_type VARCHAR(50) NOT NULL,  -- corporate, government, nonprofit, individual
-    industry VARCHAR(100),
-
-    -- Contact Information
-    primary_contact_name VARCHAR(255),
-    primary_contact_email VARCHAR(255),
-    primary_contact_phone VARCHAR(50),
-    address_line1 VARCHAR(255),
-    address_line2 VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(100),
-    country VARCHAR(100),
-    postal_code VARCHAR(20),
-
-    -- Business Details
-    tax_id VARCHAR(50),
-    website VARCHAR(255),
-
-    -- Relationship Details
-    relationship_start_date DATE,
-    relationship_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, inactive, prospect
-    account_manager_id UNIQUEIDENTIFIER,  -- Employee managing this client
-
-    -- Business Metrics
-    total_active_projects INT DEFAULT 0,
-    total_active_resources INT DEFAULT 0,
-    lifetime_revenue DECIMAL(15,2) DEFAULT 0,
-
-    -- Status
-    is_active BIT NOT NULL DEFAULT 1,
-    is_strategic BIT NOT NULL DEFAULT 0,  -- Strategic/key client flag
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2 NULL,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (account_manager_id) REFERENCES employees(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
--- PROJECTS
--- =====================================================
-
--- Projects table: Client projects where resources are assigned
-CREATE TABLE projects (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-    client_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Project Information
-    project_name VARCHAR(255) NOT NULL,
-    project_code VARCHAR(50) UNIQUE NOT NULL,
-    project_type VARCHAR(50),  -- fixed-price, time-material, retainer
-    description VARCHAR(2000),
-
-    -- Timeline
-    start_date DATE NOT NULL,
-    end_date DATE,
-    estimated_duration_months INT,
-    project_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, completed, on-hold, cancelled
-
-    -- Financial
-    project_budget DECIMAL(15,2),
-    billing_rate_type VARCHAR(50),  -- hourly, daily, monthly, fixed
-    default_billing_rate DECIMAL(10,2),
-    currency VARCHAR(10) DEFAULT 'USD',
-
-    -- Management
-    project_manager_id UNIQUEIDENTIFIER,
-
-    -- Metrics
-    total_allocated_resources INT DEFAULT 0,
-    total_hours_logged DECIMAL(10,2) DEFAULT 0,
-    total_revenue DECIMAL(15,2) DEFAULT 0,
-
-    -- Status
-    is_billable BIT NOT NULL DEFAULT 1,
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2 NULL,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (client_id) REFERENCES clients(id),
-    FOREIGN KEY (project_manager_id) REFERENCES employees(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
 
 -- =====================================================
 -- VENDOR ASSIGNMENTS
