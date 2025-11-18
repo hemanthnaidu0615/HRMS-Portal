@@ -16,6 +16,13 @@ import {
   IdcardOutlined,
   ProjectOutlined,
   HistoryOutlined,
+  ClockCircleOutlined,
+  CalendarOutlined,
+  FieldTimeOutlined,
+  DollarOutlined,
+  TrophyOutlined,
+  LaptopOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -88,6 +95,60 @@ export const orgAdminMenuItems: MenuItem[] = [
   getItem('Access Control', 'permissions', <SafetyCertificateOutlined />, [
     getItem('Roles', '/admin/roles'),
     getItem('Permission Groups', '/admin/permissions/groups'),
+  ]),
+
+  getItem('Attendance', 'attendance', <ClockCircleOutlined />, [
+    getItem('Dashboard', '/admin/attendance'),
+    getItem('Attendance Records', '/admin/attendance/records'),
+    getItem('Shifts', '/admin/attendance/shifts'),
+    getItem('Regularization', '/admin/attendance/regularization'),
+  ]),
+
+  getItem('Leave', 'leave', <CalendarOutlined />, [
+    getItem('Dashboard', '/admin/leave'),
+    getItem('Leave Applications', '/admin/leave/applications'),
+    getItem('Leave Types', '/admin/leave/types'),
+    getItem('Leave Balance', '/admin/leave/balance'),
+    getItem('Holidays', '/admin/leave/holidays'),
+  ]),
+
+  getItem('Timesheet', 'timesheet', <FieldTimeOutlined />, [
+    getItem('Dashboard', '/admin/timesheet'),
+    getItem('Timesheets', '/admin/timesheet/timesheets'),
+    getItem('Project Tasks', '/admin/timesheet/tasks'),
+  ]),
+
+  getItem('Payroll', 'payroll', <DollarOutlined />, [
+    getItem('Dashboard', '/admin/payroll'),
+    getItem('Payroll Runs', '/admin/payroll/runs'),
+    getItem('Payslips', '/admin/payroll/payslips'),
+    getItem('Salary Components', '/admin/payroll/components'),
+  ]),
+
+  getItem('Performance', 'performance', <TrophyOutlined />, [
+    getItem('Dashboard', '/admin/performance'),
+    getItem('Performance Cycles', '/admin/performance/cycles'),
+    getItem('Goals', '/admin/performance/goals'),
+    getItem('Reviews', '/admin/performance/reviews'),
+  ]),
+
+  getItem('Recruitment', 'recruitment', <TeamOutlined />, [
+    getItem('Dashboard', '/admin/recruitment'),
+    getItem('Job Postings', '/admin/recruitment/jobs'),
+    getItem('Applications', '/admin/recruitment/applications'),
+    getItem('Interviews', '/admin/recruitment/interviews'),
+  ]),
+
+  getItem('Assets', 'assets', <LaptopOutlined />, [
+    getItem('Dashboard', '/admin/assets'),
+    getItem('Assets', '/admin/assets/assets'),
+    getItem('Assignments', '/admin/assets/assignments'),
+  ]),
+
+  getItem('Expenses', 'expenses', <WalletOutlined />, [
+    getItem('Dashboard', '/admin/expenses'),
+    getItem('Expense Claims', '/admin/expenses/claims'),
+    getItem('Expense Categories', '/admin/expenses/categories'),
   ]),
 
   getItem('Audit Logs', '/admin/audit-logs', <HistoryOutlined />),
