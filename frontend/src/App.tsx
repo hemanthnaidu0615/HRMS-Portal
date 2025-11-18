@@ -1,9 +1,11 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AppLayout } from './layouts/AppLayout';
 import { useAuth } from './auth/useAuth';
 import { getMenuItemsByRole } from './config/navigation';
+import { premiumTheme } from './theme/premiumTheme';
 
 // Auth Pages
 import { LoginPage, SetPasswordPage, ForgotPasswordPage, ResetPasswordPage } from './pages/auth';
@@ -17,12 +19,9 @@ import { CreateOrgAdminPage } from './pages/superadmin/CreateOrgAdminPage';
 import { CreateEmployeePage } from './pages/orgadmin/CreateEmployeePage';
 import { EmployeePermissionsPage } from './pages/orgadmin/EmployeePermissionsPage';
 
-// Employee Pages
-import { DashboardPage } from './pages/employee/DashboardPage';
-
 // Dashboard Pages
 import { EmployeeDashboardPage } from './pages/dashboards/EmployeeDashboardPage';
-import { AdminDashboardPage } from './pages/dashboards/AdminDashboardPage';
+import { EnhancedAdminDashboard } from './pages/dashboards/EnhancedAdminDashboard';
 import { SuperAdminDashboardPage } from './pages/dashboards/SuperAdminDashboardPage';
 
 // Profile Pages
@@ -98,7 +97,7 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
  */
 function App() {
   return (
-    <div>
+    <ConfigProvider theme={premiumTheme}>
       <Routes>
         {/* Public Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
@@ -181,7 +180,7 @@ function App() {
           element={
             <ProtectedRoute requiredRole="orgadmin">
               <LayoutWrapper>
-                <AdminDashboardPage />
+                <EnhancedAdminDashboard />
               </LayoutWrapper>
             </ProtectedRoute>
           }
@@ -586,7 +585,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </div>
+    </ConfigProvider>
   );
 }
 
