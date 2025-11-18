@@ -88,8 +88,9 @@ export const orgAdminMenuItems: MenuItem[] = [
   ]),
 
   getItem('Projects', 'projects', <ProjectOutlined />, [
-    getItem('All Projects', '/admin/projects'),
-    getItem('Add Project', '/admin/projects/create'),
+    getItem('All Projects', '/admin/projects/projects'),
+    getItem('Project Tasks', '/admin/projects/tasks'),
+    getItem('Add Project', '/admin/projects/projects/create'),
   ]),
 
   getItem('Access Control', 'permissions', <SafetyCertificateOutlined />, [
@@ -98,55 +99,47 @@ export const orgAdminMenuItems: MenuItem[] = [
   ]),
 
   getItem('Attendance', 'attendance', <ClockCircleOutlined />, [
-    getItem('Dashboard', '/admin/attendance'),
     getItem('Attendance Records', '/admin/attendance/records'),
-    getItem('Shifts', '/admin/attendance/shifts'),
-    getItem('Regularization', '/admin/attendance/regularization'),
+    getItem('Regularization Requests', '/admin/attendance/regularization'),
+    getItem('Shift Management', '/admin/attendance/shifts'),
   ]),
 
   getItem('Leave', 'leave', <CalendarOutlined />, [
-    getItem('Dashboard', '/admin/leave'),
     getItem('Leave Applications', '/admin/leave/applications'),
+    getItem('Leave Balances', '/admin/leave/balances'),
     getItem('Leave Types', '/admin/leave/types'),
-    getItem('Leave Balance', '/admin/leave/balance'),
-    getItem('Holidays', '/admin/leave/holidays'),
   ]),
 
   getItem('Timesheet', 'timesheet', <FieldTimeOutlined />, [
-    getItem('Dashboard', '/admin/timesheet'),
-    getItem('Timesheets', '/admin/timesheet/timesheets'),
-    getItem('Project Tasks', '/admin/timesheet/tasks'),
+    getItem('Timesheet Entries', '/admin/timesheet/entries'),
+    getItem('Pending Approvals', '/admin/timesheet/approvals'),
   ]),
 
   getItem('Payroll', 'payroll', <DollarOutlined />, [
-    getItem('Dashboard', '/admin/payroll'),
     getItem('Payroll Runs', '/admin/payroll/runs'),
     getItem('Payslips', '/admin/payroll/payslips'),
     getItem('Salary Components', '/admin/payroll/components'),
   ]),
 
   getItem('Performance', 'performance', <TrophyOutlined />, [
-    getItem('Dashboard', '/admin/performance'),
-    getItem('Performance Cycles', '/admin/performance/cycles'),
-    getItem('Goals', '/admin/performance/goals'),
-    getItem('Reviews', '/admin/performance/reviews'),
+    getItem('Performance Reviews', '/admin/performance/reviews'),
+    getItem('Employee Goals', '/admin/performance/goals'),
+    getItem('Review Cycles', '/admin/performance/cycles'),
   ]),
 
   getItem('Recruitment', 'recruitment', <TeamOutlined />, [
-    getItem('Dashboard', '/admin/recruitment'),
     getItem('Job Postings', '/admin/recruitment/jobs'),
     getItem('Applications', '/admin/recruitment/applications'),
-    getItem('Interviews', '/admin/recruitment/interviews'),
+    getItem('Interview Schedules', '/admin/recruitment/interviews'),
   ]),
 
   getItem('Assets', 'assets', <LaptopOutlined />, [
-    getItem('Dashboard', '/admin/assets'),
-    getItem('Assets', '/admin/assets/assets'),
-    getItem('Assignments', '/admin/assets/assignments'),
+    getItem('All Assets', '/admin/assets/assets'),
+    getItem('Asset Assignments', '/admin/assets/assignments'),
+    getItem('Asset Categories', '/admin/assets/categories'),
   ]),
 
   getItem('Expenses', 'expenses', <WalletOutlined />, [
-    getItem('Dashboard', '/admin/expenses'),
     getItem('Expense Claims', '/admin/expenses/claims'),
     getItem('Expense Categories', '/admin/expenses/categories'),
   ]),
