@@ -37,6 +37,7 @@ import {
   IdcardOutlined,
   DollarOutlined,
   GlobalOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 import { getEmployeeDetails, EmployeeDetailResponse } from '../../../api/employeeManagementApi';
 import { orgadminApi } from '../../../api/orgadminApi';
@@ -353,6 +354,13 @@ export const EmployeeDetailPage = () => {
             <Space wrap>
               {!isDeleted && (
                 <>
+                  <Button
+                    icon={<FolderOutlined />}
+                    onClick={() => navigate('/documents')}
+                    style={{ borderRadius: 8 }}
+                  >
+                    View Documents
+                  </Button>
                   <Button
                     type="primary"
                     icon={<FileTextOutlined />}
