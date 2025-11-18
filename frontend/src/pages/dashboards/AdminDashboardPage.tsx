@@ -4,11 +4,11 @@ import {
   UserOutlined,
   TeamOutlined,
   ClockCircleOutlined,
-  SafetyCertificateOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
   InboxOutlined,
   RiseOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 import { getAdminDashboard, AdminDashboardStats } from '../../api/dashboardApi';
 
@@ -52,7 +52,7 @@ export const AdminDashboardPage = () => {
   if (loading) {
     return (
       <div style={{ padding: 24 }}>
-        <Skeleton active paragraph={{ rows: 10 }} />
+        <Skeleton active paragraph={{ rows: 6 }} />
       </div>
     );
   }
@@ -65,17 +65,13 @@ export const AdminDashboardPage = () => {
           description={error}
           type="error"
           showIcon
-          action={
-            <a onClick={loadDashboard}>Retry</a>
-          }
+          action={<a onClick={loadDashboard}>Retry</a>}
         />
       </div>
     );
   }
 
-  if (!dashboardData) {
-    return null;
-  }
+  if (!dashboardData) return null;
 
   const { stats, organizationInfo } = dashboardData;
 
@@ -86,7 +82,8 @@ export const AdminDashboardPage = () => {
       count: Number(count),
       percentage: (Number(count) / stats.totalEmployees) * 100,
     }))
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5); // Top 5 only
 
   // Process employment type distribution
   const employmentTypeColors: Record<string, string> = {
@@ -105,164 +102,166 @@ export const AdminDashboardPage = () => {
     }))
     .sort((a, b) => b.count - a.count);
 
-  return (
-    <div style={{ padding: 24, background: '#f0f2f5', minHeight: '100vh' }}>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* Header */}
-        <div>
-          <Title level={2} style={{ margin: 0 }}>Dashboard</Title>
-          <Text type="secondary">{organizationInfo.name} • Overview & Analytics</Text>
+  const StatCard = ({ title, value, icon, color, suffix, trend }: any) => (
+    <Card
+      bordered={false}
+      style={{
+        background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
+        borderLeft: `3px solid ${color}`,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>
+            {title}
+          </Text>
+          <div style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>
+            {value}
+            {suffix && <span style={{ fontSize: 14, color: '#999', marginLeft: 4 }}>{suffix}</span>}
+          </div>
+          {trend && (
+            <div style={{ marginTop: 8, fontSize: 12, color: '#52c41a' }}>
+              <RiseOutlined /> {trend}
+            </div>
+          )}
         </div>
+        <div style={{
+          fontSize: 32,
+          color: color + '40',
+          lineHeight: 1,
+        }}>
+          {icon}
+        </div>
+      </div>
+    </Card>
+  );
 
-        {/* Key Metrics - Row 1 */}
-        <Row gutter={[16, 16]}>
+  return (
+    <div style={{ padding: 24 }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={3} style={{ margin: 0, marginBottom: 4 }}>{organizationInfo.name}</Title>
+        <Text type="secondary">Organization Dashboard</Text>
+      </div>
+
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        {/* Key Metrics */}
+        <Row gutter={16}>
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #1890ff' }}>
-              <Statistic
-                title="Total Employees"
-                value={stats.totalEmployees}
-                prefix={<UserOutlined style={{ color: '#1890ff' }} />}
-                valueStyle={{ color: '#1890ff', fontWeight: 600 }}
-              />
-              {stats.newEmployeesLast30Days > 0 && (
-                <div style={{ marginTop: 8, color: '#52c41a', fontSize: 12 }}>
-                  <RiseOutlined /> +{stats.newEmployeesLast30Days} this month
-                </div>
-              )}
-            </Card>
+            <StatCard
+              title="Total Employees"
+              value={stats.totalEmployees}
+              icon={<UserOutlined />}
+              color="#1890ff"
+              trend={stats.newEmployeesLast30Days > 0 ? `+${stats.newEmployeesLast30Days} this month` : null}
+            />
           </Col>
-
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #fa8c16' }}>
-              <Statistic
-                title="On Probation"
-                value={stats.onProbation}
-                prefix={<ClockCircleOutlined style={{ color: '#fa8c16' }} />}
-                valueStyle={{ color: '#fa8c16', fontWeight: 600 }}
-                suffix={<span style={{ fontSize: 14, color: '#666' }}>/ {stats.totalEmployees}</span>}
-              />
-              {stats.totalEmployees > 0 && (
-                <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
-                  {((stats.onProbation / stats.totalEmployees) * 100).toFixed(1)}% of workforce
-                </div>
-              )}
-            </Card>
+            <StatCard
+              title="Departments"
+              value={stats.departmentCount}
+              icon={<ApartmentOutlined />}
+              color="#52c41a"
+              suffix={stats.departmentCount > 0 ? `· ${(stats.totalEmployees / stats.departmentCount).toFixed(0)} avg` : null}
+            />
           </Col>
-
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #52c41a' }}>
-              <Statistic
-                title="Departments"
-                value={stats.departmentCount}
-                prefix={<TeamOutlined style={{ color: '#52c41a' }} />}
-                valueStyle={{ color: '#52c41a', fontWeight: 600 }}
-              />
-              {stats.departmentCount > 0 && (
-                <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
-                  Avg: {(stats.totalEmployees / stats.departmentCount).toFixed(1)} per dept
-                </div>
-              )}
-            </Card>
+            <StatCard
+              title="On Probation"
+              value={stats.onProbation}
+              icon={<ClockCircleOutlined />}
+              color="#fa8c16"
+              suffix={stats.totalEmployees > 0 ? `· ${((stats.onProbation / stats.totalEmployees) * 100).toFixed(0)}%` : null}
+            />
           </Col>
-
           <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #722ed1' }}>
-              <Statistic
-                title="Total Documents"
-                value={stats.totalDocuments}
-                prefix={<FileTextOutlined style={{ color: '#722ed1' }} />}
-                valueStyle={{ color: '#722ed1', fontWeight: 600 }}
-              />
-              {stats.newDocumentsLast30Days > 0 && (
-                <div style={{ marginTop: 8, color: '#52c41a', fontSize: 12 }}>
-                  <RiseOutlined /> +{stats.newDocumentsLast30Days} this month
-                </div>
-              )}
-            </Card>
+            <StatCard
+              title="Total Documents"
+              value={stats.totalDocuments}
+              icon={<FileTextOutlined />}
+              color="#722ed1"
+              trend={stats.newDocumentsLast30Days > 0 ? `+${stats.newDocumentsLast30Days} this month` : null}
+            />
           </Col>
         </Row>
 
-        {/* Document Stats - Row 2 */}
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+        {/* Document & Request Stats */}
+        <Row gutter={16}>
+          <Col xs={12} sm={6}>
+            <Card bordered={false} size="small">
               <Statistic
-                title="Pending Approval"
+                title="Pending Docs"
                 value={stats.pendingDocuments}
-                prefix={<InboxOutlined style={{ color: '#fa8c16' }} />}
-                valueStyle={{ color: '#fa8c16' }}
+                prefix={<InboxOutlined style={{ fontSize: 14 }} />}
+                valueStyle={{ fontSize: 20, color: '#fa8c16' }}
               />
             </Card>
           </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+          <Col xs={12} sm={6}>
+            <Card bordered={false} size="small">
               <Statistic
-                title="Approved Documents"
+                title="Approved"
                 value={stats.approvedDocuments}
-                prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                valueStyle={{ color: '#52c41a' }}
+                prefix={<CheckCircleOutlined style={{ fontSize: 14 }} />}
+                valueStyle={{ fontSize: 20, color: '#52c41a' }}
               />
             </Card>
           </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+          <Col xs={12} sm={6}>
+            <Card bordered={false} size="small">
               <Statistic
                 title="Pending Requests"
                 value={stats.pendingDocumentRequests}
-                prefix={<ClockCircleOutlined style={{ color: '#1890ff' }} />}
-                valueStyle={{ color: '#1890ff' }}
+                prefix={<ClockCircleOutlined style={{ fontSize: 14 }} />}
+                valueStyle={{ fontSize: 20, color: '#1890ff' }}
               />
             </Card>
           </Col>
-
-          <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
+          <Col xs={12} sm={6}>
+            <Card bordered={false} size="small">
               <Statistic
-                title="Completed Requests"
+                title="Completed"
                 value={stats.completedDocumentRequests}
-                prefix={<SafetyCertificateOutlined style={{ color: '#52c41a' }} />}
-                valueStyle={{ color: '#52c41a' }}
+                prefix={<CheckCircleOutlined style={{ fontSize: 14 }} />}
+                valueStyle={{ fontSize: 20, color: '#52c41a' }}
               />
             </Card>
           </Col>
         </Row>
 
-        {/* Detailed Distribution Charts */}
-        <Row gutter={[16, 16]}>
+        {/* Distribution Charts */}
+        <Row gutter={16}>
           {/* Department Distribution */}
           <Col xs={24} lg={12}>
             <Card
-              title={<span><TeamOutlined /> Employees by Department</span>}
-              style={{ borderRadius: 12, height: '100%' }}
+              title={
+                <Space>
+                  <TeamOutlined />
+                  <span>Top Departments</span>
+                </Space>
+              }
+              bordered={false}
+              size="small"
             >
               {departmentStats.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#999' }}>
-                  <TeamOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-                  <div>No departments created yet</div>
-                  <div style={{ fontSize: 12, marginTop: 8 }}>
-                    Create departments to organize your team
-                  </div>
+                <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+                  <TeamOutlined style={{ fontSize: 36, marginBottom: 8 }} />
+                  <div style={{ fontSize: 13 }}>No departments yet</div>
                 </div>
               ) : (
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {departmentStats.map(dept => (
                     <div key={dept.name}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <Text strong>{dept.name}</Text>
-                        <Text type="secondary">
-                          {dept.count} ({dept.percentage.toFixed(1)}%)
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <Text style={{ fontSize: 13 }}>{dept.name}</Text>
+                        <Text type="secondary" style={{ fontSize: 13 }}>
+                          {dept.count} · {dept.percentage.toFixed(0)}%
                         </Text>
                       </div>
                       <Progress
                         percent={dept.percentage}
                         showInfo={false}
-                        strokeColor={{
-                          '0%': '#1890ff',
-                          '100%': '#52c41a',
-                        }}
-                        strokeWidth={12}
+                        strokeColor="#1890ff"
+                        strokeWidth={6}
                       />
                     </div>
                   ))}
@@ -274,46 +273,50 @@ export const AdminDashboardPage = () => {
           {/* Employment Type Distribution */}
           <Col xs={24} lg={12}>
             <Card
-              title={<span><UserOutlined /> Employment Type Distribution</span>}
-              style={{ borderRadius: 12, height: '100%' }}
+              title={
+                <Space>
+                  <UserOutlined />
+                  <span>Employment Types</span>
+                </Space>
+              }
+              bordered={false}
+              size="small"
             >
               {employmentTypeStats.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#999' }}>
-                  <UserOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-                  <div>No employment types set</div>
+                <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+                  <UserOutlined style={{ fontSize: 36, marginBottom: 8 }} />
+                  <div style={{ fontSize: 13 }}>No data available</div>
                 </div>
               ) : (
-                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   {employmentTypeStats.map(type => (
                     <div key={type.type} style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      padding: '12px 16px',
+                      padding: '8px 12px',
                       background: '#fafafa',
-                      borderRadius: 8,
+                      borderRadius: 6,
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div
-                          style={{
-                            width: 16,
-                            height: 16,
-                            borderRadius: 4,
-                            background: type.color,
-                          }}
-                        />
-                        <Text strong style={{ textTransform: 'capitalize' }}>
+                      <Space size="small">
+                        <div style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: 3,
+                          background: type.color,
+                        }} />
+                        <Text style={{ fontSize: 13, textTransform: 'capitalize' }}>
                           {type.type}
                         </Text>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <Tag color={type.color} style={{ margin: 0, fontSize: 14, padding: '4px 12px' }}>
+                      </Space>
+                      <Space size="small">
+                        <Tag color={type.color} style={{ margin: 0, fontSize: 12 }}>
                           {type.count}
                         </Tag>
-                        <Text type="secondary" style={{ minWidth: '60px', textAlign: 'right', fontSize: 16 }}>
-                          {((type.count / stats.totalEmployees) * 100).toFixed(1)}%
+                        <Text type="secondary" style={{ fontSize: 13, minWidth: 40, textAlign: 'right' }}>
+                          {((type.count / stats.totalEmployees) * 100).toFixed(0)}%
                         </Text>
-                      </div>
+                      </Space>
                     </div>
                   ))}
                 </Space>
@@ -321,26 +324,6 @@ export const AdminDashboardPage = () => {
             </Card>
           </Col>
         </Row>
-
-        {/* Probation Alert */}
-        {stats.onProbation > 0 && (
-          <Card style={{ borderRadius: 12, borderLeft: '4px solid #fa8c16' }}>
-            <Row gutter={16} align="middle">
-              <Col>
-                <ClockCircleOutlined style={{ fontSize: 32, color: '#fa8c16' }} />
-              </Col>
-              <Col flex="auto">
-                <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
-                  Probation Period Active
-                </div>
-                <Text type="secondary">
-                  {stats.onProbation} {stats.onProbation === 1 ? 'employee is' : 'employees are'} currently on probation period.
-                  Monitor their progress and complete evaluations on time.
-                </Text>
-              </Col>
-            </Row>
-          </Card>
-        )}
       </Space>
     </div>
   );

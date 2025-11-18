@@ -6,13 +6,10 @@ import {
   Space,
   Button,
   Switch,
-  Divider,
   message,
-  Row,
-  Col,
+  Table,
   Tag,
-  Skeleton,
-  Alert,
+  Tooltip,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -20,8 +17,9 @@ import {
   UserOutlined,
   TeamOutlined,
   BankOutlined,
-  CheckCircleOutlined,
   FileTextOutlined,
+  EyeOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import {
   getEmployeeSimplePermissions,
@@ -35,13 +33,13 @@ const { Title, Text } = Typography;
 const getResourceIcon = (resource: string): React.ReactNode => {
   switch (resource) {
     case 'employees':
-      return <UserOutlined />;
+      return <UserOutlined style={{ color: '#1890ff' }} />;
     case 'documents':
-      return <FileTextOutlined />;
+      return <FileTextOutlined style={{ color: '#52c41a' }} />;
     case 'departments':
-      return <BankOutlined />;
+      return <BankOutlined style={{ color: '#fa8c16' }} />;
     default:
-      return <TeamOutlined />;
+      return <TeamOutlined style={{ color: '#722ed1' }} />;
   }
 };
 
@@ -108,7 +106,6 @@ export const SimplePermissionsPage = () => {
     try {
       setSaving(true);
 
-      // Convert to API request format (exclude label and description)
       const request = {
         permissions: permissions.map(p => ({
           resource: p.resource,
@@ -133,243 +130,210 @@ export const SimplePermissionsPage = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-        <Skeleton active paragraph={{ rows: 10 }} />
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-      <Card style={{ borderRadius: 12 }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Title level={3} style={{ margin: 0 }}>Simple Permissions</Title>
-              <Text type="secondary">{employeeName}</Text>
-              {employeeName !== employeeEmail && (
-                <div><Text type="secondary" style={{ fontSize: 12 }}>{employeeEmail}</Text></div>
-              )}
-            </div>
-            <Space>
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/admin/employees')}
-              >
-                Back
-              </Button>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                loading={saving}
-                onClick={handleSave}
-                style={{ background: '#52c41a', borderColor: '#52c41a' }}
-              >
-                Save Changes
-              </Button>
-            </Space>
-          </div>
-
-          <Alert
-            message="Simple Permissions Model"
-            description="Grant view (read-only) or edit (full access) permissions at three levels: Own (self), Team (direct reports), or Organization (everyone)."
-            type="info"
-            showIcon
-            icon={<CheckCircleOutlined />}
-          />
-
-          {/* Permissions Table */}
+  const columns = [
+    {
+      title: 'Resource',
+      dataIndex: 'label',
+      key: 'resource',
+      width: 200,
+      render: (_: any, record: ResourcePermission) => (
+        <Space>
+          <span style={{ fontSize: 18 }}>{getResourceIcon(record.resource)}</span>
           <div>
-            {permissions.map((perm, index) => (
-              <Card
-                key={perm.resource}
-                style={{
-                  marginBottom: 16,
-                  borderRadius: 8,
-                  border: '1px solid #e8e8e8',
-                }}
-              >
-                <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                  {/* Resource Header */}
-                  <div>
-                    <Space>
-                      <span style={{ fontSize: 20 }}>{getResourceIcon(perm.resource)}</span>
-                      <Title level={5} style={{ margin: 0 }}>{perm.label}</Title>
-                    </Space>
-                    <Text type="secondary" style={{ fontSize: 13 }}>
-                      {perm.description}
-                    </Text>
-                  </div>
-
-                  <Divider style={{ margin: 0 }} />
-
-                  {/* Permission Grid */}
-                  <Row gutter={[24, 16]}>
-                    {/* Own Column */}
-                    <Col span={8}>
-                      <div style={{
-                        background: '#f0f5ff',
-                        padding: 16,
-                        borderRadius: 8,
-                        textAlign: 'center',
-                      }}>
-                        <UserOutlined style={{ fontSize: 24, color: '#1890ff', marginBottom: 8 }} />
-                        <div style={{ fontWeight: 600, marginBottom: 12 }}>Own (Self)</div>
-                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px 12px',
-                            background: 'white',
-                            borderRadius: 6,
-                          }}>
-                            <Text>View</Text>
-                            <Switch
-                              checked={perm.canViewOwn}
-                              onChange={(checked) =>
-                                handlePermissionChange(index, 'canViewOwn', checked)
-                              }
-                            />
-                          </div>
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px 12px',
-                            background: 'white',
-                            borderRadius: 6,
-                          }}>
-                            <Text>Edit</Text>
-                            <Switch
-                              checked={perm.canEditOwn}
-                              onChange={(checked) =>
-                                handlePermissionChange(index, 'canEditOwn', checked)
-                              }
-                            />
-                          </div>
-                        </Space>
-                      </div>
-                    </Col>
-
-                    {/* Team Column */}
-                    <Col span={8}>
-                      <div style={{
-                        background: '#f6ffed',
-                        padding: 16,
-                        borderRadius: 8,
-                        textAlign: 'center',
-                      }}>
-                        <TeamOutlined style={{ fontSize: 24, color: '#52c41a', marginBottom: 8 }} />
-                        <div style={{ fontWeight: 600, marginBottom: 12 }}>Team (Direct Reports)</div>
-                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px 12px',
-                            background: 'white',
-                            borderRadius: 6,
-                          }}>
-                            <Text>View</Text>
-                            <Switch
-                              checked={perm.canViewTeam}
-                              onChange={(checked) =>
-                                handlePermissionChange(index, 'canViewTeam', checked)
-                              }
-                            />
-                          </div>
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px 12px',
-                            background: 'white',
-                            borderRadius: 6,
-                          }}>
-                            <Text>Edit</Text>
-                            <Switch
-                              checked={perm.canEditTeam}
-                              onChange={(checked) =>
-                                handlePermissionChange(index, 'canEditTeam', checked)
-                              }
-                            />
-                          </div>
-                        </Space>
-                      </div>
-                    </Col>
-
-                    {/* Organization Column */}
-                    <Col span={8}>
-                      <div style={{
-                        background: '#fff7e6',
-                        padding: 16,
-                        borderRadius: 8,
-                        textAlign: 'center',
-                      }}>
-                        <BankOutlined style={{ fontSize: 24, color: '#fa8c16', marginBottom: 8 }} />
-                        <div style={{ fontWeight: 600, marginBottom: 12 }}>Organization (Everyone)</div>
-                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px 12px',
-                            background: 'white',
-                            borderRadius: 6,
-                          }}>
-                            <Text>View</Text>
-                            <Switch
-                              checked={perm.canViewOrg}
-                              onChange={(checked) =>
-                                handlePermissionChange(index, 'canViewOrg', checked)
-                              }
-                            />
-                          </div>
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px 12px',
-                            background: 'white',
-                            borderRadius: 6,
-                          }}>
-                            <Text>Edit</Text>
-                            <Switch
-                              checked={perm.canEditOrg}
-                              onChange={(checked) =>
-                                handlePermissionChange(index, 'canEditOrg', checked)
-                              }
-                            />
-                          </div>
-                        </Space>
-                      </div>
-                    </Col>
-                  </Row>
-
-                  {/* Active Permissions Summary */}
-                  <div style={{ paddingTop: 8 }}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>Active: </Text>
-                    <Space wrap size="small">
-                      {perm.canViewOwn && <Tag color="blue">View Own</Tag>}
-                      {perm.canEditOwn && <Tag color="blue">Edit Own</Tag>}
-                      {perm.canViewTeam && <Tag color="green">View Team</Tag>}
-                      {perm.canEditTeam && <Tag color="green">Edit Team</Tag>}
-                      {perm.canViewOrg && <Tag color="orange">View Org</Tag>}
-                      {perm.canEditOrg && <Tag color="orange">Edit Org</Tag>}
-                      {!perm.canViewOwn && !perm.canEditOwn && !perm.canViewTeam && !perm.canEditTeam && !perm.canViewOrg && !perm.canEditOrg && (
-                        <Tag>No permissions</Tag>
-                      )}
-                    </Space>
-                  </div>
-                </Space>
-              </Card>
-            ))}
+            <div style={{ fontWeight: 500 }}>{record.label}</div>
+            <Text type="secondary" style={{ fontSize: 12 }}>{record.description}</Text>
           </div>
         </Space>
+      ),
+    },
+    {
+      title: () => (
+        <div style={{ textAlign: 'center' }}>
+          <UserOutlined style={{ marginRight: 6, color: '#1890ff' }} />
+          Own
+        </div>
+      ),
+      children: [
+        {
+          title: <Tooltip title="View own data"><EyeOutlined /></Tooltip>,
+          dataIndex: 'canViewOwn',
+          key: 'canViewOwn',
+          width: 70,
+          align: 'center' as const,
+          render: (_: any, record: ResourcePermission, index: number) => (
+            <Switch
+              size="small"
+              checked={record.canViewOwn}
+              onChange={(checked) => handlePermissionChange(index, 'canViewOwn', checked)}
+            />
+          ),
+        },
+        {
+          title: <Tooltip title="Edit own data"><EditOutlined /></Tooltip>,
+          dataIndex: 'canEditOwn',
+          key: 'canEditOwn',
+          width: 70,
+          align: 'center' as const,
+          render: (_: any, record: ResourcePermission, index: number) => (
+            <Switch
+              size="small"
+              checked={record.canEditOwn}
+              onChange={(checked) => handlePermissionChange(index, 'canEditOwn', checked)}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      title: () => (
+        <div style={{ textAlign: 'center' }}>
+          <TeamOutlined style={{ marginRight: 6, color: '#52c41a' }} />
+          Team
+        </div>
+      ),
+      children: [
+        {
+          title: <Tooltip title="View team data"><EyeOutlined /></Tooltip>,
+          dataIndex: 'canViewTeam',
+          key: 'canViewTeam',
+          width: 70,
+          align: 'center' as const,
+          render: (_: any, record: ResourcePermission, index: number) => (
+            <Switch
+              size="small"
+              checked={record.canViewTeam}
+              onChange={(checked) => handlePermissionChange(index, 'canViewTeam', checked)}
+            />
+          ),
+        },
+        {
+          title: <Tooltip title="Edit team data"><EditOutlined /></Tooltip>,
+          dataIndex: 'canEditTeam',
+          key: 'canEditTeam',
+          width: 70,
+          align: 'center' as const,
+          render: (_: any, record: ResourcePermission, index: number) => (
+            <Switch
+              size="small"
+              checked={record.canEditTeam}
+              onChange={(checked) => handlePermissionChange(index, 'canEditTeam', checked)}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      title: () => (
+        <div style={{ textAlign: 'center' }}>
+          <BankOutlined style={{ marginRight: 6, color: '#fa8c16' }} />
+          Organization
+        </div>
+      ),
+      children: [
+        {
+          title: <Tooltip title="View org data"><EyeOutlined /></Tooltip>,
+          dataIndex: 'canViewOrg',
+          key: 'canViewOrg',
+          width: 70,
+          align: 'center' as const,
+          render: (_: any, record: ResourcePermission, index: number) => (
+            <Switch
+              size="small"
+              checked={record.canViewOrg}
+              onChange={(checked) => handlePermissionChange(index, 'canViewOrg', checked)}
+            />
+          ),
+        },
+        {
+          title: <Tooltip title="Edit org data"><EditOutlined /></Tooltip>,
+          dataIndex: 'canEditOrg',
+          key: 'canEditOrg',
+          width: 70,
+          align: 'center' as const,
+          render: (_: any, record: ResourcePermission, index: number) => (
+            <Switch
+              size="small"
+              checked={record.canEditOrg}
+              onChange={(checked) => handlePermissionChange(index, 'canEditOrg', checked)}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      title: 'Active Permissions',
+      key: 'summary',
+      render: (_: any, record: ResourcePermission) => {
+        const activeTags = [];
+        if (record.canViewOwn) activeTags.push(<Tag key="vo" color="blue">View Own</Tag>);
+        if (record.canEditOwn) activeTags.push(<Tag key="eo" color="blue">Edit Own</Tag>);
+        if (record.canViewTeam) activeTags.push(<Tag key="vt" color="green">View Team</Tag>);
+        if (record.canEditTeam) activeTags.push(<Tag key="et" color="green">Edit Team</Tag>);
+        if (record.canViewOrg) activeTags.push(<Tag key="vor" color="orange">View Org</Tag>);
+        if (record.canEditOrg) activeTags.push(<Tag key="eor" color="orange">Edit Org</Tag>);
+
+        return (
+          <Space wrap size="small">
+            {activeTags.length > 0 ? activeTags : <Tag>No access</Tag>}
+          </Space>
+        );
+      },
+    },
+  ];
+
+  return (
+    <div style={{ padding: 24 }}>
+      {/* Header */}
+      <div style={{
+        marginBottom: 24,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start'
+      }}>
+        <div>
+          <Title level={3} style={{ margin: 0, marginBottom: 4 }}>Manage Permissions</Title>
+          <Text strong style={{ fontSize: 16 }}>{employeeName}</Text>
+          {employeeName !== employeeEmail && (
+            <>
+              <Text type="secondary" style={{ margin: '0 8px' }}>•</Text>
+              <Text type="secondary">{employeeEmail}</Text>
+            </>
+          )}
+          <div style={{ marginTop: 8 }}>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              Control view and edit access at three levels: Own (self), Team (direct reports), Organization (all)
+            </Text>
+          </div>
+        </div>
+        <Space>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/admin/employees')}
+          >
+            Back
+          </Button>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={saving}
+            onClick={handleSave}
+          >
+            Save Changes
+          </Button>
+        </Space>
+      </div>
+
+      {/* Permissions Table */}
+      <Card bordered={false} style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}>
+        <Table
+          dataSource={permissions}
+          columns={columns}
+          loading={loading}
+          pagination={false}
+          rowKey="resource"
+          bordered
+          size="middle"
+        />
       </Card>
     </div>
   );
