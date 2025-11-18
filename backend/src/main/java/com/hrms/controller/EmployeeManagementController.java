@@ -655,28 +655,164 @@ public class EmployeeManagementController {
     }
 
     private EmployeeDetailResponse mapToDetail(Employee employee) {
-        return new EmployeeDetailResponse(
-                employee.getId(),
-                employee.getUser().getId(),
-                employee.getUser().getEmail(),
-                employee.getFirstName(),
-                employee.getLastName(),
-                employee.getDepartment() != null ? employee.getDepartment().getId() : null,
-                employee.getDepartment() != null ? employee.getDepartment().getName() : null,
-                employee.getPosition() != null ? employee.getPosition().getId() : null,
-                employee.getPosition() != null ? employee.getPosition().getName() : null,
-                employee.getReportsTo() != null ? employee.getReportsTo().getId() : null,
-                employee.getReportsTo() != null ? employee.getReportsTo().getUser().getEmail() : null,
-                employee.getReportsTo() != null ? employee.getReportsTo().getFirstName() : null,
-                employee.getReportsTo() != null ? employee.getReportsTo().getLastName() : null,
-                employee.getEmploymentType(),
-                employee.getClientId(),
-                employee.getProjectId(),
-                employee.getContractEndDate(),
-                employee.getIsProbation(),
-                employee.getProbationStartDate(),
-                employee.getProbationEndDate(),
-                employee.getProbationStatus()
-        );
+        EmployeeDetailResponse response = new EmployeeDetailResponse();
+
+        // Basic IDs
+        response.setEmployeeId(employee.getId());
+        response.setUserId(employee.getUser().getId());
+        response.setEmail(employee.getUser().getEmail());
+        response.setOrganizationId(employee.getOrganization().getId());
+
+        // Employee Code
+        response.setEmployeeCode(employee.getEmployeeCode());
+
+        // Personal Details
+        response.setFirstName(employee.getFirstName());
+        response.setMiddleName(employee.getMiddleName());
+        response.setLastName(employee.getLastName());
+        response.setDateOfBirth(employee.getDateOfBirth());
+        response.setGender(employee.getGender());
+        response.setNationality(employee.getNationality());
+        response.setMaritalStatus(employee.getMaritalStatus());
+        response.setBloodGroup(employee.getBloodGroup());
+
+        // Contact Information
+        response.setPersonalEmail(employee.getPersonalEmail());
+        response.setPhoneNumber(employee.getPhoneNumber());
+        response.setWorkPhone(employee.getWorkPhone());
+        response.setAlternatePhone(employee.getAlternatePhone());
+
+        // Current Address
+        response.setCurrentAddressLine1(employee.getCurrentAddressLine1());
+        response.setCurrentAddressLine2(employee.getCurrentAddressLine2());
+        response.setCurrentCity(employee.getCurrentCity());
+        response.setCurrentState(employee.getCurrentState());
+        response.setCurrentCountry(employee.getCurrentCountry());
+        response.setCurrentPostalCode(employee.getCurrentPostalCode());
+
+        // Permanent Address
+        response.setSameAsCurrentAddress(employee.getSameAsCurrentAddress());
+        response.setPermanentAddressLine1(employee.getPermanentAddressLine1());
+        response.setPermanentAddressLine2(employee.getPermanentAddressLine2());
+        response.setPermanentCity(employee.getPermanentCity());
+        response.setPermanentState(employee.getPermanentState());
+        response.setPermanentCountry(employee.getPermanentCountry());
+        response.setPermanentPostalCode(employee.getPermanentPostalCode());
+
+        // Emergency Contacts
+        response.setEmergencyContactName(employee.getEmergencyContactName());
+        response.setEmergencyContactRelationship(employee.getEmergencyContactRelationship());
+        response.setEmergencyContactPhone(employee.getEmergencyContactPhone());
+        response.setAlternateEmergencyContactName(employee.getAlternateEmergencyContactName());
+        response.setAlternateEmergencyContactRelationship(employee.getAlternateEmergencyContactRelationship());
+        response.setAlternateEmergencyContactPhone(employee.getAlternateEmergencyContactPhone());
+
+        // Employment Details
+        response.setJoiningDate(employee.getJoiningDate());
+        response.setEmploymentStatus(employee.getEmploymentStatus());
+        response.setEmploymentType(employee.getEmploymentType());
+
+        // Department
+        if (employee.getDepartment() != null) {
+            response.setDepartmentId(employee.getDepartment().getId());
+            response.setDepartmentName(employee.getDepartment().getName());
+            response.setDepartmentCode(employee.getDepartment().getDepartmentCode());
+        }
+
+        // Position
+        if (employee.getPosition() != null) {
+            response.setPositionId(employee.getPosition().getId());
+            response.setPositionName(employee.getPosition().getName());
+        }
+
+        // Reporting Manager
+        if (employee.getReportsTo() != null) {
+            response.setReportsToEmployeeId(employee.getReportsTo().getId());
+            response.setReportsToEmail(employee.getReportsTo().getUser().getEmail());
+            response.setReportsToFirstName(employee.getReportsTo().getFirstName());
+            response.setReportsToLastName(employee.getReportsTo().getLastName());
+        }
+
+        // Vendor Assignment
+        if (employee.getVendor() != null) {
+            response.setVendorId(employee.getVendor().getId());
+            response.setVendorName(employee.getVendor().getName());
+            response.setVendorCode(employee.getVendor().getVendorCode());
+        }
+
+        // Client Assignment
+        if (employee.getClient() != null) {
+            response.setClientId(employee.getClient().getId());
+            response.setClientName(employee.getClient().getName());
+            response.setClientCode(employee.getClient().getClientCode());
+        }
+
+        // Project Assignment
+        if (employee.getProject() != null) {
+            response.setProjectId(employee.getProject().getId());
+            response.setProjectName(employee.getProject().getProjectName());
+            response.setProjectCode(employee.getProject().getProjectCode());
+        }
+
+        // Contract Details
+        response.setContractStartDate(employee.getContractStartDate());
+        response.setContractEndDate(employee.getContractEndDate());
+
+        // Probation
+        response.setIsProbation(employee.getIsProbation());
+        response.setProbationStartDate(employee.getProbationStartDate());
+        response.setProbationEndDate(employee.getProbationEndDate());
+        response.setProbationStatus(employee.getProbationStatus());
+
+        // Compensation
+        response.setBasicSalary(employee.getBasicSalary());
+        response.setCurrency(employee.getCurrency());
+        response.setPayFrequency(employee.getPayFrequency());
+
+        // Bank Details
+        response.setBankAccountNumber(employee.getBankAccountNumber());
+        response.setBankName(employee.getBankName());
+        response.setBankBranch(employee.getBankBranch());
+        response.setIfscCode(employee.getIfscCode());
+        response.setSwiftCode(employee.getSwiftCode());
+
+        // Tax & Legal
+        response.setTaxIdentificationNumber(employee.getTaxIdentificationNumber());
+
+        // India-Specific
+        response.setPanNumber(employee.getPanNumber());
+        response.setAadharNumber(employee.getAadharNumber());
+        response.setUanNumber(employee.getUanNumber());
+
+        // USA-Specific
+        response.setSsnNumber(employee.getSsnNumber());
+        response.setDriversLicenseNumber(employee.getDriversLicenseNumber());
+        response.setPassportNumber(employee.getPassportNumber());
+
+        // Resignation/Exit
+        response.setResignationDate(employee.getResignationDate());
+        response.setLastWorkingDate(employee.getLastWorkingDate());
+        response.setExitReason(employee.getExitReason());
+        response.setExitNotes(employee.getExitNotes());
+
+        // Additional Info
+        response.setLinkedInProfile(employee.getLinkedInProfile());
+        response.setGithubProfile(employee.getGithubProfile());
+
+        // Audit Fields
+        response.setCreatedAt(employee.getCreatedAt());
+        if (employee.getCreatedBy() != null) {
+            response.setCreatedByEmail(employee.getCreatedBy().getEmail());
+        }
+        response.setUpdatedAt(employee.getUpdatedAt());
+        if (employee.getUpdatedBy() != null) {
+            response.setUpdatedByEmail(employee.getUpdatedBy().getEmail());
+        }
+        response.setDeletedAt(employee.getDeletedAt());
+        if (employee.getDeletedBy() != null) {
+            response.setDeletedByEmail(employee.getDeletedBy().getEmail());
+        }
+
+        return response;
     }
 }
