@@ -623,6 +623,37 @@ public class EmployeeManagementController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Get next available employee code for a department
+     * Returns format like IT001, HR002, FIN010, or EMP001 if no department
+     */
+    @GetMapping("/codes/next")
+    public ResponseEntity<Map<String, String>> getNextEmployeeCode(
+            @RequestParam(required = false) UUID departmentId,
+            Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            return ResponseEntity.status(403).body(Map.of("error", "User has no organization"));
+        }
+
+        Department department = null;
+        if (departmentId != null) {
+            department = departmentRepository.findById(departmentId)
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
+
+            if (!department.getOrganization().getId().equals(organization.getId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Department does not belong to your organization"));
+            }
+        }
+
+        String nextCode = employeeService.getNextEmployeeCode(organization, department);
+
+        return ResponseEntity.ok(Map.of("code", nextCode));
+    }
+
     private EmployeeDetailResponse mapToDetail(Employee employee) {
         return new EmployeeDetailResponse(
                 employee.getId(),

@@ -3,6 +3,7 @@ package com.hrms.service;
 import com.hrms.dto.CreateEmployeeRequest;
 import com.hrms.entity.*;
 import com.hrms.repository.DepartmentRepository;
+import com.hrms.repository.EmployeeCodeSequenceRepository;
 import com.hrms.repository.EmployeeHistoryRepository;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PermissionGroupRepository;
@@ -25,17 +26,20 @@ public class EmployeeService {
     private final PermissionGroupRepository permissionGroupRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
+    private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository,
                           EmployeeHistoryRepository employeeHistoryRepository,
                           PermissionGroupRepository permissionGroupRepository,
                           DepartmentRepository departmentRepository,
-                          PositionRepository positionRepository) {
+                          PositionRepository positionRepository,
+                          EmployeeCodeSequenceRepository employeeCodeSequenceRepository) {
         this.employeeRepository = employeeRepository;
         this.employeeHistoryRepository = employeeHistoryRepository;
         this.permissionGroupRepository = permissionGroupRepository;
         this.departmentRepository = departmentRepository;
         this.positionRepository = positionRepository;
+        this.employeeCodeSequenceRepository = employeeCodeSequenceRepository;
     }
 
     @Transactional
@@ -380,5 +384,71 @@ public class EmployeeService {
         recordHistory(employee, "probation_status", oldStatus, "terminated", changedBy);
         recordHistory(employee, "is_probation", "true", "false", changedBy);
         return updated;
+    }
+
+    /**
+     * Generate next employee code for the department
+     * Format: {DEPT_CODE}{NUMBER} (e.g., IT001, HR002, FIN010)
+     * If no department, uses EMP prefix (e.g., EMP001)
+     */
+    @Transactional
+    public String generateEmployeeCode(Organization organization, Department department) {
+        String prefix;
+
+        if (department != null && department.getDepartmentCode() != null && !department.getDepartmentCode().isEmpty()) {
+            prefix = department.getDepartmentCode().toUpperCase();
+        } else {
+            prefix = "EMP"; // Default for employees without department
+        }
+
+        // Find or create sequence for this department
+        EmployeeCodeSequence sequence;
+        if (department != null) {
+            sequence = employeeCodeSequenceRepository.findByOrganizationAndDepartment(organization, department)
+                    .orElseGet(() -> {
+                        // Create new sequence starting at 1
+                        EmployeeCodeSequence newSeq = new EmployeeCodeSequence(organization, department, prefix, 0);
+                        return employeeCodeSequenceRepository.save(newSeq);
+                    });
+        } else {
+            sequence = employeeCodeSequenceRepository.findByOrganizationAndDepartmentIsNull(organization)
+                    .orElseGet(() -> {
+                        // Create new sequence for employees without department
+                        EmployeeCodeSequence newSeq = new EmployeeCodeSequence(organization, null, prefix, 0);
+                        return employeeCodeSequenceRepository.save(newSeq);
+                    });
+        }
+
+        // Increment and save
+        sequence.setCurrentNumber(sequence.getCurrentNumber() + 1);
+        employeeCodeSequenceRepository.save(sequence);
+
+        // Format: PREFIX + 3-digit number (e.g., IT001, HR025)
+        return String.format("%s%03d", prefix, sequence.getCurrentNumber());
+    }
+
+    /**
+     * Get next available employee code (preview without incrementing)
+     */
+    public String getNextEmployeeCode(Organization organization, Department department) {
+        String prefix;
+
+        if (department != null && department.getDepartmentCode() != null && !department.getDepartmentCode().isEmpty()) {
+            prefix = department.getDepartmentCode().toUpperCase();
+        } else {
+            prefix = "EMP";
+        }
+
+        // Find existing sequence
+        Optional<EmployeeCodeSequence> sequenceOpt;
+        if (department != null) {
+            sequenceOpt = employeeCodeSequenceRepository.findByOrganizationAndDepartment(organization, department);
+        } else {
+            sequenceOpt = employeeCodeSequenceRepository.findByOrganizationAndDepartmentIsNull(organization);
+        }
+
+        int nextNumber = sequenceOpt.map(seq -> seq.getCurrentNumber() + 1).orElse(1);
+
+        return String.format("%s%03d", prefix, nextNumber);
     }
 }
