@@ -86,16 +86,16 @@ public class DashboardController {
             throw new RuntimeException("User has no organization");
         }
 
+        var allEmployees = employeeRepository.findByOrganization(organization);
+
         Map<String, Object> stats = new HashMap<>();
 
         // Employee stats
-        long totalEmployees = employeeRepository.findByOrganization(organization).stream()
+        long totalEmployees = allEmployees.stream()
                 .filter(emp -> emp.getDeletedAt() == null)
                 .count();
-        long activeEmployees = employeeRepository.findByOrganization(organization).stream()
-                .filter(emp -> emp.getDeletedAt() == null)
-                .count();
-        long inactiveEmployees = employeeRepository.findByOrganization(organization).stream()
+        long activeEmployees = totalEmployees; // Active = not deleted
+        long inactiveEmployees = allEmployees.stream()
                 .filter(emp -> emp.getDeletedAt() != null)
                 .count();
 
@@ -103,9 +103,45 @@ public class DashboardController {
         stats.put("activeEmployees", activeEmployees);
         stats.put("inactiveEmployees", inactiveEmployees);
 
+        // Probation stats
+        long onProbation = allEmployees.stream()
+                .filter(emp -> emp.getDeletedAt() == null)
+                .filter(emp -> Boolean.TRUE.equals(emp.getIsProbation()))
+                .count();
+        stats.put("onProbation", onProbation);
+
+        // Department stats
+        Map<String, Long> departmentStats = allEmployees.stream()
+                .filter(emp -> emp.getDeletedAt() == null)
+                .filter(emp -> emp.getDepartment() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        emp -> emp.getDepartment().getName(),
+                        java.util.stream.Collectors.counting()
+                ));
+        stats.put("departmentCount", departmentStats.size());
+        stats.put("departmentDistribution", departmentStats);
+
+        // Employment type distribution
+        Map<String, Long> employmentTypeStats = allEmployees.stream()
+                .filter(emp -> emp.getDeletedAt() == null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        emp -> emp.getEmploymentType() != null ? emp.getEmploymentType() : "Not Set",
+                        java.util.stream.Collectors.counting()
+                ));
+        stats.put("employmentTypeDistribution", employmentTypeStats);
+
         // Document stats
         long totalDocuments = documentRepository.findByEmployeeOrganizationId(organization.getId()).size();
+        long pendingDocuments = documentRepository.findByEmployeeOrganizationId(organization.getId()).stream()
+                .filter(doc -> "PENDING".equals(doc.getApprovalStatus()))
+                .count();
+        long approvedDocuments = documentRepository.findByEmployeeOrganizationId(organization.getId()).stream()
+                .filter(doc -> "APPROVED".equals(doc.getApprovalStatus()))
+                .count();
+
         stats.put("totalDocuments", totalDocuments);
+        stats.put("pendingDocuments", pendingDocuments);
+        stats.put("approvedDocuments", approvedDocuments);
 
         // Document request stats
         long pendingRequests = documentRequestRepository.findByTargetEmployeeOrganizationId(organization.getId()).stream()
@@ -120,11 +156,15 @@ public class DashboardController {
 
         // Recent activity (last 30 days)
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        long newEmployeesLast30Days = employeeRepository.findByOrganization(organization).stream()
+        long newEmployeesLast30Days = allEmployees.stream()
                 .filter(emp -> emp.getCreatedAt().isAfter(thirtyDaysAgo))
+                .count();
+        long newDocumentsLast30Days = documentRepository.findByEmployeeOrganizationId(organization.getId()).stream()
+                .filter(doc -> doc.getCreatedAt().isAfter(thirtyDaysAgo))
                 .count();
 
         stats.put("newEmployeesLast30Days", newEmployeesLast30Days);
+        stats.put("newDocumentsLast30Days", newDocumentsLast30Days);
 
         Map<String, Object> response = new HashMap<>();
         response.put("stats", stats);

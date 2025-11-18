@@ -5,86 +5,49 @@ import {
   TeamOutlined,
   ClockCircleOutlined,
   SafetyCertificateOutlined,
+  FileTextOutlined,
+  CheckCircleOutlined,
+  InboxOutlined,
+  RiseOutlined,
 } from '@ant-design/icons';
-import { getEmployees, EmployeeSummaryResponse } from '../../api/employeeManagementApi';
+import { getAdminDashboard, AdminDashboardStats } from '../../api/dashboardApi';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
-interface DepartmentStats {
+interface DepartmentStat {
   name: string;
   count: number;
   percentage: number;
 }
 
-interface EmploymentTypeStats {
+interface EmploymentTypeStat {
   type: string;
   count: number;
   color: string;
 }
 
 export const AdminDashboardPage = () => {
-  const [employees, setEmployees] = useState<EmployeeSummaryResponse[]>([]);
+  const [dashboardData, setDashboardData] = useState<AdminDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadEmployees();
+    loadDashboard();
   }, []);
 
-  const loadEmployees = async () => {
+  const loadDashboard = async () => {
     try {
       setLoading(true);
-      const data = await getEmployees();
-      setEmployees(data);
+      const data = await getAdminDashboard();
+      setDashboardData(data);
       setError('');
     } catch (err: any) {
-      setError('Failed to load dashboard data');
+      setError(err.response?.data?.error || 'Failed to load dashboard data');
+      console.error('Dashboard error:', err);
     } finally {
       setLoading(false);
     }
   };
-
-  const totalEmployees = employees.length;
-  const onProbation = employees.filter(emp => emp.isProbation).length;
-
-  // Calculate department distribution
-  const departmentMap = new Map<string, number>();
-  employees.forEach(emp => {
-    if (emp.departmentName) {
-      departmentMap.set(emp.departmentName, (departmentMap.get(emp.departmentName) || 0) + 1);
-    }
-  });
-
-  const departmentStats: DepartmentStats[] = Array.from(departmentMap.entries())
-    .map(([name, count]) => ({
-      name,
-      count,
-      percentage: (count / totalEmployees) * 100,
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  // Calculate employment type distribution
-  const employmentTypeMap = new Map<string, number>();
-  employees.forEach(emp => {
-    const type = emp.employmentType || 'Not Set';
-    employmentTypeMap.set(type, (employmentTypeMap.get(type) || 0) + 1);
-  });
-
-  const employmentTypeColors: Record<string, string> = {
-    internal: '#52c41a',
-    client: '#1890ff',
-    contract: '#fa8c16',
-    bench: '#f5222d',
-    'Not Set': '#d9d9d9',
-  };
-
-  const employmentTypeStats: EmploymentTypeStats[] = Array.from(employmentTypeMap.entries())
-    .map(([type, count]) => ({
-      type,
-      count,
-      color: employmentTypeColors[type] || '#d9d9d9',
-    }))
-    .sort((a, b) => b.count - a.count);
 
   if (loading) {
     return (
@@ -94,56 +57,171 @@ export const AdminDashboardPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div style={{ padding: 24 }}>
+        <Alert
+          message="Error Loading Dashboard"
+          description={error}
+          type="error"
+          showIcon
+          action={
+            <a onClick={loadDashboard}>Retry</a>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return null;
+  }
+
+  const { stats, organizationInfo } = dashboardData;
+
+  // Process department distribution
+  const departmentStats: DepartmentStat[] = Object.entries(stats.departmentDistribution || {})
+    .map(([name, count]) => ({
+      name,
+      count: Number(count),
+      percentage: (Number(count) / stats.totalEmployees) * 100,
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  // Process employment type distribution
+  const employmentTypeColors: Record<string, string> = {
+    internal: '#52c41a',
+    client: '#1890ff',
+    contract: '#fa8c16',
+    bench: '#f5222d',
+    'Not Set': '#d9d9d9',
+  };
+
+  const employmentTypeStats: EmploymentTypeStat[] = Object.entries(stats.employmentTypeDistribution || {})
+    .map(([type, count]) => ({
+      type,
+      count: Number(count),
+      color: employmentTypeColors[type] || '#d9d9d9',
+    }))
+    .sort((a, b) => b.count - a.count);
+
   return (
     <div style={{ padding: 24, background: '#f0f2f5', minHeight: '100vh' }}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* Header */}
         <div>
           <Title level={2} style={{ margin: 0 }}>Dashboard</Title>
-          <p style={{ color: '#666', marginTop: 8 }}>Overview of your organization</p>
+          <Text type="secondary">{organizationInfo.name} • Overview & Analytics</Text>
         </div>
 
-        {error && (
-          <Alert message={error} type="error" showIcon closable />
-        )}
+        {/* Key Metrics - Row 1 */}
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #1890ff' }}>
+              <Statistic
+                title="Total Employees"
+                value={stats.totalEmployees}
+                prefix={<UserOutlined style={{ color: '#1890ff' }} />}
+                valueStyle={{ color: '#1890ff', fontWeight: 600 }}
+              />
+              {stats.newEmployeesLast30Days > 0 && (
+                <div style={{ marginTop: 8, color: '#52c41a', fontSize: 12 }}>
+                  <RiseOutlined /> +{stats.newEmployeesLast30Days} this month
+                </div>
+              )}
+            </Card>
+          </Col>
 
-        {/* Key Metrics */}
+          <Col xs={24} sm={12} lg={6}>
+            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #fa8c16' }}>
+              <Statistic
+                title="On Probation"
+                value={stats.onProbation}
+                prefix={<ClockCircleOutlined style={{ color: '#fa8c16' }} />}
+                valueStyle={{ color: '#fa8c16', fontWeight: 600 }}
+                suffix={<span style={{ fontSize: 14, color: '#666' }}>/ {stats.totalEmployees}</span>}
+              />
+              {stats.totalEmployees > 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+                  {((stats.onProbation / stats.totalEmployees) * 100).toFixed(1)}% of workforce
+                </div>
+              )}
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} lg={6}>
+            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #52c41a' }}>
+              <Statistic
+                title="Departments"
+                value={stats.departmentCount}
+                prefix={<TeamOutlined style={{ color: '#52c41a' }} />}
+                valueStyle={{ color: '#52c41a', fontWeight: 600 }}
+              />
+              {stats.departmentCount > 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+                  Avg: {(stats.totalEmployees / stats.departmentCount).toFixed(1)} per dept
+                </div>
+              )}
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} lg={6}>
+            <Card hoverable style={{ borderRadius: 12, borderLeft: '4px solid #722ed1' }}>
+              <Statistic
+                title="Total Documents"
+                value={stats.totalDocuments}
+                prefix={<FileTextOutlined style={{ color: '#722ed1' }} />}
+                valueStyle={{ color: '#722ed1', fontWeight: 600 }}
+              />
+              {stats.newDocumentsLast30Days > 0 && (
+                <div style={{ marginTop: 8, color: '#52c41a', fontSize: 12 }}>
+                  <RiseOutlined /> +{stats.newDocumentsLast30Days} this month
+                </div>
+              )}
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Document Stats - Row 2 */}
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} lg={6}>
             <Card hoverable style={{ borderRadius: 12 }}>
               <Statistic
-                title="Total Employees"
-                value={totalEmployees}
-                prefix={<UserOutlined style={{ color: '#0a0d54' }} />}
-                valueStyle={{ color: '#0a0d54' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card hoverable style={{ borderRadius: 12 }}>
-              <Statistic
-                title="On Probation"
-                value={onProbation}
-                prefix={<ClockCircleOutlined style={{ color: '#fa8c16' }} />}
+                title="Pending Approval"
+                value={stats.pendingDocuments}
+                prefix={<InboxOutlined style={{ color: '#fa8c16' }} />}
                 valueStyle={{ color: '#fa8c16' }}
-                suffix={totalEmployees > 0 ? `/ ${totalEmployees}` : ''}
               />
             </Card>
           </Col>
+
           <Col xs={24} sm={12} lg={6}>
             <Card hoverable style={{ borderRadius: 12 }}>
               <Statistic
-                title="Departments"
-                value={departmentMap.size}
-                prefix={<TeamOutlined style={{ color: '#1890ff' }} />}
+                title="Approved Documents"
+                value={stats.approvedDocuments}
+                prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+
+          <Col xs={24} sm={12} lg={6}>
+            <Card hoverable style={{ borderRadius: 12 }}>
+              <Statistic
+                title="Pending Requests"
+                value={stats.pendingDocumentRequests}
+                prefix={<ClockCircleOutlined style={{ color: '#1890ff' }} />}
                 valueStyle={{ color: '#1890ff' }}
               />
             </Card>
           </Col>
+
           <Col xs={24} sm={12} lg={6}>
             <Card hoverable style={{ borderRadius: 12 }}>
               <Statistic
-                title="Active Employees"
-                value={totalEmployees - onProbation}
+                title="Completed Requests"
+                value={stats.completedDocumentRequests}
                 prefix={<SafetyCertificateOutlined style={{ color: '#52c41a' }} />}
                 valueStyle={{ color: '#52c41a' }}
               />
@@ -151,34 +229,40 @@ export const AdminDashboardPage = () => {
           </Col>
         </Row>
 
-        {/* Detailed Stats */}
+        {/* Detailed Distribution Charts */}
         <Row gutter={[16, 16]}>
+          {/* Department Distribution */}
           <Col xs={24} lg={12}>
             <Card
-              title="Employees by Department"
+              title={<span><TeamOutlined /> Employees by Department</span>}
               style={{ borderRadius: 12, height: '100%' }}
             >
               {departmentStats.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
-                  No departments assigned yet
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#999' }}>
+                  <TeamOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                  <div>No departments created yet</div>
+                  <div style={{ fontSize: 12, marginTop: 8 }}>
+                    Create departments to organize your team
+                  </div>
                 </div>
               ) : (
                 <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                   {departmentStats.map(dept => (
                     <div key={dept.name}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontWeight: 500 }}>{dept.name}</span>
-                        <span style={{ color: '#666' }}>
+                        <Text strong>{dept.name}</Text>
+                        <Text type="secondary">
                           {dept.count} ({dept.percentage.toFixed(1)}%)
-                        </span>
+                        </Text>
                       </div>
                       <Progress
                         percent={dept.percentage}
                         showInfo={false}
                         strokeColor={{
-                          '0%': '#0a0d54',
-                          '100%': '#1890ff',
+                          '0%': '#1890ff',
+                          '100%': '#52c41a',
                         }}
+                        strokeWidth={12}
                       />
                     </div>
                   ))}
@@ -187,39 +271,48 @@ export const AdminDashboardPage = () => {
             </Card>
           </Col>
 
+          {/* Employment Type Distribution */}
           <Col xs={24} lg={12}>
             <Card
-              title="Employment Type Distribution"
+              title={<span><UserOutlined /> Employment Type Distribution</span>}
               style={{ borderRadius: 12, height: '100%' }}
             >
               {employmentTypeStats.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
-                  No employment types set
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#999' }}>
+                  <UserOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                  <div>No employment types set</div>
                 </div>
               ) : (
                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
                   {employmentTypeStats.map(type => (
-                    <div key={type.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={type.type} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px 16px',
+                      background: '#fafafa',
+                      borderRadius: 8,
+                    }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div
                           style={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
+                            width: 16,
+                            height: 16,
+                            borderRadius: 4,
                             background: type.color,
                           }}
                         />
-                        <span style={{ fontWeight: 500, textTransform: 'capitalize' }}>
+                        <Text strong style={{ textTransform: 'capitalize' }}>
                           {type.type}
-                        </span>
+                        </Text>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Tag color={type.color} style={{ margin: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <Tag color={type.color} style={{ margin: 0, fontSize: 14, padding: '4px 12px' }}>
                           {type.count}
                         </Tag>
-                        <span style={{ color: '#666', minWidth: '50px', textAlign: 'right' }}>
-                          {((type.count / totalEmployees) * 100).toFixed(1)}%
-                        </span>
+                        <Text type="secondary" style={{ minWidth: '60px', textAlign: 'right', fontSize: 16 }}>
+                          {((type.count / stats.totalEmployees) * 100).toFixed(1)}%
+                        </Text>
                       </div>
                     </div>
                   ))}
@@ -229,24 +322,21 @@ export const AdminDashboardPage = () => {
           </Col>
         </Row>
 
-        {/* Probation Details */}
-        {onProbation > 0 && (
-          <Card title="Probation Overview" style={{ borderRadius: 12 }}>
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                <div style={{ background: '#fff7e6', padding: 16, borderRadius: 8, border: '1px solid #ffd591' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <ClockCircleOutlined style={{ fontSize: 24, color: '#fa8c16' }} />
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 16 }}>
-                        {onProbation} {onProbation === 1 ? 'employee' : 'employees'} currently on probation
-                      </div>
-                      <div style={{ color: '#666', marginTop: 4 }}>
-                        {((onProbation / totalEmployees) * 100).toFixed(1)}% of total workforce
-                      </div>
-                    </div>
-                  </div>
+        {/* Probation Alert */}
+        {stats.onProbation > 0 && (
+          <Card style={{ borderRadius: 12, borderLeft: '4px solid #fa8c16' }}>
+            <Row gutter={16} align="middle">
+              <Col>
+                <ClockCircleOutlined style={{ fontSize: 32, color: '#fa8c16' }} />
+              </Col>
+              <Col flex="auto">
+                <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
+                  Probation Period Active
                 </div>
+                <Text type="secondary">
+                  {stats.onProbation} {stats.onProbation === 1 ? 'employee is' : 'employees are'} currently on probation period.
+                  Monitor their progress and complete evaluations on time.
+                </Text>
               </Col>
             </Row>
           </Card>
