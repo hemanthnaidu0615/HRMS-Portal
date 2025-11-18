@@ -15,6 +15,9 @@ public class Department {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Column(name = "department_code", length = 50, unique = true)
+    private String departmentCode;
+
     @Column(nullable = false)
     private String name;
 
@@ -40,6 +43,14 @@ public class Department {
 
     public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+
+    public String getDepartmentCode() {
+        return departmentCode;
+    }
+
+    public void setDepartmentCode(String departmentCode) {
+        this.departmentCode = departmentCode;
     }
 
     public String getName() {
