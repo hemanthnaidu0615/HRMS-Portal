@@ -23,6 +23,7 @@ import {
   TrophyOutlined,
   LaptopOutlined,
   WalletOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -55,6 +56,10 @@ function getItem(
 export const superAdminMenuItems: MenuItem[] = [
   getItem('Dashboard', '/superadmin/dashboard', <DashboardOutlined />),
   getItem('Organizations', '/superadmin/organizations', <BankOutlined />),
+  getItem('Notifications', 'notifications', <BellOutlined />, [
+    getItem('All Notifications', '/notifications'),
+    getItem('Notification Preferences', '/notifications/preferences'),
+  ]),
   getItem('Profile', '/profile', <UserOutlined />),
   getItem('My Permissions', '/permissions', <SafetyCertificateOutlined />),
 ];
@@ -152,6 +157,11 @@ export const orgAdminMenuItems: MenuItem[] = [
     getItem('Request Document', '/document-requests/create'),
   ]),
 
+  getItem('Notifications', 'notifications', <BellOutlined />, [
+    getItem('All Notifications', '/notifications'),
+    getItem('Notification Preferences', '/notifications/preferences'),
+  ]),
+
   getItem('Profile', '/profile', <UserOutlined />),
 ];
 
@@ -171,6 +181,11 @@ export const employeeMenuItems: MenuItem[] = [
     getItem('Request Document', '/document-requests/create'),
     getItem('Requests I Received', '/document-requests/incoming'),
     getItem('Requests I Sent', '/document-requests/outgoing'),
+  ]),
+
+  getItem('Notifications', 'notifications', <BellOutlined />, [
+    getItem('All Notifications', '/notifications'),
+    getItem('Notification Preferences', '/notifications/preferences'),
   ]),
 
   getItem('Profile', '/profile', <UserOutlined />),

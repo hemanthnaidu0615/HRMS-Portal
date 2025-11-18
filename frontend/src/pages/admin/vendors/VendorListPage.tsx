@@ -1,10 +1,48 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select, Modal, message } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import {
+  Card,
+  Table,
+  Button,
+  Alert,
+  Typography,
+  Space,
+  Skeleton,
+  Tag,
+  Input,
+  Select,
+  Modal,
+  message,
+  Row,
+  Col,
+  Dropdown,
+  Rate,
+  Tabs
+} from 'antd';
+import type { MenuProps } from 'antd';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  MoreOutlined,
+  ShopOutlined,
+  CheckCircleOutlined,
+  AppstoreOutlined,
+  TableOutlined,
+  StarOutlined
+} from '@ant-design/icons';
 import { getAllVendors, deleteVendor, VendorListItem } from '../../../api/vendorApi';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+interface VendorStats {
+  total: number;
+  active: number;
+  categories: number;
+  thisMonth: number;
+}
 
 export const VendorListPage = () => {
   const navigate = useNavigate();
@@ -16,6 +54,7 @@ export const VendorListPage = () => {
   const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   useEffect(() => {
     loadVendors();
@@ -112,6 +151,47 @@ export const VendorListPage = () => {
       },
     });
   };
+
+  const getActionMenu = (vendor: VendorListItem): MenuProps => ({
+    items: [
+      {
+        key: 'view',
+        label: 'View Details',
+        icon: <EyeOutlined />,
+        onClick: () => navigate(`/admin/vendors/${vendor.id}`),
+      },
+      {
+        key: 'edit',
+        label: 'Edit Vendor',
+        icon: <EditOutlined />,
+        onClick: () => navigate(`/admin/vendors/${vendor.id}/edit`),
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        icon: <DeleteOutlined />,
+        danger: true,
+        onClick: () => handleDelete(vendor.id, vendor.name),
+      },
+    ],
+  });
+
+  const calculateStats = (): VendorStats => {
+    const activeVendors = vendors.filter(v => v.isActive);
+    const uniqueCategories = new Set(vendors.filter(v => v.vendorType).map(v => v.vendorType));
+
+    return {
+      total: vendors.length,
+      active: activeVendors.length,
+      categories: uniqueCategories.size,
+      thisMonth: 0,
+    };
+  };
+
+  const stats = calculateStats();
 
   // Extract unique vendor types for filters
   const uniqueTypes = Array.from(
@@ -216,102 +296,232 @@ export const VendorListPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 220,
+      width: 80,
       render: (record: VendorListItem) => (
-        <Space size="small">
+        <Dropdown menu={getActionMenu(record)} trigger={['click']}>
           <Button
-            type="primary"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => navigate(`/admin/vendors/${record.id}`)}
-            style={{
-              background: '#0a0d54',
-              borderColor: '#0a0d54',
-              borderRadius: 6,
-            }}
-          >
-            View
-          </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/admin/vendors/${record.id}/edit`)}
-            style={{ borderRadius: 6 }}
-          >
-            Edit
-          </Button>
-          <Button
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id, record.name)}
-            loading={deleteLoading}
-            style={{ borderRadius: 6 }}
-          >
-            Delete
-          </Button>
-        </Space>
+            type="text"
+            icon={<MoreOutlined />}
+            style={{ padding: 4 }}
+          />
+        </Dropdown>
       ),
     },
   ];
 
+  const renderStatsCards = () => (
+    <Row gutter={[16, 16]}>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>Total Vendors</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>{stats.total}</Title>
+            <ShopOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>Active</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>{stats.active}</Title>
+            <CheckCircleOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>Categories</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>{stats.categories}</Title>
+            <AppstoreOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>This Month</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>{stats.thisMonth}</Title>
+            <StarOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+    </Row>
+  );
+
+  const renderCardsView = () => (
+    <Row gutter={[16, 16]}>
+      {filteredVendors.map(vendor => (
+        <Col xs={24} sm={12} lg={8} xl={6} key={vendor.id}>
+          <Card
+            hoverable
+            style={{
+              borderRadius: 12,
+              border: '1px solid #f0f0f0',
+              transition: 'all 0.3s ease',
+            }}
+            styles={{
+              body: { padding: 20 }
+            }}
+          >
+            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Space>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ShopOutlined style={{ fontSize: 24, color: '#fff' }} />
+                  </div>
+                  <div>
+                    <Title level={5} style={{ margin: 0 }}>{vendor.name}</Title>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{vendor.vendorCode}</Text>
+                  </div>
+                </Space>
+                <Dropdown menu={getActionMenu(vendor)} trigger={['click']}>
+                  <Button
+                    type="text"
+                    icon={<MoreOutlined />}
+                    style={{ padding: 4 }}
+                  />
+                </Dropdown>
+              </div>
+
+              {vendor.vendorType && (
+                <Tag color={vendorTypeColors[vendor.vendorType.toLowerCase()] || 'default'} style={{ borderRadius: 6 }}>
+                  {vendor.vendorType}
+                </Tag>
+              )}
+
+              <div>
+                <Text type="secondary" style={{ fontSize: 12 }}>Contact:</Text>
+                <br />
+                {vendor.primaryContactName ? (
+                  <>
+                    <Text strong style={{ fontSize: 13 }}>{vendor.primaryContactName}</Text>
+                    <br />
+                    {vendor.primaryContactEmail && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>{vendor.primaryContactEmail}</Text>
+                    )}
+                    {vendor.primaryContactPhone && (
+                      <>
+                        <br />
+                        <Text type="secondary" style={{ fontSize: 12 }}>{vendor.primaryContactPhone}</Text>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <Text type="secondary">Not set</Text>
+                )}
+              </div>
+
+              <div>
+                <Text type="secondary" style={{ fontSize: 12 }}>Rating:</Text>
+                <br />
+                <Rate disabled defaultValue={4} style={{ fontSize: 14 }} />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Tag
+                  color={vendor.isActive ? 'green' : 'red'}
+                  icon={vendor.isActive ? <CheckCircleOutlined /> : undefined}
+                  style={{ borderRadius: 6 }}
+                >
+                  {vendor.isActive ? 'Active' : 'Inactive'}
+                </Tag>
+                {vendor.isPreferred && (
+                  <Tag color="gold" icon={<StarOutlined />} style={{ borderRadius: 6 }}>
+                    Preferred
+                  </Tag>
+                )}
+              </div>
+            </Space>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  );
+
   return (
     <div style={{ maxWidth: 1600, margin: '0 auto', padding: 24 }}>
-      <Card
-        style={{
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        }}
-      >
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
-              <Title level={3} style={{ margin: 0 }}>Vendors</Title>
-              <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: 14 }}>
-                Manage vendor relationships and contracts
-              </p>
-            </div>
-            <Space wrap>
-              <Input
-                placeholder="Search vendors..."
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: 250, borderRadius: 6 }}
-                allowClear
-              />
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate('/admin/vendors/create')}
-                style={{
-                  background: '#0a0d54',
-                  borderColor: '#0a0d54',
-                  borderRadius: 6,
-                }}
-              >
-                Create Vendor
-              </Button>
-            </Space>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <Title level={2} style={{ margin: 0 }}>
+              <ShopOutlined /> Vendors
+            </Title>
+            <Text type="secondary">Manage vendor relationships and contracts</Text>
           </div>
+          <Space wrap>
+            <Input
+              placeholder="Search vendors..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: 250, borderRadius: 8 }}
+              allowClear
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/admin/vendors/create')}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                borderRadius: 8,
+              }}
+            >
+              Create Vendor
+            </Button>
+          </Space>
+        </div>
 
-          {/* Advanced Filters */}
-          <div style={{
-            background: '#f5f5f5',
-            padding: '16px',
-            borderRadius: 8,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            flexWrap: 'wrap'
-          }}>
-            <span style={{ fontWeight: 500, color: '#666' }}>Filters:</span>
+        {/* Stats Cards */}
+        {renderStatsCards()}
+
+        {/* Filters */}
+        <Card style={{ borderRadius: 12 }}>
+          <Space wrap size="middle" style={{ width: '100%' }}>
+            <Text strong>Filters:</Text>
             <Select
               placeholder="Vendor Type"
               value={selectedType}
               onChange={handleTypeChange}
               allowClear
-              style={{ width: 180, borderRadius: 6 }}
+              style={{ width: 180 }}
             >
               {uniqueTypes.map(type => (
                 <Select.Option key={type} value={type}>
@@ -324,53 +534,91 @@ export const VendorListPage = () => {
               value={selectedStatus}
               onChange={handleStatusChange}
               allowClear
-              style={{ width: 150, borderRadius: 6 }}
+              style={{ width: 150 }}
             >
               <Select.Option value="active">Active</Select.Option>
               <Select.Option value="inactive">Inactive</Select.Option>
             </Select>
             {(selectedType || selectedStatus || searchText) && (
-              <Button onClick={handleClearFilters} style={{ borderRadius: 6 }}>
-                Clear All Filters
-              </Button>
+              <Button onClick={handleClearFilters}>Clear All Filters</Button>
             )}
-            <span style={{ marginLeft: 'auto', color: '#666' }}>
+            <Text type="secondary" style={{ marginLeft: 'auto' }}>
               Showing {filteredVendors.length} of {vendors.length} vendors
-            </span>
-          </div>
+            </Text>
+          </Space>
+        </Card>
 
-          {error && (
-            <Alert
-              message="Error Loading Vendors"
-              description={error}
-              type="error"
-              showIcon
-              closable
-              onClose={() => setError('')}
-            />
-          )}
+        {/* Error Alert */}
+        {error && (
+          <Alert
+            message="Error Loading Vendors"
+            description={error}
+            type="error"
+            showIcon
+            closable
+            onClose={() => setError('')}
+          />
+        )}
 
-          {loading ? (
-            <Skeleton active paragraph={{ rows: 8 }} />
-          ) : (
-            <Table
-              columns={columns}
-              dataSource={filteredVendors}
-              rowKey="id"
-              locale={{
-                emptyText: searchText
-                  ? `No vendors match "${searchText}"`
-                  : 'No vendors found. Click "Create Vendor" to add one.'
-              }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} vendors`,
-              }}
-            />
-          )}
-        </Space>
-      </Card>
+        {/* View Mode Toggle */}
+        <Card style={{ borderRadius: 12 }}>
+          <Tabs
+            activeKey={viewMode}
+            onChange={(key) => setViewMode(key as 'cards' | 'table')}
+            items={[
+              {
+                key: 'cards',
+                label: (
+                  <span>
+                    <AppstoreOutlined /> Card View
+                  </span>
+                ),
+              },
+              {
+                key: 'table',
+                label: (
+                  <span>
+                    <TableOutlined /> Table View
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </Card>
+
+        {/* Content */}
+        {loading ? (
+          <Row gutter={[16, 16]}>
+            {[1, 2, 3, 4].map(i => (
+              <Col xs={24} sm={12} lg={8} xl={6} key={i}>
+                <Card style={{ borderRadius: 12 }}>
+                  <Skeleton active paragraph={{ rows: 4 }} />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          viewMode === 'cards' ? renderCardsView() : (
+            <Card style={{ borderRadius: 12 }}>
+              <Table
+                columns={columns}
+                dataSource={filteredVendors}
+                rowKey="id"
+                locale={{
+                  emptyText: searchText
+                    ? `No vendors match "${searchText}"`
+                    : 'No vendors found. Click "Create Vendor" to add one.'
+                }}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} vendors`,
+                }}
+              />
+            </Card>
+          )
+        )}
+      </Space>
     </div>
   );
 };

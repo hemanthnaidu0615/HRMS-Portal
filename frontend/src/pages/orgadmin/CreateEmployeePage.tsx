@@ -19,7 +19,12 @@ import {
   message,
   InputNumber,
   Checkbox,
+  Upload,
+  Avatar,
+  Result,
+  Progress,
 } from 'antd';
+import type { UploadFile } from 'antd/es/upload/interface';
 import {
   MailOutlined,
   LockOutlined,
@@ -32,6 +37,9 @@ import {
   ContactsOutlined,
   IdcardOutlined,
   PlusOutlined,
+  CameraOutlined,
+  LoadingOutlined,
+  SmileOutlined,
 } from '@ant-design/icons';
 import { orgadminApi } from '../../api/orgadminApi';
 import { getAllVendors } from '../../api/vendorApi';
@@ -39,6 +47,17 @@ import { getAllClients } from '../../api/clientApi';
 import { getAllProjects } from '../../api/projectApi';
 import { CreateDepartmentModal } from '../../components/CreateDepartmentModal';
 import { CreatePositionModal } from '../../components/CreatePositionModal';
+import { PasswordStrengthMeter } from '../../components/ValidatedFormItem';
+import {
+  emailRule,
+  phoneRule,
+  passwordStrengthRule,
+  employeeCodeRule,
+  salaryRule,
+  taxIdRule,
+  noFutureDateRule,
+  positiveNumberRule
+} from '../../utils/validationRules';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -113,6 +132,10 @@ export const CreateEmployeePage = () => {
   // Employee code generation
   const [employeeCode, setEmployeeCode] = useState('');
   const [codeGenerating, setCodeGenerating] = useState(false);
+
+  // Photo upload
+  const [photoFile, setPhotoFile] = useState<UploadFile | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
 
   useEffect(() => {
     loadDropdownData();
@@ -374,6 +397,16 @@ export const CreateEmployeePage = () => {
     setShowPositionModal(false);
   };
 
+  const handlePhotoUpload = (file: UploadFile) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPhotoPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file as any);
+    setPhotoFile(file);
+    return false; // Prevent auto upload
+  };
+
   const steps = [
     { title: 'Account', icon: <MailOutlined /> },
     { title: 'Personal', icon: <UserOutlined /> },
@@ -391,13 +424,66 @@ export const CreateEmployeePage = () => {
         // Account Setup
         return (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+              <Upload
+                accept="image/*"
+                showUploadList={false}
+                beforeUpload={handlePhotoUpload}
+                maxCount={1}
+              >
+                <div
+                  style={{
+                    position: 'relative',
+                    width: 120,
+                    height: 120,
+                    borderRadius: '50%',
+                    background: photoPreview
+                      ? `url(${photoPreview}) center/cover`
+                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    border: '4px solid #f0f0f0',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  {!photoPreview && (
+                    <CameraOutlined style={{ fontSize: 36, color: '#fff' }} />
+                  )}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      background: '#0a0d54',
+                      borderRadius: '50%',
+                      width: 36,
+                      height: 36,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: 16,
+                    }}
+                  >
+                    <CameraOutlined />
+                  </div>
+                </div>
+              </Upload>
+              <Typography.Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: 8 }}>
+                Click to upload employee photo (optional)
+              </Typography.Text>
+            </div>
+
             <Form.Item
               name="email"
-              label="Work Email Address"
+              label={<span>Work Email Address <span style={{ color: '#ff4d4f' }}>*</span></span>}
               rules={[
                 { required: true, message: 'Email is required' },
-                { type: 'email', message: 'Invalid email format' },
+                emailRule,
               ]}
+              extra="This will be the employee's login email"
             >
               <Input prefix={<MailOutlined />} placeholder="employee@company.com" size="large" />
             </Form.Item>
@@ -429,13 +515,18 @@ export const CreateEmployeePage = () => {
 
             <Form.Item
               name="temporaryPassword"
-              label="Temporary Password"
+              label={<span>Temporary Password <span style={{ color: '#ff4d4f' }}>*</span></span>}
               rules={[
                 { required: true, message: 'Temporary password is required' },
-                { min: 8, message: 'Password must be at least 8 characters' },
+                passwordStrengthRule,
               ]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Min 8 characters" size="large" />
+              <Input.Password prefix={<LockOutlined />} placeholder="Min 8 characters, mix of upper/lower/number/special" size="large" />
+            </Form.Item>
+            <Form.Item noStyle shouldUpdate={(prev, curr) => prev.temporaryPassword !== curr.temporaryPassword}>
+              {({ getFieldValue }) => (
+                <PasswordStrengthMeter password={getFieldValue('temporaryPassword') || ''} />
+              )}
             </Form.Item>
 
             <Alert
@@ -453,12 +544,12 @@ export const CreateEmployeePage = () => {
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="dateOfBirth" label="Date of Birth">
+                <Form.Item name="dateOfBirth" label="Date of Birth" rules={[noFutureDateRule]}>
                   <DatePicker
                     style={{ width: '100%' }}
                     size="large"
                     placeholder="Select date"
-                    disabledDate={(current) => current && current > dayjs().endOf('day')}
+                    disabledDate={(current) => current && (current > dayjs().endOf('day') || current < dayjs().subtract(100, 'year'))}
                   />
                 </Form.Item>
               </Col>
@@ -521,7 +612,7 @@ export const CreateEmployeePage = () => {
             <Form.Item
               name="personalEmail"
               label="Personal Email"
-              rules={[{ type: 'email', message: 'Invalid email format' }]}
+              rules={[emailRule]}
             >
               <Input prefix={<MailOutlined />} placeholder="personal@email.com" size="large" />
             </Form.Item>
@@ -529,18 +620,20 @@ export const CreateEmployeePage = () => {
             <Form.Item
               name="phoneNumber"
               label="Primary Phone Number"
+              rules={[phoneRule]}
+              extra="Format: +1 (555) 123-4567 or +91-1234567890"
             >
               <Input prefix={<PhoneOutlined />} placeholder="+1 (555) 123-4567" size="large" />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="workPhone" label="Work Phone">
+                <Form.Item name="workPhone" label="Work Phone" rules={[phoneRule]}>
                   <Input prefix={<PhoneOutlined />} placeholder="Extension / Direct line" size="large" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="alternatePhone" label="Alternate Phone">
+                <Form.Item name="alternatePhone" label="Alternate Phone" rules={[phoneRule]}>
                   <Input prefix={<PhoneOutlined />} placeholder="Alternative contact" size="large" />
                 </Form.Item>
               </Col>
@@ -666,7 +759,7 @@ export const CreateEmployeePage = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="emergencyContactPhone" label="Phone Number">
+                  <Form.Item name="emergencyContactPhone" label="Phone Number" rules={[phoneRule]}>
                     <Input prefix={<PhoneOutlined />} placeholder="+1 (555) 123-4567" size="large" />
                   </Form.Item>
                 </Col>
@@ -688,7 +781,7 @@ export const CreateEmployeePage = () => {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="alternateEmergencyContactPhone" label="Phone Number">
+                  <Form.Item name="alternateEmergencyContactPhone" label="Phone Number" rules={[phoneRule]}>
                     <Input prefix={<PhoneOutlined />} placeholder="+1 (555) 123-4567" size="large" />
                   </Form.Item>
                 </Col>
@@ -712,12 +805,15 @@ export const CreateEmployeePage = () => {
               <Col span={16}>
                 <Form.Item
                   name="employeeCode"
-                  label="Employee Code"
-                  rules={[{ required: true, message: 'Employee code is required' }]}
-                  extra={employeeCode ? `Auto-generated based on department` : 'Select department to auto-generate code'}
+                  label={<span>Employee Code <span style={{ color: '#ff4d4f' }}>*</span></span>}
+                  rules={[
+                    { required: true, message: 'Employee code is required' },
+                    employeeCodeRule,
+                  ]}
+                  extra={employeeCode ? `Auto-generated based on department` : 'Select department to auto-generate code or enter manually (Format: EMP-1234)'}
                 >
                   <Input
-                    placeholder="Will be auto-generated"
+                    placeholder="EMP-1234"
                     size="large"
                     disabled={codeGenerating}
                     value={employeeCode}
@@ -740,10 +836,15 @@ export const CreateEmployeePage = () => {
 
             <Form.Item
               name="joiningDate"
-              label="Joining Date"
+              label={<span>Joining Date <span style={{ color: '#ff4d4f' }}>*</span></span>}
               rules={[{ required: true, message: 'Joining date is required' }]}
             >
-              <DatePicker style={{ width: '100%' }} size="large" placeholder="Select joining date" />
+              <DatePicker
+                style={{ width: '100%' }}
+                size="large"
+                placeholder="Select joining date"
+                disabledDate={(current) => current && current < dayjs().subtract(5, 'year')}
+              />
             </Form.Item>
 
             <Form.Item name="departmentId" label="Department">
@@ -983,7 +1084,12 @@ export const CreateEmployeePage = () => {
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="basicSalary" label="Basic Salary">
+                <Form.Item
+                  name="basicSalary"
+                  label="Basic Salary"
+                  rules={[positiveNumberRule, salaryRule(0, 10000000)]}
+                  extra="Annual salary in selected currency"
+                >
                   <InputNumber
                     placeholder="0.00"
                     min={0}
@@ -1041,31 +1147,31 @@ export const CreateEmployeePage = () => {
 
             <Divider>Tax & Legal</Divider>
 
-            <Form.Item name="taxIdentificationNumber" label="Tax ID Number">
+            <Form.Item name="taxIdentificationNumber" label="Tax ID Number" rules={[taxIdRule]}>
               <Input placeholder="Tax identification number" size="large" />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="panNumber" label="PAN Number (India)">
-                  <Input placeholder="Permanent Account Number" size="large" />
+                <Form.Item name="panNumber" label="PAN Number (India)" rules={[taxIdRule]}>
+                  <Input placeholder="Permanent Account Number" size="large" maxLength={10} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="aadharNumber" label="Aadhar Number (India)">
-                  <Input placeholder="12-digit Aadhar number" size="large" />
+                <Form.Item name="aadharNumber" label="Aadhar Number (India)" rules={[taxIdRule]}>
+                  <Input placeholder="12-digit Aadhar number" size="large" maxLength={12} />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item name="uanNumber" label="UAN Number (India)">
-              <Input placeholder="Universal Account Number" size="large" />
+            <Form.Item name="uanNumber" label="UAN Number (India)" rules={[taxIdRule]}>
+              <Input placeholder="Universal Account Number" size="large" maxLength={12} />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="ssnNumber" label="SSN (USA)">
-                  <Input placeholder="Social Security Number" size="large" />
+                <Form.Item name="ssnNumber" label="SSN (USA)" rules={[taxIdRule]}>
+                  <Input placeholder="Social Security Number" size="large" maxLength={11} />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -1176,16 +1282,67 @@ export const CreateEmployeePage = () => {
 
   if (success) {
     return (
-      <div style={{ padding: 24 }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <Card>
-            <Alert
-              message="Employee Created Successfully!"
-              description="The employee has been created with all provided information. Redirecting to employee list..."
-              type="success"
-              showIcon
+      <div style={{ padding: 24, minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ maxWidth: 600, width: '100%' }}>
+          <Card style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', textAlign: 'center' }}>
+            <Result
+              status="success"
+              icon={
+                <div
+                  style={{
+                    animation: 'scaleIn 0.5s ease-out',
+                  }}
+                >
+                  <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 72 }} />
+                </div>
+              }
+              title={
+                <span style={{ fontSize: 24, fontWeight: 600, color: '#0a0d54' }}>
+                  Employee Created Successfully!
+                </span>
+              }
+              subTitle={
+                <Space direction="vertical" size="middle" style={{ marginTop: 16 }}>
+                  <Typography.Text style={{ fontSize: 16 }}>
+                    The employee account has been created with all provided information.
+                  </Typography.Text>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <LoadingOutlined style={{ fontSize: 16, color: '#0a0d54' }} />
+                    <Typography.Text type="secondary">
+                      Redirecting to employee list...
+                    </Typography.Text>
+                  </div>
+                </Space>
+              }
+              extra={
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={() => navigate('/admin/employees')}
+                  style={{
+                    background: '#0a0d54',
+                    borderColor: '#0a0d54',
+                    borderRadius: 8,
+                    marginTop: 16,
+                  }}
+                >
+                  Go to Employee List Now
+                </Button>
+              }
             />
           </Card>
+          <style>{`
+            @keyframes scaleIn {
+              from {
+                transform: scale(0);
+                opacity: 0;
+              }
+              to {
+                transform: scale(1);
+                opacity: 1;
+              }
+            }
+          `}</style>
         </div>
       </div>
     );

@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Form, Input, Button, Alert, Progress, Result } from 'antd';
-import { LockOutlined, CheckCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { AuthLayout } from '../../layouts/AuthLayout';
+import { Form, Input, Button } from 'antd';
+import {
+  LockOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
+  ArrowLeftOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 import { authApi } from '../../api/authApi';
+import styles from './ResetPasswordPage.module.css';
+
+interface PasswordRequirement {
+  label: string;
+  test: (password: string) => boolean;
+}
 
 /**
  * Premium Reset Password Page
- * Reset password with token from email
+ * Reset password with token from email - includes strength meter and validation
  */
 export const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,33 +28,40 @@ export const ResetPasswordPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [form] = Form.useForm();
 
+  // Password requirements
+  const requirements: PasswordRequirement[] = [
+    { label: 'At least 8 characters', test: (pwd) => pwd.length >= 8 },
+    { label: 'Contains uppercase letter', test: (pwd) => /[A-Z]/.test(pwd) },
+    { label: 'Contains lowercase letter', test: (pwd) => /[a-z]/.test(pwd) },
+    { label: 'Contains number', test: (pwd) => /\d/.test(pwd) },
+    { label: 'Contains special character', test: (pwd) => /[^a-zA-Z0-9]/.test(pwd) },
+  ];
+
   // Calculate password strength
-  const calculatePasswordStrength = (password: string) => {
+  const calculatePasswordStrength = (pwd: string): number => {
     let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (password.length >= 12) strength += 15;
-    if (/[a-z]/.test(password)) strength += 15;
-    if (/[A-Z]/.test(password)) strength += 15;
-    if (/[0-9]/.test(password)) strength += 15;
-    if (/[^a-zA-Z0-9]/.test(password)) strength += 15;
+    if (pwd.length >= 8) strength += 20;
+    if (pwd.length >= 12) strength += 20;
+    if (/[a-z]/.test(pwd)) strength += 20;
+    if (/[A-Z]/.test(pwd)) strength += 20;
+    if (/\d/.test(pwd)) strength += 10;
+    if (/[^a-zA-Z0-9]/.test(pwd)) strength += 10;
     return Math.min(strength, 100);
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const strength = calculatePasswordStrength(e.target.value);
-    setPasswordStrength(strength);
+  const passwordStrength = calculatePasswordStrength(password);
+
+  const getStrengthColor = (): string => {
+    if (passwordStrength < 40) return '#ef4444';
+    if (passwordStrength < 70) return '#f59e0b';
+    return '#22c55e';
   };
 
-  const getStrengthColor = () => {
-    if (passwordStrength < 40) return '#ff4d4f';
-    if (passwordStrength < 70) return '#faad14';
-    return '#52c41a';
-  };
-
-  const getStrengthText = () => {
+  const getStrengthText = (): string => {
     if (passwordStrength < 40) return 'Weak';
     if (passwordStrength < 70) return 'Medium';
     return 'Strong';
@@ -76,183 +96,248 @@ export const ResetPasswordPage: React.FC = () => {
 
   if (success) {
     return (
-      <AuthLayout title="Password Reset Successful">
-        <Result
-          status="success"
-          icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-          title="Password Reset Successfully"
-          subTitle={
-            <div style={{ color: '#64748b' }}>
-              Your password has been reset successfully!
-              <br />
-              You can now sign in with your new password.
-              <br />
-              <br />
-              Redirecting to login page...
-            </div>
-          }
-          extra={
-            <Link to="/login">
-              <Button
-                type="primary"
-                size="large"
-                style={{ height: 48, fontSize: 16, fontWeight: 500 }}
-              >
-                Go to Login
-              </Button>
-            </Link>
-          }
-        />
-      </AuthLayout>
+      <div className={styles.container}>
+        <div className={`${styles.card} ${styles.successCard}`}>
+          <div className={styles.successIcon}>
+            <CheckCircleFilled />
+          </div>
+          <h2 className={styles.successTitle}>Password Reset Successfully</h2>
+          <div className={styles.successMessage}>
+            Your password has been reset successfully!
+            <br />
+            You can now sign in with your new password.
+            <br />
+            <br />
+            Redirecting to login page...
+          </div>
+          <Link to="/login">
+            <Button
+              type="primary"
+              size="large"
+              className={styles.submitButton}
+              block
+            >
+              Go to Login
+            </Button>
+          </Link>
+        </div>
+      </div>
     );
   }
 
   if (!token) {
     return (
-      <AuthLayout title="Invalid Reset Link">
-        <Result
-          status="error"
-          title="Invalid Reset Link"
-          subTitle="The password reset link is invalid or has expired. Please request a new one."
-          extra={
-            <Link to="/forgot-password">
-              <Button
-                type="primary"
-                size="large"
-                style={{ height: 48, fontSize: 16, fontWeight: 500 }}
-              >
-                Request New Link
-              </Button>
-            </Link>
-          }
-        />
-      </AuthLayout>
+      <div className={styles.container}>
+        <div className={`${styles.card} ${styles.errorCard}`}>
+          <div className={styles.errorIcon}>
+            <WarningOutlined />
+          </div>
+          <h2 className={styles.errorTitle}>Invalid Reset Link</h2>
+          <div className={styles.errorMessage}>
+            The password reset link is invalid or has expired.
+            <br />
+            Please request a new one.
+          </div>
+          <Link to="/forgot-password">
+            <Button
+              type="primary"
+              size="large"
+              className={styles.submitButton}
+              block
+            >
+              Request New Link
+            </Button>
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
-    <AuthLayout
-      title="Reset Your Password"
-      subtitle="Create a new password for your account"
-    >
-      {error && (
-        <Alert
-          message="Error"
-          description={error}
-          type="error"
-          showIcon
-          closable
-          onClose={() => setError('')}
-          style={{ marginBottom: 24 }}
-        />
-      )}
+    <div className={styles.container}>
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <div className={styles.icon}>
+            <LockOutlined />
+          </div>
+          <h2 className={styles.title}>Reset Your Password</h2>
+          <p className={styles.subtitle}>Create a new password for your account</p>
+        </div>
 
-      <Form
-        form={form}
-        name="resetPassword"
-        onFinish={handleResetPassword}
-        layout="vertical"
-        size="large"
-        requiredMark="optional"
-      >
-        <Form.Item
-          name="newPassword"
-          label="New Password"
-          rules={[
-            { required: true, message: 'Please enter a new password' },
-            { min: 8, message: 'Password must be at least 8 characters' },
-            {
-              pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-              message: 'Password must contain uppercase, lowercase, and number',
-            },
-          ]}
-        >
-          <Input.Password
-            prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Create a strong password"
-            onChange={handlePasswordChange}
-          />
-        </Form.Item>
-
-        {/* Password Strength Indicator */}
-        {passwordStrength > 0 && (
-          <div style={{ marginBottom: 24 }}>
+        {error && (
+          <div className={styles.errorAlert}>
             <div
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: 8,
-                fontSize: 13,
+                background: '#fff1f0',
+                border: '1px solid #ffccc7',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                color: '#cf1322',
+                fontSize: '14px',
               }}
             >
-              <span style={{ color: '#64748b' }}>Password Strength:</span>
-              <span style={{ color: getStrengthColor(), fontWeight: 500 }}>
-                {getStrengthText()}
-              </span>
+              {error}
             </div>
-            <Progress
-              percent={passwordStrength}
-              strokeColor={getStrengthColor()}
-              showInfo={false}
-              size="small"
-            />
           </div>
         )}
 
-        <Form.Item
-          name="confirmPassword"
-          label="Confirm New Password"
-          dependencies={['newPassword']}
-          rules={[
-            { required: true, message: 'Please confirm your password' },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('newPassword') === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error('Passwords do not match'));
-              },
-            }),
-          ]}
+        <Form
+          form={form}
+          name="resetPassword"
+          onFinish={handleResetPassword}
+          layout="vertical"
+          size="large"
+          requiredMark={false}
         >
-          <Input.Password
-            prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Re-enter your password"
-          />
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            block
-            size="large"
-            style={{
-              height: 48,
-              fontSize: 16,
-              fontWeight: 500,
-            }}
+          <Form.Item
+            name="newPassword"
+            label={<span style={{ fontWeight: 500, color: '#334155' }}>New Password</span>}
+            rules={[
+              { required: true, message: 'Please enter a new password' },
+              { min: 8, message: 'Password must be at least 8 characters' },
+              {
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                message: 'Password must contain uppercase, lowercase, and number',
+              },
+            ]}
           >
-            Reset Password
-          </Button>
-        </Form.Item>
+            <Input.Password
+              prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Create a strong password"
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                height: 52,
+                borderRadius: 10,
+                fontSize: 15,
+              }}
+              iconRender={(visible) =>
+                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
+            />
+          </Form.Item>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Link
-            to="/login"
-            style={{
-              fontSize: 14,
-              fontWeight: 500,
-              color: '#0a0d54',
-            }}
+          {/* Password Strength Meter */}
+          {password && (
+            <div className={styles.strengthMeter}>
+              <div className={styles.strengthHeader}>
+                <span className={styles.strengthLabel}>Password Strength</span>
+                <span
+                  className={styles.strengthValue}
+                  style={{ color: getStrengthColor() }}
+                >
+                  {getStrengthText()}
+                </span>
+              </div>
+              <div className={styles.strengthBar}>
+                <div
+                  className={styles.strengthFill}
+                  style={{
+                    width: `${passwordStrength}%`,
+                    background: getStrengthColor(),
+                  }}
+                />
+              </div>
+
+              {/* Requirements Checklist */}
+              <div className={styles.requirements}>
+                {requirements.map((req, index) => {
+                  const isMet = req.test(password);
+                  return (
+                    <div
+                      key={index}
+                      className={
+                        isMet ? styles.requirementChecked : styles.requirementUnchecked
+                      }
+                    >
+                      <div className={styles.requirementIcon}>
+                        {isMet ? <CheckCircleFilled /> : <CloseCircleFilled />}
+                      </div>
+                      <span>{req.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <Form.Item
+            name="confirmPassword"
+            label={
+              <span style={{ fontWeight: 500, color: '#334155' }}>Confirm New Password</span>
+            }
+            dependencies={['newPassword']}
+            rules={[
+              { required: true, message: 'Please confirm your password' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Passwords do not match'));
+                },
+              }),
+            ]}
           >
-            <ArrowLeftOutlined style={{ marginRight: 4 }} />
+            <Input.Password
+              prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Re-enter your password"
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={{
+                height: 52,
+                borderRadius: 10,
+                fontSize: 15,
+              }}
+              iconRender={(visible) =>
+                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
+            />
+          </Form.Item>
+
+          {/* Password Match Indicator */}
+          {confirmPassword && password && (
+            <div
+              className={
+                password === confirmPassword ? styles.matchSuccess : styles.matchError
+              }
+            >
+              <div className={styles.matchIndicator}>
+                <div className={styles.matchIcon}>
+                  {password === confirmPassword ? (
+                    <CheckCircleFilled />
+                  ) : (
+                    <CloseCircleFilled />
+                  )}
+                </div>
+                <span>
+                  {password === confirmPassword
+                    ? 'Passwords match'
+                    : 'Passwords do not match'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <Form.Item style={{ marginTop: 32 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              className={styles.submitButton}
+            >
+              {loading ? 'Resetting Password...' : 'Reset Password'}
+            </Button>
+          </Form.Item>
+        </Form>
+
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <Link to="/login" className={styles.backLink}>
+            <ArrowLeftOutlined />
             Back to Login
           </Link>
         </div>
-      </Form>
-    </AuthLayout>
+      </div>
+    </div>
   );
 };
 

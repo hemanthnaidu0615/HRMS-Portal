@@ -29,6 +29,8 @@ import http from '../../../../api/http';
 import { PremiumCard } from '../../../../components/PremiumCard';
 import dayjs from 'dayjs';
 import type { UploadFile } from 'antd/es/upload/interface';
+import { withinLastDaysRule, positiveNumberRule, minCharactersRule } from '../../../../utils/validationRules';
+import { validateFile } from '../../../../utils/validators';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -197,7 +199,7 @@ const ClaimsFormPage: React.FC = () => {
           placeholder="0.00"
           prefix="$"
           style={{ width: '100%' }}
-          min={0}
+          min={0.01}
           precision={2}
         />
       ),
@@ -249,7 +251,7 @@ const ClaimsFormPage: React.FC = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="employee"
-                    label="Employee"
+                    label={<span>Employee <span style={{ color: '#ff4d4f' }}>*</span></span>}
                     rules={[{ required: true, message: 'Please select employee' }]}
                   >
                     <Select
@@ -269,16 +271,28 @@ const ClaimsFormPage: React.FC = () => {
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="claimDate"
-                    label="Claim Date"
-                    rules={[{ required: true, message: 'Please select claim date' }]}
+                    label={<span>Claim Date <span style={{ color: '#ff4d4f' }}>*</span></span>}
+                    rules={[
+                      { required: true, message: 'Please select claim date' },
+                      withinLastDaysRule(90),
+                    ]}
+                    extra="Expenses must be claimed within 90 days"
                   >
-                    <DatePicker size="large" style={{ width: '100%' }} />
+                    <DatePicker
+                      size="large"
+                      style={{ width: '100%' }}
+                      disabledDate={(current) => {
+                        const today = dayjs();
+                        const minDate = today.subtract(90, 'day');
+                        return current && (current < minDate || current > today);
+                      }}
+                    />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item
                     name="category"
-                    label="Primary Category"
+                    label={<span>Primary Category <span style={{ color: '#ff4d4f' }}>*</span></span>}
                     rules={[{ required: true, message: 'Please select category' }]}
                   >
                     <Select size="large" placeholder="Select category">
@@ -308,12 +322,18 @@ const ClaimsFormPage: React.FC = () => {
                 <Col xs={24}>
                   <Form.Item
                     name="description"
-                    label="Description"
-                    rules={[{ required: true, message: 'Please enter description' }]}
+                    label={<span>Description <span style={{ color: '#ff4d4f' }}>*</span></span>}
+                    rules={[
+                      { required: true, message: 'Please enter description' },
+                      minCharactersRule(10),
+                    ]}
+                    extra="Minimum 10 characters. Provide clear details about the expense"
                   >
                     <TextArea
                       rows={4}
                       placeholder="Provide detailed description of your expense claim"
+                      showCount
+                      maxLength={500}
                     />
                   </Form.Item>
                 </Col>
@@ -376,13 +396,34 @@ const ClaimsFormPage: React.FC = () => {
               <Form.Item
                 name="receipt"
                 label="Upload Receipt"
-                extra="Supported formats: JPG, PNG, PDF (Max: 5MB)"
+                extra="Supported formats: JPG, PNG, PDF (Max: 5MB). Required for claims over $100"
+                rules={[
+                  {
+                    validator: (_, value) => {
+                      const total = calculateTotal();
+                      if (total > 100 && fileList.length === 0) {
+                        return Promise.reject(new Error('Receipt is required for amounts over $100'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
                 <Upload
                   listType="picture-card"
                   fileList={fileList}
                   onChange={({ fileList }) => setFileList(fileList)}
-                  beforeUpload={() => false}
+                  beforeUpload={(file) => {
+                    const validation = validateFile(file, {
+                      maxSize: 5,
+                      allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+                    });
+                    if (!validation.isValid) {
+                      message.error(validation.error);
+                      return Upload.LIST_IGNORE;
+                    }
+                    return false;
+                  }}
                   maxCount={1}
                 >
                   {fileList.length === 0 && (

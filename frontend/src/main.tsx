@@ -5,6 +5,7 @@ import { ConfigProvider, App as AntApp } from 'antd';
 import App from './App.tsx';
 import theme from './theme';
 import './index.css';
+import './styles/animations.css';
 
 /**
  * HRMS Application Entry Point

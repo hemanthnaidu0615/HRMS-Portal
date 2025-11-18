@@ -6,6 +6,7 @@ import { AppLayout } from './layouts/AppLayout';
 import { useAuth } from './auth/useAuth';
 import { getMenuItemsByRole } from './config/navigation';
 import { premiumTheme } from './theme/premiumTheme';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Auth Pages
 import { LoginPage, SetPasswordPage, ForgotPasswordPage, ResetPasswordPage } from './pages/auth';
@@ -14,6 +15,7 @@ import { LoginPage, SetPasswordPage, ForgotPasswordPage, ResetPasswordPage } fro
 import { OrganizationsPage } from './pages/superadmin/OrganizationsPage';
 import { CreateOrganizationPage } from './pages/superadmin/CreateOrganizationPage';
 import { CreateOrgAdminPage } from './pages/superadmin/CreateOrgAdminPage';
+import { OrganizationModulesPage } from './pages/superadmin/OrganizationModulesPage';
 
 // OrgAdmin Pages (Legacy - being phased out)
 import { CreateEmployeePage } from './pages/orgadmin/CreateEmployeePage';
@@ -27,6 +29,10 @@ import { SuperAdminDashboardPage } from './pages/dashboards/SuperAdminDashboardP
 // Profile Pages
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { PermissionsPage } from './pages/profile/PermissionsPage';
+
+// Notification Pages
+import NotificationsPage from './pages/notifications/NotificationsPage';
+import NotificationPreferencesPage from './pages/notifications/NotificationPreferencesPage';
 
 // Document Pages
 import { MyDocumentsPage } from './pages/documents/MyDocumentsPage';
@@ -144,6 +150,9 @@ import { ProjectsFormPage } from './pages/admin/projects/projects/FormPage';
 import { ProjectTasksListPage } from './pages/admin/projects/tasks';
 import { ProjectTasksFormPage } from './pages/admin/projects/tasks/FormPage';
 
+// Error Pages
+import { NotFoundPage } from './pages/NotFoundPage';
+
 /**
  * Layout Wrapper Component
  * Wraps authenticated routes with AppLayout and role-based navigation
@@ -162,8 +171,9 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
  */
 function App() {
   return (
-    <ConfigProvider theme={premiumTheme}>
-      <Routes>
+    <ErrorBoundary>
+      <ConfigProvider theme={premiumTheme}>
+        <Routes>
         {/* Public Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/set-password" element={<SetPasswordPage />} />
@@ -212,8 +222,18 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/superadmin/organizations/:orgId/modules"
+          element={
+            <ProtectedRoute requiredRole="superadmin">
+              <LayoutWrapper>
+                <OrganizationModulesPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
 
-        {/* OrgAdmin Routes (Legacy - redirecting to new admin routes) */}
+        {/* OrgAdmin Routes (Legacy - redirecting to new admin routes) */}}
         <Route path="/orgadmin/employees" element={<Navigate to="/admin/employees" replace />} />
         <Route path="/orgadmin/create-employee" element={<Navigate to="/admin/employees/create" replace />} />
         <Route
@@ -268,6 +288,28 @@ function App() {
             <ProtectedRoute>
               <LayoutWrapper>
                 <PermissionsPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Notification Routes */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <LayoutWrapper>
+                <NotificationsPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications/preferences"
+          element={
+            <ProtectedRoute>
+              <LayoutWrapper>
+                <NotificationPreferencesPage />
               </LayoutWrapper>
             </ProtectedRoute>
           }
@@ -703,9 +745,12 @@ function App() {
 
         {/* Default Redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </ConfigProvider>
+
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ConfigProvider>
+    </ErrorBoundary>
   );
 }
 

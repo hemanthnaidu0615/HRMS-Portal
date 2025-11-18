@@ -31,6 +31,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import http from '../../../../api/http';
 import { PremiumCard } from '../../../../components/PremiumCard';
+import { hoursRule, noFutureDateRule, minCharactersRule } from '../../../../utils/validationRules';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -189,7 +190,7 @@ const TimesheetEntryFormPage: React.FC = () => {
                     label={
                       <span>
                         <UserOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-                        Employee
+                        Employee <span style={{ color: '#ff4d4f' }}>*</span>
                       </span>
                     }
                     rules={[{ required: true, message: 'Please select an employee' }]}
@@ -216,15 +217,20 @@ const TimesheetEntryFormPage: React.FC = () => {
                     label={
                       <span>
                         <CalendarOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-                        Date
+                        Date <span style={{ color: '#ff4d4f' }}>*</span>
                       </span>
                     }
-                    rules={[{ required: true, message: 'Please select a date' }]}
+                    rules={[
+                      { required: true, message: 'Please select a date' },
+                      noFutureDateRule,
+                    ]}
+                    extra="Date cannot be in the future"
                   >
                     <DatePicker
                       size="large"
                       style={{ width: '100%', borderRadius: 8 }}
                       format="YYYY-MM-DD"
+                      disabledDate={(current) => current && current > dayjs().endOf('day')}
                     />
                   </Form.Item>
                 </Col>
@@ -237,7 +243,7 @@ const TimesheetEntryFormPage: React.FC = () => {
                     label={
                       <span>
                         <ProjectOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-                        Project
+                        Project <span style={{ color: '#ff4d4f' }}>*</span>
                       </span>
                     }
                     rules={[{ required: true, message: 'Please select a project' }]}
@@ -268,10 +274,11 @@ const TimesheetEntryFormPage: React.FC = () => {
                     label={
                       <span>
                         <CheckSquareOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-                        Task
+                        Task <span style={{ color: '#ff4d4f' }}>*</span>
                       </span>
                     }
                     rules={[{ required: true, message: 'Please select a task' }]}
+                    extra={!selectedProject ? 'Please select a project first' : undefined}
                   >
                     <Select
                       size="large"
@@ -298,18 +305,14 @@ const TimesheetEntryFormPage: React.FC = () => {
                     label={
                       <span>
                         <ClockCircleOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-                        Hours
+                        Hours <span style={{ color: '#ff4d4f' }}>*</span>
                       </span>
                     }
                     rules={[
                       { required: true, message: 'Please enter hours' },
-                      {
-                        type: 'number',
-                        min: 0.5,
-                        max: 24,
-                        message: 'Hours must be between 0.5 and 24',
-                      },
+                      hoursRule,
                     ]}
+                    extra="Enter hours in 0.5 increments (e.g., 1.5, 2.0, 8.5)"
                   >
                     <InputNumber
                       size="large"
@@ -355,10 +358,14 @@ const TimesheetEntryFormPage: React.FC = () => {
                 label={
                   <span>
                     <FileTextOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-                    Description
+                    Description <span style={{ color: '#ff4d4f' }}>*</span>
                   </span>
                 }
-                rules={[{ required: true, message: 'Please enter a description' }]}
+                rules={[
+                  { required: true, message: 'Please enter a description' },
+                  minCharactersRule(5),
+                ]}
+                extra="Minimum 5 characters. Provide details about the work completed."
               >
                 <TextArea
                   rows={4}

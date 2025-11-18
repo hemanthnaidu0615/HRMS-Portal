@@ -52,6 +52,26 @@ CREATE TABLE organizations (
     deleted_at DATETIME2 NULL
 );
 
+-- =====================================================
+-- ORGANIZATION MODULE SUBSCRIPTIONS
+-- =====================================================
+
+CREATE TABLE organization_modules (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    module_name VARCHAR(50) NOT NULL,
+    is_enabled BIT NOT NULL DEFAULT 0,
+    user_limit INT,
+    expiry_date DATE,
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_at DATETIME2,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    CONSTRAINT unique_org_module UNIQUE (organization_id, module_name)
+);
+
+-- Index for faster lookups
+CREATE INDEX idx_org_modules_enabled ON organization_modules(organization_id, is_enabled);
+
 CREATE TABLE users (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -3741,6 +3761,26 @@ END TRY
 BEGIN CATCH
     PRINT 'Some permissions already exist or could not be created. Continuing...';
 END CATCH;
+
+-- =====================================================
+-- SCHEDULED JOB TRACKING
+-- =====================================================
+
+CREATE TABLE scheduled_job_logs (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    job_name VARCHAR(100) NOT NULL,
+    execution_time DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    status VARCHAR(20) NOT NULL, -- SUCCESS, FAILED
+    error_message TEXT,
+    duration_ms BIGINT,
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME()
+);
+
+-- Index for faster job history queries
+CREATE INDEX idx_scheduled_job_logs_job_name ON scheduled_job_logs(job_name, execution_time DESC);
+CREATE INDEX idx_scheduled_job_logs_status ON scheduled_job_logs(status, execution_time DESC);
+
+PRINT 'Scheduled job tracking tables created successfully';
 
 -- =====================================================
 -- SCHEMA COMPLETION MESSAGE

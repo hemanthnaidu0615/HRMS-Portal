@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, Input, Button, Alert, Result } from 'antd';
-import { MailOutlined, SendOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { AuthLayout } from '../../layouts/AuthLayout';
+import { Form, Input, Button } from 'antd';
+import {
+  MailOutlined,
+  SendOutlined,
+  ArrowLeftOutlined,
+  CheckCircleFilled,
+  InfoCircleFilled,
+} from '@ant-design/icons';
 import { authApi } from '../../api/authApi';
+import styles from './ForgotPasswordPage.module.css';
 
 /**
  * Premium Forgot Password Page
- * Request password reset link
+ * Request password reset link with gradient border and animations
  */
 export const ForgotPasswordPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -36,119 +42,123 @@ export const ForgotPasswordPage: React.FC = () => {
 
   if (success) {
     return (
-      <AuthLayout title="Check Your Email">
-        <Result
-          status="success"
-          icon={<MailOutlined style={{ color: '#52c41a' }} />}
-          title="Reset Link Sent"
-          subTitle={
-            <div style={{ color: '#64748b' }}>
-              We've sent a password reset link to{' '}
-              <strong style={{ color: '#111111' }}>{emailSent}</strong>
-              <br />
-              <br />
-              Please check your inbox and follow the instructions to reset your password.
-              The link will expire in 1 hour.
-            </div>
-          }
-          extra={
-            <Link to="/login">
-              <Button
-                type="primary"
-                size="large"
-                icon={<ArrowLeftOutlined />}
-                style={{ height: 48, fontSize: 16, fontWeight: 500 }}
-              >
-                Back to Login
-              </Button>
-            </Link>
-          }
-        />
-      </AuthLayout>
+      <div className={styles.container}>
+        <div className={`${styles.card} ${styles.successCard}`}>
+          <div className={styles.successIcon}>
+            <CheckCircleFilled />
+          </div>
+          <h2 className={styles.successTitle}>Check Your Email</h2>
+          <div className={styles.successMessage}>
+            We've sent a password reset link to{' '}
+            <span className={styles.successEmail}>{emailSent}</span>
+            <br />
+            <br />
+            Please check your inbox and follow the instructions to reset your password.
+            The link will expire in 1 hour.
+          </div>
+          <Link to="/login">
+            <Button
+              type="primary"
+              size="large"
+              icon={<ArrowLeftOutlined />}
+              className={styles.submitButton}
+              block
+            >
+              Back to Login
+            </Button>
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
-    <AuthLayout
-      title="Forgot Password?"
-      subtitle="Enter your email to receive a reset link"
-    >
-      {error && (
-        <Alert
-          message="Error"
-          description={error}
-          type="error"
-          showIcon
-          closable
-          onClose={() => setError('')}
-          style={{ marginBottom: 24 }}
-        />
-      )}
+    <div className={styles.container}>
+      <div className={styles.card}>
+        <div className={styles.icon}>
+          <MailOutlined />
+        </div>
 
-      <Alert
-        message="Password Reset"
-        description="We'll send you an email with instructions to reset your password."
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
-      />
+        <div className={styles.header}>
+          <h2 className={styles.title}>Forgot Password?</h2>
+          <p className={styles.subtitle}>Enter your email to receive a reset link</p>
+        </div>
 
-      <Form
-        form={form}
-        name="forgotPassword"
-        onFinish={handleForgotPassword}
-        layout="vertical"
-        size="large"
-        requiredMark="optional"
-      >
-        <Form.Item
-          name="email"
-          label="Email Address"
-          rules={[
-            { required: true, message: 'Please enter your email address' },
-            { type: 'email', message: 'Please enter a valid email address' },
-          ]}
+        {error && (
+          <div className={styles.errorAlert}>
+            <div
+              style={{
+                background: '#fff1f0',
+                border: '1px solid #ffccc7',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                color: '#cf1322',
+                fontSize: '14px',
+              }}
+            >
+              {error}
+            </div>
+          </div>
+        )}
+
+        <div className={styles.infoBox}>
+          <InfoCircleFilled className={styles.infoIcon} />
+          <div className={styles.infoText}>
+            We'll send you an email with instructions to reset your password. Make sure to
+            check your spam folder if you don't see it in your inbox.
+          </div>
+        </div>
+
+        <Form
+          form={form}
+          name="forgotPassword"
+          onFinish={handleForgotPassword}
+          layout="vertical"
+          size="large"
+          requiredMark={false}
         >
-          <Input
-            prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="you@company.com"
-            autoComplete="email"
-          />
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            block
-            size="large"
-            icon={<SendOutlined />}
-            style={{
-              height: 48,
-              fontSize: 16,
-              fontWeight: 500,
-            }}
+          <Form.Item
+            name="email"
+            label={<span style={{ fontWeight: 500, color: '#334155' }}>Email Address</span>}
+            rules={[
+              { required: true, message: 'Please enter your email address' },
+              { type: 'email', message: 'Please enter a valid email address' },
+            ]}
           >
-            Send Reset Link
-          </Button>
-        </Form.Item>
+            <Input
+              prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="you@company.com"
+              autoComplete="email"
+              style={{
+                height: 52,
+                borderRadius: 10,
+                fontSize: 15,
+              }}
+            />
+          </Form.Item>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Link
-            to="/login"
-            style={{
-              fontSize: 14,
-              fontWeight: 500,
-              color: '#0a0d54',
-            }}
-          >
-            <ArrowLeftOutlined style={{ marginRight: 4 }} />
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              icon={<SendOutlined />}
+              className={styles.submitButton}
+            >
+              {loading ? 'Sending...' : 'Send Reset Link'}
+            </Button>
+          </Form.Item>
+        </Form>
+
+        <div style={{ textAlign: 'center' }}>
+          <Link to="/login" className={styles.backLink}>
+            <ArrowLeftOutlined style={{ marginRight: 6 }} />
             Back to Login
           </Link>
         </div>
-      </Form>
-    </AuthLayout>
+      </div>
+    </div>
   );
 };
 

@@ -1,39 +1,58 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Card, Table, Button, Alert, Typography, Space, Tooltip, Modal, Input,
-  Upload, message, Tag, Popconfirm, Tabs, Empty, Badge
+  Card,
+  Button,
+  Alert,
+  Typography,
+  Space,
+  message,
+  Row,
+  Col,
+  Empty,
+  Breadcrumb,
+  Dropdown,
+  Tag,
+  Statistic,
+  Input,
+  Select,
+  Modal,
+  Tooltip,
 } from 'antd';
 import {
   FileOutlined,
   UploadOutlined,
   EyeOutlined,
   DownloadOutlined,
-  CheckOutlined,
-  CloseOutlined,
   DeleteOutlined,
-  SwapOutlined,
   FolderOutlined,
+  FilePdfOutlined,
+  FileImageOutlined,
+  FileTextOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  MoreOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  HomeOutlined,
   TeamOutlined,
-  BankOutlined,
-  UserOutlined,
-  ExportOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import {
-  getMyDocuments,
   getOrganizationDocuments,
   downloadDocument,
-  approveDocument,
-  rejectDocument,
   deleteDocument,
-  replaceDocument,
+  approveDocument,
 } from '../../api/documentsApi';
 import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 import { useAuth } from '../../auth/useAuth';
-import { exportToExcelCSV, formatDateForExport } from '../../utils/exportUtils';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 interface Document {
   id: string;
@@ -43,69 +62,77 @@ interface Document {
   filePath: string;
   createdAt: string;
   approvalStatus?: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  rejectionReason?: string;
+  category?: string;
+  department?: string;
+  fileSize?: number;
 }
 
-export const OrgDocumentsPage = () => {
+/**
+ * Organization Documents Page - Premium UI
+ * Features: Folder structure, card grid, department filters, admin controls
+ */
+export const OrgDocumentsPage: React.FC = () => {
   const navigate = useNavigate();
   const { roles } = useAuth();
-  const [activeTab, setActiveTab] = useState('my');
+  const isAdmin = roles.includes('orgadmin');
 
-  // Document states for each tab
-  const [myDocuments, setMyDocuments] = useState<Document[]>([]);
-  const [orgDocuments, setOrgDocuments] = useState<Document[]>([]);
-
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [filteredDocs, setFilteredDocs] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [previewVisible, setPreviewVisible] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<{
-    id: string;
-    fileName: string;
-    fileType: string | null;
-    filePath: string;
-    createdAt: string
-  } | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<any | null>(null);
 
-  // Reject modal state
-  const [rejectModalVisible, setRejectModalVisible] = useState(false);
-  const [rejectDocId, setRejectDocId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-
-  // Replace modal state
-  const [replaceModalVisible, setReplaceModalVisible] = useState(false);
-  const [replaceDocId, setReplaceDocId] = useState<string | null>(null);
-  const [replaceFile, setReplaceFile] = useState<File | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [departmentFilter, setDepartmentFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
   useEffect(() => {
-    loadDocumentsForTab(activeTab);
-  }, [activeTab]);
+    loadDocuments();
+  }, []);
 
-  const loadDocumentsForTab = async (tab: string) => {
+  useEffect(() => {
+    applyFilters();
+  }, [documents, searchText, categoryFilter, departmentFilter, statusFilter]);
+
+  const loadDocuments = async () => {
     try {
       setLoading(true);
       setError('');
-
-      if (tab === 'my') {
-        const docs = await getMyDocuments();
-        setMyDocuments(Array.isArray(docs) ? docs : []);
-      } else if (tab === 'org') {
-        const docs = await getOrganizationDocuments();
-        setOrgDocuments(Array.isArray(docs) ? docs : []);
-      }
+      const docs = await getOrganizationDocuments();
+      setDocuments(Array.isArray(docs) ? docs : []);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load documents');
+      message.error('Failed to load documents');
     } finally {
       setLoading(false);
     }
   };
 
-  const getCurrentDocuments = (): Document[] => {
-    if (activeTab === 'my') return myDocuments;
-    if (activeTab === 'org') return orgDocuments;
-    return [];
+  const applyFilters = () => {
+    let filtered = [...documents];
+
+    if (searchText) {
+      filtered = filtered.filter((doc) =>
+        doc.fileName.toLowerCase().includes(searchText.toLowerCase()) ||
+        doc.employeeId.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    if (categoryFilter) {
+      filtered = filtered.filter((doc) => doc.category === categoryFilter);
+    }
+
+    if (departmentFilter) {
+      filtered = filtered.filter((doc) => doc.department === departmentFilter);
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((doc) => doc.approvalStatus === statusFilter);
+    }
+
+    setFilteredDocs(filtered);
   };
 
   const openPreview = (doc: Document) => {
@@ -114,7 +141,7 @@ export const OrgDocumentsPage = () => {
       fileName: doc.fileName,
       fileType: doc.fileType || null,
       filePath: doc.filePath,
-      createdAt: doc.createdAt
+      createdAt: doc.createdAt,
     });
     setPreviewVisible(true);
   };
@@ -122,9 +149,7 @@ export const OrgDocumentsPage = () => {
   const handleDownload = async (doc: Document) => {
     try {
       const res = await downloadDocument(doc.id);
-      const contentType = (res as any)?.headers?.['content-type'] ||
-                         (res as any)?.headers?.get?.('content-type') || undefined;
-      const blob = new Blob([res.data], contentType ? { type: contentType } : undefined);
+      const blob = new Blob([res.data]);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -139,490 +164,345 @@ export const OrgDocumentsPage = () => {
     }
   };
 
+  const handleDelete = async (docId: string) => {
+    Modal.confirm({
+      title: 'Delete Document',
+      content: 'Are you sure you want to delete this document? This action cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await deleteDocument(docId);
+          message.success('Document deleted successfully');
+          loadDocuments();
+        } catch (err: any) {
+          message.error(err.response?.data?.error || 'Failed to delete document');
+        }
+      },
+    });
+  };
+
   const handleApprove = async (docId: string) => {
     try {
-      setActionLoading(docId);
       await approveDocument(docId);
       message.success('Document approved successfully');
-      await loadDocumentsForTab(activeTab);
+      loadDocuments();
     } catch (err: any) {
       message.error(err.response?.data?.error || 'Failed to approve document');
-    } finally {
-      setActionLoading(null);
     }
   };
 
-  const openRejectModal = (docId: string) => {
-    setRejectDocId(docId);
-    setRejectionReason('');
-    setRejectModalVisible(true);
+  const getFileIcon = (fileType: string, size: number = 40) => {
+    const type = fileType.toLowerCase();
+    if (type.includes('pdf')) return <FilePdfOutlined style={{ fontSize: size, color: '#ff4d4f' }} />;
+    if (type.includes('image') || type.includes('jpg') || type.includes('jpeg') || type.includes('png')) {
+      return <FileImageOutlined style={{ fontSize: size, color: '#52c41a' }} />;
+    }
+    if (type.includes('sheet') || type.includes('xls') || type.includes('excel')) {
+      return <FileExcelOutlined style={{ fontSize: size, color: '#52c41a' }} />;
+    }
+    if (type.includes('doc') || type.includes('word')) {
+      return <FileWordOutlined style={{ fontSize: size, color: '#1890ff' }} />;
+    }
+    return <FileTextOutlined style={{ fontSize: size, color: '#8c8c8c' }} />;
   };
 
-  const handleReject = async () => {
-    if (!rejectDocId || !rejectionReason.trim()) {
-      message.error('Please provide a rejection reason');
-      return;
-    }
-
-    try {
-      setActionLoading(rejectDocId);
-      await rejectDocument(rejectDocId, rejectionReason.trim());
-      message.success('Document rejected');
-      setRejectModalVisible(false);
-      setRejectDocId(null);
-      setRejectionReason('');
-      await loadDocumentsForTab(activeTab);
-    } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to reject document');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleDelete = async (docId: string) => {
-    try {
-      setActionLoading(docId);
-      await deleteDocument(docId);
-      message.success('Document deleted successfully');
-      await loadDocumentsForTab(activeTab);
-    } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to delete document');
-    } finally {
-      setActionLoading(null);
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <Tag icon={<CheckCircleOutlined />} color="success">Approved</Tag>;
+      case 'PENDING':
+        return <Tag icon={<ClockCircleOutlined />} color="warning">Pending</Tag>;
+      default:
+        return <Tag icon={<ClockCircleOutlined />} color="default">Pending</Tag>;
     }
   };
 
-  const openReplaceModal = (docId: string) => {
-    setReplaceDocId(docId);
-    setReplaceFile(null);
-    setReplaceModalVisible(true);
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return 'N/A';
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    return `${(kb / 1024).toFixed(1)} MB`;
   };
 
-  const handleReplace = async () => {
-    if (!replaceDocId || !replaceFile) {
-      message.error('Please select a file');
-      return;
-    }
+  const getDocumentActions = (doc: Document) => ({
+    items: [
+      {
+        key: 'view',
+        icon: <EyeOutlined />,
+        label: 'View',
+        onClick: () => openPreview(doc),
+      },
+      {
+        key: 'download',
+        icon: <DownloadOutlined />,
+        label: 'Download',
+        onClick: () => handleDownload(doc),
+      },
+      ...(isAdmin && doc.approvalStatus !== 'APPROVED' ? [{
+        key: 'approve',
+        icon: <CheckCircleOutlined />,
+        label: 'Approve',
+        onClick: () => handleApprove(doc.id),
+      }] : []),
+      ...(isAdmin ? [{
+        type: 'divider' as const,
+      }, {
+        key: 'delete',
+        icon: <DeleteOutlined />,
+        label: 'Delete',
+        danger: true,
+        onClick: () => handleDelete(doc.id),
+      }] : []),
+    ],
+  });
 
-    try {
-      setActionLoading(replaceDocId);
-      await replaceDocument(replaceDocId, replaceFile);
-      message.success('Document replaced successfully');
-      setReplaceModalVisible(false);
-      setReplaceDocId(null);
-      setReplaceFile(null);
-      await loadDocumentsForTab(activeTab);
-    } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to replace document');
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  // Calculate stats
+  const totalDocs = documents.length;
+  const pendingDocs = documents.filter(d => d.approvalStatus === 'PENDING' || !d.approvalStatus).length;
+  const approvedDocs = documents.filter(d => d.approvalStatus === 'APPROVED').length;
+  const totalStorage = documents.reduce((sum, doc) => sum + (doc.fileSize || 0), 0);
 
-  const handleExportToCSV = () => {
-    const documentsToExport = activeTab === 'my' ? myDocuments : orgDocuments;
-
-    if (documentsToExport.length === 0) {
-      message.warning('No documents to export');
-      return;
-    }
-
-    // Define field mapping for export
-    const fieldMapping: Record<string, string | ((doc: Document) => any)> = {
-      'Document ID': 'id',
-      'Employee ID': 'employeeId',
-      'File Name': 'fileName',
-      'File Type': 'fileType',
-      'Uploaded At': (doc: Document) => formatDateForExport(doc.createdAt),
-      'Approval Status': (doc: Document) => doc.approvalStatus || 'PENDING',
-      'Approved By': (doc: Document) => doc.approvedBy || '',
-      'Approved At': (doc: Document) => formatDateForExport(doc.approvedAt),
-      'Rejection Reason': (doc: Document) => doc.rejectionReason || '',
-    };
-
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `${activeTab === 'my' ? 'my' : 'organization'}-documents-${timestamp}.csv`;
-
-    exportToExcelCSV(documentsToExport, filename, fieldMapping);
-    message.success(`Exported ${documentsToExport.length} documents to CSV`);
-  };
-
-  const getApprovalStatusTag = (status?: string, reason?: string) => {
-    if (!status || status === 'PENDING') return <Tag color="warning">Pending</Tag>;
-    if (status === 'APPROVED') return <Tag color="success">Approved</Tag>;
-    if (status === 'REJECTED') return (
-      <Tooltip title={reason || 'No reason provided'}>
-        <Tag color="error">Rejected</Tag>
-      </Tooltip>
-    );
-    return <Tag color="default">{status}</Tag>;
-  };
-
-  const columns = [
-    {
-      title: 'File Name',
-      dataIndex: 'fileName',
-      key: 'fileName',
-      sorter: (a: Document, b: Document) => a.fileName.localeCompare(b.fileName),
-      render: (text: string, record: Document) => (
-        <Space>
-          <FileOutlined style={{ color: '#1890ff', fontSize: 16 }} />
-          <div>
-            <div style={{ fontWeight: 500 }}>{text}</div>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {record.fileType || 'Unknown type'}
-            </Text>
-          </div>
-        </Space>
-      ),
-    },
-    ...(activeTab !== 'my' ? [{
-      title: 'Employee ID',
-      dataIndex: 'employeeId',
-      key: 'employeeId',
-      width: 280,
-      sorter: (a: Document, b: Document) => a.employeeId.localeCompare(b.employeeId),
-      render: (id: string) => <Text code>{id}</Text>,
-    }] : []),
-    {
-      title: 'Status',
-      dataIndex: 'approvalStatus',
-      key: 'approvalStatus',
-      width: 120,
-      filters: [
-        { text: 'Pending', value: 'PENDING' },
-        { text: 'Approved', value: 'APPROVED' },
-        { text: 'Rejected', value: 'REJECTED' },
-      ],
-      onFilter: (value: any, record: Document) =>
-        (record.approvalStatus || 'PENDING') === value,
-      render: (status: string, record: Document) =>
-        getApprovalStatusTag(status, record.rejectionReason),
-    },
-    {
-      title: 'Uploaded',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 180,
-      sorter: (a: Document, b: Document) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (date: string) => (
-        <Tooltip title={new Date(date).toLocaleString()}>
-          <Text>{new Date(date).toLocaleDateString()}</Text>
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 180,
-      fixed: 'right' as const,
-      render: (record: Document) => (
-        <Space size={4} wrap>
-          <Tooltip title="Preview">
-            <Button
-              type="text"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => openPreview(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Download">
-            <Button
-              type="text"
-              size="small"
-              icon={<DownloadOutlined />}
-              onClick={() => handleDownload(record)}
-            />
-          </Tooltip>
-
-          {roles.includes('orgadmin') && activeTab === 'org' && (
-            <>
-              {record.approvalStatus !== 'APPROVED' && (
-                <Tooltip title="Approve">
-                  <Button
-                    type="link"
-                    size="small"
-                    icon={<CheckOutlined />}
-                    onClick={() => handleApprove(record.id)}
-                    loading={actionLoading === record.id}
-                    style={{ color: '#52c41a' }}
-                  >
-                    Approve
-                  </Button>
-                </Tooltip>
-              )}
-
-              {record.approvalStatus !== 'APPROVED' && (
-                <Tooltip title="Reject">
-                  <Button
-                    type="link"
-                    danger
-                    size="small"
-                    icon={<CloseOutlined />}
-                    onClick={() => openRejectModal(record.id)}
-                    loading={actionLoading === record.id}
-                  >
-                    Reject
-                  </Button>
-                </Tooltip>
-              )}
-
-              <Tooltip title="Replace">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<SwapOutlined />}
-                  onClick={() => openReplaceModal(record.id)}
-                />
-              </Tooltip>
-
-              <Popconfirm
-                title="Delete document"
-                description="Are you sure you want to delete this document?"
-                onConfirm={() => handleDelete(record.id)}
-                okText="Yes"
-                cancelText="No"
-              >
-                <Tooltip title="Delete">
-                  <Button
-                    type="text"
-                    danger
-                    size="small"
-                    icon={<DeleteOutlined />}
-                    loading={actionLoading === record.id}
-                  />
-                </Tooltip>
-              </Popconfirm>
-            </>
-          )}
-        </Space>
-      ),
-    },
-  ];
-
-  const tabItems = [
-    {
-      key: 'my',
-      label: (
-        <span>
-          <UserOutlined /> My Documents
-          <Badge
-            count={myDocuments.length}
-            style={{ marginLeft: 8, backgroundColor: '#1890ff' }}
-            showZero
-          />
-        </span>
-      ),
-      children: (
-        <div>
-          {error && <Alert message={error} type="error" showIcon closable style={{ marginBottom: 16 }} />}
-
-          {myDocuments.length === 0 && !loading ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <div>
-                  <Text type="secondary">No documents uploaded yet</Text>
-                  <div style={{ marginTop: 8 }}>
-                    <Button
-                      type="primary"
-                      icon={<UploadOutlined />}
-                      onClick={() => navigate('/documents/upload-mine')}
-                    >
-                      Upload Your First Document
-                    </Button>
-                  </div>
-                </div>
-              }
-            />
-          ) : (
-            <Table
-              columns={columns}
-              dataSource={myDocuments}
-              loading={loading}
-              rowKey="id"
-              locale={{ emptyText: 'No documents found' }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} documents`,
-              }}
-              scroll={{ x: 900 }}
-            />
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'org',
-      label: (
-        <span>
-          <BankOutlined /> Organization Documents
-          <Badge
-            count={orgDocuments.length}
-            style={{ marginLeft: 8, backgroundColor: '#52c41a' }}
-            showZero
-          />
-        </span>
-      ),
-      children: (
-        <div>
-          <Alert
-            message="Viewing based on your permissions"
-            description="You're seeing documents you have permission to access (own team, department, or full organization)"
-            type="info"
-            showIcon
-            closable
-            style={{ marginBottom: 16 }}
-          />
-
-          {error && <Alert message={error} type="error" showIcon closable style={{ marginBottom: 16 }} />}
-
-          {orgDocuments.length === 0 && !loading ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <div>
-                  <Text type="secondary">No organization documents available</Text>
-                </div>
-              }
-            />
-          ) : (
-            <Table
-              columns={columns}
-              dataSource={orgDocuments}
-              loading={loading}
-              rowKey="id"
-              locale={{ emptyText: 'No documents found' }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} documents`,
-              }}
-              scroll={{ x: 1200 }}
-            />
-          )}
-        </div>
-      ),
-    },
-  ];
+  // Get unique departments
+  const departments = Array.from(new Set(documents.map(d => d.department).filter(Boolean)));
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-        <Card
-          style={{
-            borderRadius: 12,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          }}
-        >
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Title level={3} style={{ margin: 0 }}>
-                <FolderOutlined style={{ marginRight: 8 }} />
-                Documents
+    <div style={{ padding: 0 }}>
+      {/* Header Card */}
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 16,
+          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          marginBottom: 24,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        }}
+        bodyStyle={{ padding: '32px' }}
+      >
+        <Row justify="space-between" align="middle">
+          <Col>
+            <Space direction="vertical" size={8}>
+              <Breadcrumb
+                items={[
+                  { title: <HomeOutlined style={{ color: 'rgba(255,255,255,0.8)' }} /> },
+                  { title: <Text style={{ color: 'rgba(255,255,255,0.9)' }}>Organization</Text> },
+                  { title: <Text style={{ color: 'white' }}>Documents</Text> },
+                ]}
+                style={{ marginBottom: 8 }}
+              />
+              <Title level={2} style={{ margin: 0, color: 'white' }}>
+                <FolderOutlined /> Organization Documents
               </Title>
-              <Space>
+              <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 15 }}>
+                Manage and access organization-wide documents
+              </Text>
+            </Space>
+          </Col>
+          <Col>
+            <Space>
+              {isAdmin && (
                 <Button
-                  icon={<ExportOutlined />}
-                  onClick={handleExportToCSV}
-                  disabled={
-                    (activeTab === 'my' && myDocuments.length === 0) ||
-                    (activeTab === 'org' && orgDocuments.length === 0)
-                  }
-                >
-                  Export CSV
-                </Button>
-                <Button
-                  type="default"
+                  type="primary"
+                  size="large"
                   icon={<UploadOutlined />}
-                  onClick={() => navigate('/documents/upload-mine')}
+                  onClick={() => navigate('/documents/upload')}
+                  style={{
+                    background: 'white',
+                    color: '#4facfe',
+                    border: 'none',
+                    fontWeight: 600,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  }}
                 >
-                  Upload My Document
+                  Upload Document
                 </Button>
-                {roles.includes('orgadmin') && (
-                  <Button
-                    type="primary"
-                    icon={<UploadOutlined />}
-                    onClick={() => navigate('/documents/upload')}
-                  >
-                    Upload for Employee
+              )}
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Stats Cards */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ borderRadius: 12, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)' }}>
+            <Statistic
+              title={<Text style={{ color: 'rgba(255,255,255,0.85)' }}>Total Documents</Text>}
+              value={totalDocs}
+              valueStyle={{ color: '#fff', fontWeight: 600 }}
+              prefix={<FileOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ borderRadius: 12, background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', boxShadow: '0 4px 12px rgba(245, 87, 108, 0.3)' }}>
+            <Statistic
+              title={<Text style={{ color: 'rgba(255,255,255,0.85)' }}>Pending Approval</Text>}
+              value={pendingDocs}
+              valueStyle={{ color: '#fff', fontWeight: 600 }}
+              prefix={<ClockCircleOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ borderRadius: 12, background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', boxShadow: '0 4px 12px rgba(79, 172, 254, 0.3)' }}>
+            <Statistic
+              title={<Text style={{ color: 'rgba(255,255,255,0.85)' }}>Approved</Text>}
+              value={approvedDocs}
+              valueStyle={{ color: '#fff', fontWeight: 600 }}
+              prefix={<CheckCircleOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ borderRadius: 12, background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', boxShadow: '0 4px 12px rgba(67, 233, 123, 0.3)' }}>
+            <Statistic
+              title={<Text style={{ color: 'rgba(255,255,255,0.85)' }}>Storage Used</Text>}
+              value={formatFileSize(totalStorage)}
+              valueStyle={{ color: '#fff', fontWeight: 600, fontSize: 20 }}
+              prefix={<FolderOutlined />}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Main Content Card */}
+      <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }} bodyStyle={{ padding: 24 }}>
+        {error && <Alert message="Error" description={error} type="error" showIcon closable onClose={() => setError('')} style={{ marginBottom: 16 }} />}
+
+        {/* Filters */}
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} md={18}>
+            <Space size={12} wrap>
+              <Input
+                placeholder="Search documents..."
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{ width: 240 }}
+                allowClear
+              />
+              <Select
+                placeholder="Category"
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                style={{ width: 140 }}
+                allowClear
+              >
+                <Select.Option value="ID Proof">ID Proof</Select.Option>
+                <Select.Option value="Educational">Educational</Select.Option>
+                <Select.Option value="Experience">Experience</Select.Option>
+                <Select.Option value="Contract">Contract</Select.Option>
+                <Select.Option value="Other">Other</Select.Option>
+              </Select>
+              <Select
+                placeholder="Department"
+                value={departmentFilter}
+                onChange={setDepartmentFilter}
+                style={{ width: 140 }}
+                allowClear
+              >
+                {departments.map(dept => (
+                  <Select.Option key={dept} value={dept}>{dept}</Select.Option>
+                ))}
+              </Select>
+              <Select
+                placeholder="Status"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: 140 }}
+                allowClear
+              >
+                <Select.Option value="PENDING">Pending</Select.Option>
+                <Select.Option value="APPROVED">Approved</Select.Option>
+              </Select>
+              {(searchText || categoryFilter || departmentFilter || statusFilter) && (
+                <Button icon={<FilterOutlined />} onClick={() => { setSearchText(''); setCategoryFilter(undefined); setDepartmentFilter(undefined); setStatusFilter(undefined); }}>
+                  Clear
+                </Button>
+              )}
+            </Space>
+          </Col>
+        </Row>
+
+        {/* Document Grid */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <Text type="secondary">Loading documents...</Text>
+          </div>
+        ) : filteredDocs.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <Space direction="vertical" size={8}>
+                <Text type="secondary" style={{ fontSize: 16 }}>No documents found</Text>
+                {isAdmin && (
+                  <Button type="primary" icon={<UploadOutlined />} onClick={() => navigate('/documents/upload')} size="large">
+                    Upload Document
                   </Button>
                 )}
               </Space>
-            </div>
-
-            <Tabs
-              activeKey={activeTab}
-              onChange={setActiveTab}
-              items={tabItems}
-              size="large"
-            />
-
-            {previewDoc && (
-              <DocumentPreviewModal
-                document={previewDoc}
-                visible={previewVisible}
-                onClose={() => setPreviewVisible(false)}
-              />
-            )}
-          </Space>
-        </Card>
-      </div>
-
-      {/* Reject Modal */}
-      <Modal
-        title="Reject Document"
-        open={rejectModalVisible}
-        onOk={handleReject}
-        onCancel={() => {
-          setRejectModalVisible(false);
-          setRejectDocId(null);
-          setRejectionReason('');
-        }}
-        confirmLoading={actionLoading === rejectDocId}
-      >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Text>Please provide a reason for rejecting this document:</Text>
-          <TextArea
-            rows={4}
-            placeholder="Enter rejection reason..."
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
+            }
+            style={{ padding: '60px 0' }}
           />
-        </Space>
-      </Modal>
+        ) : (
+          <Row gutter={[16, 16]}>
+            {filteredDocs.map((doc) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={doc.id}>
+                <Card
+                  hoverable
+                  bordered={false}
+                  style={{
+                    borderRadius: 12,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    transition: 'all 0.3s ease',
+                  }}
+                  bodyStyle={{ padding: 16 }}
+                >
+                  <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                    {getFileIcon(doc.fileType, 48)}
+                  </div>
+                  <div style={{ textAlign: 'center', marginBottom: 8 }}>
+                    <Tooltip title={doc.fileName}>
+                      <Text strong style={{ fontSize: 14 }}>
+                        {doc.fileName.length > 20 ? `${doc.fileName.substring(0, 20)}...` : doc.fileName}
+                      </Text>
+                    </Tooltip>
+                  </div>
+                  <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                    {getStatusBadge(doc.approvalStatus)}
+                  </div>
+                  <Space direction="vertical" size={4} style={{ width: '100%', marginBottom: 12 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      <TeamOutlined /> {doc.employeeId}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      <ClockCircleOutlined /> {dayjs(doc.createdAt).fromNow()}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Size: {formatFileSize(doc.fileSize)}
+                    </Text>
+                  </Space>
+                  <Dropdown menu={getDocumentActions(doc)} trigger={['click']}>
+                    <Button block icon={<MoreOutlined />}>
+                      Actions
+                    </Button>
+                  </Dropdown>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </Card>
 
-      {/* Replace Modal */}
-      <Modal
-        title="Replace Document"
-        open={replaceModalVisible}
-        onOk={handleReplace}
-        onCancel={() => {
-          setReplaceModalVisible(false);
-          setReplaceDocId(null);
-          setReplaceFile(null);
-        }}
-        confirmLoading={actionLoading === replaceDocId}
-      >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Text>Upload a new file to replace the existing document:</Text>
-          <Upload
-            beforeUpload={(file) => {
-              setReplaceFile(file);
-              return false;
-            }}
-            maxCount={1}
-            onRemove={() => setReplaceFile(null)}
-          >
-            <Button icon={<UploadOutlined />}>Select File</Button>
-          </Upload>
-          {replaceFile && (
-            <Text type="secondary">Selected: {replaceFile.name}</Text>
-          )}
-        </Space>
-      </Modal>
+      {/* Preview Modal */}
+      {previewDoc && (
+        <DocumentPreviewModal
+          document={previewDoc}
+          visible={previewVisible}
+          onClose={() => setPreviewVisible(false)}
+        />
+      )}
     </div>
   );
 };

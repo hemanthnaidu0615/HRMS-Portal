@@ -359,12 +359,19 @@ export const BulkImportPage = () => {
                 beforeUpload={handleFileUpload}
                 onRemove={() => setFileList([])}
                 maxCount={1}
+                style={{
+                  borderRadius: 12,
+                  border: '2px dashed #d9d9d9',
+                  background: '#fafafa',
+                }}
               >
                 <p className="ant-upload-drag-icon">
-                  <UploadOutlined style={{ fontSize: 48, color: '#0a0d54' }} />
+                  <UploadOutlined style={{ fontSize: 64, color: '#0a0d54' }} />
                 </p>
-                <p className="ant-upload-text">Click or drag CSV file to this area to upload</p>
-                <p className="ant-upload-hint">
+                <p className="ant-upload-text" style={{ fontSize: 18, fontWeight: 500, color: '#0a0d54' }}>
+                  Click or drag CSV file to this area to upload
+                </p>
+                <p className="ant-upload-hint" style={{ fontSize: 14, color: '#8c8c8c' }}>
                   Support for a single CSV file upload. The file should follow the template format.
                 </p>
               </Dragger>
@@ -387,6 +394,8 @@ export const BulkImportPage = () => {
                 rowKey="email"
                 pagination={{ pageSize: 10 }}
                 scroll={{ x: true }}
+                style={{ borderRadius: 8 }}
+                bordered
               />
 
               <Space>

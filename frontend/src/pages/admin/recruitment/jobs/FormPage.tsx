@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { SaveOutlined, ArrowLeftOutlined, TeamOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { API_BASE_URL } from '../../../../config/api';
+import { minCharactersRule, positiveNumberRule, salaryRangeRule } from '../../../../utils/validationRules';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -109,26 +110,36 @@ const JobsFormPage: React.FC = () => {
             <Col xs={24} md={16}>
               <Form.Item
                 name="title"
-                label={<span style={{ fontWeight: 500, fontSize: 14 }}>Job Title</span>}
-                rules={[{ required: true, message: 'Please enter job title' }]}
+                label={<span style={{ fontWeight: 500, fontSize: 14 }}>Job Title <span style={{ color: '#ff4d4f' }}>*</span></span>}
+                rules={[
+                  { required: true, message: 'Please enter job title' },
+                  minCharactersRule(5),
+                ]}
+                extra="Minimum 5 characters"
               >
                 <Input
                   placeholder="e.g. Senior Software Engineer"
                   size="large"
                   style={{ borderRadius: 8 }}
+                  showCount
+                  maxLength={100}
                 />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
               <Form.Item
                 name="openings"
-                label={<span style={{ fontWeight: 500, fontSize: 14 }}>Number of Openings</span>}
-                rules={[{ required: true, message: 'Please enter number of openings' }]}
+                label={<span style={{ fontWeight: 500, fontSize: 14 }}>Number of Openings <span style={{ color: '#ff4d4f' }}>*</span></span>}
+                rules={[
+                  { required: true, message: 'Please enter number of openings' },
+                  positiveNumberRule,
+                ]}
                 initialValue={1}
               >
                 <InputNumber
                   placeholder="0"
                   min={1}
+                  max={999}
                   size="large"
                   style={{ width: '100%', borderRadius: 8 }}
                 />
@@ -229,8 +240,12 @@ const JobsFormPage: React.FC = () => {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Form.Item
             name="description"
-            label={<span style={{ fontWeight: 500, fontSize: 14 }}>Job Description</span>}
-            rules={[{ required: true, message: 'Please enter job description' }]}
+            label={<span style={{ fontWeight: 500, fontSize: 14 }}>Job Description <span style={{ color: '#ff4d4f' }}>*</span></span>}
+            rules={[
+              { required: true, message: 'Please enter job description' },
+              minCharactersRule(50),
+            ]}
+            extra="Minimum 50 characters. Provide a detailed and compelling description."
           >
             <TextArea
               placeholder="Provide a detailed description of the role, responsibilities, and what a typical day looks like..."
@@ -243,8 +258,12 @@ const JobsFormPage: React.FC = () => {
 
           <Form.Item
             name="requirements"
-            label={<span style={{ fontWeight: 500, fontSize: 14 }}>Requirements & Qualifications</span>}
-            rules={[{ required: true, message: 'Please enter requirements' }]}
+            label={<span style={{ fontWeight: 500, fontSize: 14 }}>Requirements & Qualifications <span style={{ color: '#ff4d4f' }}>*</span></span>}
+            rules={[
+              { required: true, message: 'Please enter requirements' },
+              minCharactersRule(30),
+            ]}
+            extra="Minimum 30 characters. List clear and specific requirements."
           >
             <TextArea
               placeholder="List the required qualifications, education, certifications, and experience..."
@@ -303,10 +322,13 @@ const JobsFormPage: React.FC = () => {
               <Form.Item
                 name="salaryMin"
                 label={<span style={{ fontWeight: 500, fontSize: 14 }}>Minimum Salary (Annual)</span>}
+                dependencies={['salaryMax']}
+                rules={[salaryRangeRule]}
               >
                 <InputNumber
                   placeholder="0"
                   min={0}
+                  max={10000000}
                   prefix="$"
                   size="large"
                   style={{ width: '100%', borderRadius: 8 }}
@@ -319,10 +341,25 @@ const JobsFormPage: React.FC = () => {
               <Form.Item
                 name="salaryMax"
                 label={<span style={{ fontWeight: 500, fontSize: 14 }}>Maximum Salary (Annual)</span>}
+                dependencies={['salaryMin']}
+                rules={[
+                  salaryRangeRule,
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const minSalary = getFieldValue('salaryMin');
+                      if (!value || !minSalary || value > minSalary) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Maximum salary must be greater than minimum'));
+                    },
+                  }),
+                ]}
+                extra="Must be greater than minimum salary"
               >
                 <InputNumber
                   placeholder="0"
                   min={0}
+                  max={10000000}
                   prefix="$"
                   size="large"
                   style={{ width: '100%', borderRadius: 8 }}

@@ -6,7 +6,8 @@ import {
 } from 'antd';
 import {
   BankOutlined, PlusOutlined, UserAddOutlined, ReloadOutlined, DeleteOutlined,
-  UndoOutlined, TeamOutlined, UserOutlined, FileOutlined, ApartmentOutlined
+  UndoOutlined, TeamOutlined, UserOutlined, FileOutlined, ApartmentOutlined,
+  AppstoreOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -189,22 +190,35 @@ export const OrganizationsPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 200,
+      width: 280,
       fixed: 'right' as const,
       render: (_, record) => (
         <Space size={4}>
           {!record.deletedAt && (
-            <Tooltip title="Add Organization Admin">
-              <Button
-                type="primary"
-                size="small"
-                icon={<UserAddOutlined />}
-                onClick={() => navigate(`/superadmin/orgadmin/${record.id}`)}
-                style={{ borderRadius: 6 }}
-              >
-                Add Admin
-              </Button>
-            </Tooltip>
+            <>
+              <Tooltip title="Manage Modules">
+                <Button
+                  type="default"
+                  size="small"
+                  icon={<AppstoreOutlined />}
+                  onClick={() => navigate(`/superadmin/organizations/${record.id}/modules`)}
+                  style={{ borderRadius: 6, borderColor: '#722ed1', color: '#722ed1' }}
+                >
+                  Modules
+                </Button>
+              </Tooltip>
+              <Tooltip title="Add Organization Admin">
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<UserAddOutlined />}
+                  onClick={() => navigate(`/superadmin/orgadmin/${record.id}`)}
+                  style={{ borderRadius: 6 }}
+                >
+                  Add Admin
+                </Button>
+              </Tooltip>
+            </>
           )}
 
           {!record.deletedAt ? (

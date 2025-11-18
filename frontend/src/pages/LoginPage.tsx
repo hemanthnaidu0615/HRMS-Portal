@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, Alert, Space } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { authApi } from '../api/authApi';
+import { emailRule } from '../utils/validationRules';
 
 const { Title, Text, Link } = Typography;
 
@@ -93,22 +94,27 @@ export const LoginPage = () => {
               name="email"
               rules={[
                 { required: true, message: 'Please enter your email' },
-                { type: 'email', message: 'Please enter a valid email' },
+                emailRule,
               ]}
             >
               <Input
                 prefix={<UserOutlined />}
                 placeholder="Email address"
+                autoComplete="email"
               />
             </Form.Item>
 
             <Form.Item
               name="password"
-              rules={[{ required: true, message: 'Please enter your password' }]}
+              rules={[
+                { required: true, message: 'Please enter your password' },
+                { min: 8, message: 'Password must be at least 8 characters' },
+              ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
                 placeholder="Password"
+                autoComplete="current-password"
               />
             </Form.Item>
 

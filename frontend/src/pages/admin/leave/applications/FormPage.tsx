@@ -31,6 +31,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import dayjs, { Dayjs } from 'dayjs';
 import http from '../../../../api/http';
 import { PremiumCard } from '../../../../components/PremiumCard';
+import { noPastDateRule, minCharactersRule, endDateAfterStartDateRule } from '../../../../utils/validationRules';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -228,7 +229,7 @@ const ApplicationsFormPage: React.FC = () => {
                   label={
                     <span style={{ fontSize: 15, fontWeight: 500 }}>
                       <UserOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                      Employee
+                      Employee <span style={{ color: '#ff4d4f' }}>*</span>
                     </span>
                   }
                   rules={[{ required: true, message: 'Please select an employee' }]}
@@ -254,10 +255,11 @@ const ApplicationsFormPage: React.FC = () => {
                   label={
                     <span style={{ fontSize: 15, fontWeight: 500 }}>
                       <FileTextOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                      Leave Type
+                      Leave Type <span style={{ color: '#ff4d4f' }}>*</span>
                     </span>
                   }
                   rules={[{ required: true, message: 'Please select leave type' }]}
+                  extra="Select the type of leave you want to apply for"
                 >
                   <Select
                     placeholder="Select leave type"
@@ -281,10 +283,14 @@ const ApplicationsFormPage: React.FC = () => {
                   label={
                     <span style={{ fontSize: 15, fontWeight: 500 }}>
                       <CalendarOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                      Date Range
+                      Date Range <span style={{ color: '#ff4d4f' }}>*</span>
                     </span>
                   }
                   required
+                  rules={[
+                    { required: true, message: 'Please select date range' },
+                  ]}
+                  extra="Leave dates cannot be in the past. Please select future dates."
                 >
                   <RangePicker
                     value={dateRange}
@@ -315,18 +321,27 @@ const ApplicationsFormPage: React.FC = () => {
                   label={
                     <span style={{ fontSize: 15, fontWeight: 500 }}>
                       <FileTextOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                      Reason
+                      Reason <span style={{ color: '#ff4d4f' }}>*</span>
                     </span>
                   }
                   rules={[
                     { required: true, message: 'Please provide a reason' },
-                    { min: 10, message: 'Reason must be at least 10 characters' },
+                    minCharactersRule(10),
                   ]}
+                  extra={
+                    <div style={{ marginTop: 4 }}>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Minimum 10 characters required. Be specific and clear about your leave reason.
+                      </Text>
+                    </div>
+                  }
                 >
                   <TextArea
                     rows={4}
                     placeholder="Please provide a detailed reason for your leave..."
                     style={{ borderRadius: 8 }}
+                    showCount
+                    maxLength={500}
                   />
                 </Form.Item>
 
