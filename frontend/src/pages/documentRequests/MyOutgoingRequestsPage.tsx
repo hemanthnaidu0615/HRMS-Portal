@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Table, Card, Space, Input, Tag, Typography, message, Alert, Button, Empty, Tooltip } from 'antd';
-import { SendOutlined, SearchOutlined, ReloadOutlined, EyeOutlined, CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DownloadOutlined } from '@ant-design/icons';
+import { SendOutlined, SearchOutlined, ReloadOutlined, EyeOutlined, CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { getMyDocumentRequestsAsRequester } from '../../api/documentRequestsApi';
@@ -20,6 +21,7 @@ interface DocumentRequest {
 }
 
 export const MyOutgoingRequestsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<DocumentRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<DocumentRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,14 +162,30 @@ export const MyOutgoingRequestsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 0 }}>
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)' }}>
+      {/* Header Card with Gradient */}
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 16,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          marginBottom: 24,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+        }}
+        bodyStyle={{ padding: '32px' }}
+      >
+        <Space direction="vertical" size={8}>
+          <Title level={2} style={{ margin: 0, color: 'white' }}>
+            <SendOutlined /> My Outgoing Requests
+          </Title>
+          <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 15 }}>
+            Document requests you've sent to others
+          </Text>
+        </Space>
+      </Card>
+
+      <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }}>
         <div style={{ marginBottom: 24 }}>
           <div style={{ marginBottom: 16 }}>
-            <Title level={3} style={{ margin: 0, marginBottom: 4 }}>
-              <SendOutlined /> My Outgoing Requests
-            </Title>
-            <Text type="secondary">Document requests you've sent to others</Text>
-          </div>
 
           <Space size={16} wrap style={{ marginBottom: 16 }}>
             {[
@@ -185,6 +203,18 @@ export const MyOutgoingRequestsPage: React.FC = () => {
           </Space>
 
           <Space size={12} wrap>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/document-requests/create')}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                fontWeight: 600,
+              }}
+            >
+              Request Document
+            </Button>
             <Input placeholder="Search..." prefix={<SearchOutlined />} value={searchText} onChange={(e) => setSearchText(e.target.value)} style={{ width: 280 }} allowClear />
             <Button icon={<ReloadOutlined />} onClick={loadRequests}>Refresh</Button>
           </Space>

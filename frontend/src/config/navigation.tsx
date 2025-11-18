@@ -94,7 +94,8 @@ export const orgAdminMenuItems: MenuItem[] = [
 
   getItem('Documents', 'documents', <FileTextOutlined />, [
     getItem('All Documents', '/documents/org'),
-    getItem('Document Requests', '/document-requests/org'),
+    getItem('All Document Requests', '/document-requests/org'),
+    getItem('Request Document', '/document-requests/create'),
   ]),
 
   getItem('Profile', '/profile', <UserOutlined />),
@@ -113,6 +114,7 @@ export const employeeMenuItems: MenuItem[] = [
   ]),
 
   getItem('Document Requests', 'document-requests', <InboxOutlined />, [
+    getItem('Request Document', '/document-requests/create'),
     getItem('Requests I Received', '/document-requests/incoming'),
     getItem('Requests I Sent', '/document-requests/outgoing'),
   ]),

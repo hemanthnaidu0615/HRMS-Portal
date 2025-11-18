@@ -230,36 +230,53 @@ export const MyDocumentsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 0 }}>
+      {/* Header Card with Gradient */}
       <Card
         bordered={false}
         style={{
-          borderRadius: 12,
-          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)',
+          borderRadius: 16,
+          background: 'linear-gradient(135deg, #0093E9 0%, #80D0C7 100%)',
+          marginBottom: 24,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+        }}
+        bodyStyle={{ padding: '32px' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Space direction="vertical" size={8}>
+            <Title level={2} style={{ margin: 0, color: 'white' }}>
+              <FileTextOutlined /> My Documents
+            </Title>
+            <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 15 }}>
+              View and manage your uploaded documents
+            </Text>
+          </Space>
+          <Button
+            type="primary"
+            size="large"
+            icon={<UploadOutlined />}
+            onClick={() => navigate('/documents/upload')}
+            style={{
+              background: 'white',
+              color: '#0093E9',
+              border: 'none',
+              fontWeight: 600,
+            }}
+          >
+            Upload Document
+          </Button>
+        </div>
+      </Card>
+
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 16,
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
         }}
       >
-        {/* Header */}
+        {/* Filters */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div>
-              <Title level={3} style={{ margin: 0, marginBottom: 4 }}>
-                My Documents
-              </Title>
-              <Text type="secondary">
-                View and manage your uploaded documents
-              </Text>
-            </div>
-            <Button
-              type="primary"
-              size="large"
-              icon={<UploadOutlined />}
-              onClick={() => navigate('/documents/upload')}
-            >
-              Upload Document
-            </Button>
-          </div>
-
-          {/* Filters */}
-          <Space size={12} wrap style={{ marginTop: 16 }}>
+          <Space size={12} wrap>
             <Input
               placeholder="Search documents..."
               prefix={<SearchOutlined />}
