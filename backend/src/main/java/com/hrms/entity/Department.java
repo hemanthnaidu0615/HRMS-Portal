@@ -2,6 +2,7 @@ package com.hrms.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -20,6 +21,9 @@ public class Department {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     public Department() {
     }
@@ -59,5 +63,17 @@ public class Department {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 }
