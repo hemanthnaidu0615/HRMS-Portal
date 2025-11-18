@@ -167,167 +167,6 @@ CREATE TABLE positions (
 );
 
 -- =====================================================
--- VENDOR & CLIENT MANAGEMENT
--- =====================================================
-
-CREATE TABLE vendors (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Basic Information
-    name VARCHAR(255) NOT NULL,
-    vendor_code VARCHAR(50) UNIQUE NOT NULL,
-    vendor_type VARCHAR(50) NOT NULL DEFAULT 'staffing',
-
-    -- Contact Information
-    primary_contact_name VARCHAR(255),
-    primary_contact_email VARCHAR(255),
-    primary_contact_phone VARCHAR(50),
-    address_line1 VARCHAR(255),
-    address_line2 VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(100),
-    country VARCHAR(100),
-    postal_code VARCHAR(20),
-
-    -- Business Details
-    tax_id VARCHAR(50),
-    business_registration_number VARCHAR(100),
-    website VARCHAR(255),
-
-    -- Contract Details
-    contract_start_date DATE,
-    contract_end_date DATE,
-    contract_status VARCHAR(50) DEFAULT 'active',
-
-    -- Billing
-    billing_type VARCHAR(50),
-    default_billing_rate DECIMAL(10,2),
-    billing_currency VARCHAR(10) DEFAULT 'USD',
-    payment_terms VARCHAR(100),
-
-    -- Multi-tier Support
-    parent_vendor_id UNIQUEIDENTIFIER NULL,
-    tier_level INT DEFAULT 1,
-
-    -- Metrics
-    total_resources_supplied INT DEFAULT 0,
-    active_resources_count INT DEFAULT 0,
-
-    -- Status
-    is_active BIT DEFAULT 1,
-    is_preferred BIT DEFAULT 0,
-
-    -- Audit
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2,
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (parent_vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
-CREATE TABLE clients (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Client Information
-    name VARCHAR(255) NOT NULL,
-    client_code VARCHAR(50) UNIQUE NOT NULL,
-    client_type VARCHAR(50) DEFAULT 'corporate',
-    industry VARCHAR(100),
-
-    -- Contact Information
-    primary_contact_name VARCHAR(255),
-    primary_contact_email VARCHAR(255),
-    primary_contact_phone VARCHAR(50),
-    address_line1 VARCHAR(255),
-    address_line2 VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(100),
-    country VARCHAR(100),
-    postal_code VARCHAR(20),
-
-    -- Business Details
-    tax_id VARCHAR(50),
-    website VARCHAR(255),
-
-    -- Relationship
-    relationship_start_date DATE,
-    relationship_status VARCHAR(50) DEFAULT 'active',
-    account_manager_id UNIQUEIDENTIFIER,
-
-    -- Metrics
-    total_active_projects INT DEFAULT 0,
-    total_active_resources INT DEFAULT 0,
-
-    -- Status
-    is_active BIT DEFAULT 1,
-    is_strategic BIT DEFAULT 0,
-
-    -- Audit
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2,
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
-CREATE TABLE projects (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-    client_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Project Information
-    project_name VARCHAR(255) NOT NULL,
-    project_code VARCHAR(50) UNIQUE NOT NULL,
-    project_type VARCHAR(50),
-    description VARCHAR(2000),
-
-    -- Timeline
-    start_date DATE NOT NULL,
-    end_date DATE,
-    estimated_duration_months INT,
-    project_status VARCHAR(50) DEFAULT 'active',
-
-    -- Financial
-    project_budget DECIMAL(15,2),
-    billing_rate_type VARCHAR(50),
-    default_billing_rate DECIMAL(10,2),
-    currency VARCHAR(10) DEFAULT 'USD',
-
-    -- Management
-    project_manager_id UNIQUEIDENTIFIER,
-
-    -- Metrics
-    total_allocated_resources INT DEFAULT 0,
-
-    -- Status
-    is_billable BIT DEFAULT 1,
-    is_active BIT DEFAULT 1,
-
-    -- Audit
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2,
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (client_id) REFERENCES clients(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
 -- EMPLOYEE MANAGEMENT - COMPLETE PROFESSIONAL SCHEMA
 -- =====================================================
 
@@ -734,6 +573,7 @@ WHERE scope = 'organization' AND organization_id IS NULL;
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT @EmployeeRoleId, id FROM permissions
 WHERE scope = 'own' AND organization_id IS NULL;
+GO
 
 -- =====================================================
 -- PERMISSION GROUPS
@@ -778,19 +618,6 @@ WHERE g.name = 'Audit & Logs' AND p.resource IN ('audit-logs', 'email-logs');
 
 CREATE INDEX idx_users_org ON users(organization_id);
 CREATE INDEX idx_users_email ON users(email);
-
-CREATE INDEX idx_vendors_org ON vendors(organization_id);
-CREATE INDEX idx_vendors_status ON vendors(is_active);
-CREATE INDEX idx_vendors_code ON vendors(vendor_code);
-
-CREATE INDEX idx_clients_org ON clients(organization_id);
-CREATE INDEX idx_clients_status ON clients(is_active);
-CREATE INDEX idx_clients_code ON clients(client_code);
-
-CREATE INDEX idx_projects_org ON projects(organization_id);
-CREATE INDEX idx_projects_client ON projects(client_id);
-CREATE INDEX idx_projects_status ON projects(is_active);
-CREATE INDEX idx_projects_code ON projects(project_code);
 
 CREATE INDEX idx_employees_org ON employees(organization_id);
 CREATE INDEX idx_employees_dept ON employees(department_id);
@@ -1209,6 +1036,7 @@ CREATE INDEX idx_vendor_contracts_dates ON vendor_contracts(effective_date, expi
 CREATE INDEX idx_vendor_reviews_org ON vendor_performance_reviews(organization_id);
 CREATE INDEX idx_vendor_reviews_vendor ON vendor_performance_reviews(vendor_id);
 CREATE INDEX idx_vendor_reviews_date ON vendor_performance_reviews(review_date DESC);
+GO
 
 -- =====================================================
 -- SEED DATA - VENDOR MANAGEMENT PERMISSIONS
@@ -1216,37 +1044,36 @@ CREATE INDEX idx_vendor_reviews_date ON vendor_performance_reviews(review_date D
 -- =====================================================
 
 BEGIN TRY
-    -- Add vendor management permissions (only if they don't exist)
-    IF NOT EXISTS (SELECT 1 FROM permissions WHERE resource = 'vendors' AND action = 'view' AND scope = 'organization' AND organization_id IS NULL)
+    -- Add additional vendor management permissions (only new ones not already inserted earlier)
+
+    -- Add vendor rating permission (if not exists)
+    IF NOT EXISTS (SELECT 1 FROM permissions WHERE resource = 'vendors' AND action = 'rate' AND scope = 'organization' AND organization_id IS NULL)
     BEGIN
         INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
-        -- Vendors
-        ('vendors', 'view', 'organization', NULL, 'View all vendors'),
-        ('vendors', 'create', 'organization', NULL, 'Create new vendors'),
-        ('vendors', 'edit', 'organization', NULL, 'Edit vendor information'),
-        ('vendors', 'delete', 'organization', NULL, 'Delete vendors'),
-        ('vendors', 'rate', 'organization', NULL, 'Rate vendor performance'),
+        ('vendors', 'rate', 'organization', NULL, 'Rate vendor performance');
+    END
 
-        -- Clients
-        ('clients', 'view', 'organization', NULL, 'View all clients'),
-        ('clients', 'create', 'organization', NULL, 'Create new clients'),
-        ('clients', 'edit', 'organization', NULL, 'Edit client information'),
-        ('clients', 'delete', 'organization', NULL, 'Delete clients'),
+    -- Add project 'own' scope permission (if not exists)
+    IF NOT EXISTS (SELECT 1 FROM permissions WHERE resource = 'projects' AND action = 'view' AND scope = 'own' AND organization_id IS NULL)
+    BEGIN
+        INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
+        ('projects', 'view', 'own', NULL, 'View own projects');
+    END
 
-        -- Projects
-        ('projects', 'view', 'own', NULL, 'View own projects'),
-        ('projects', 'view', 'organization', NULL, 'View all projects'),
-        ('projects', 'create', 'organization', NULL, 'Create new projects'),
-        ('projects', 'edit', 'organization', NULL, 'Edit project details'),
-        ('projects', 'delete', 'organization', NULL, 'Delete projects'),
-
-        -- Vendor Assignments
+    -- Add vendor assignment permissions (if not exists)
+    IF NOT EXISTS (SELECT 1 FROM permissions WHERE resource = 'vendor-assignments' AND organization_id IS NULL)
+    BEGIN
+        INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
         ('vendor-assignments', 'view', 'organization', NULL, 'View vendor assignments'),
         ('vendor-assignments', 'create', 'organization', NULL, 'Create vendor assignments'),
         ('vendor-assignments', 'edit', 'organization', NULL, 'Edit vendor assignments'),
-        ('vendor-assignments', 'terminate', 'organization', NULL, 'Terminate vendor assignments'),
+        ('vendor-assignments', 'terminate', 'organization', NULL, 'Terminate vendor assignments');
+    END
 
-        -- Vendor Contracts
+    -- Add vendor contract permissions (if not exists)
+    IF NOT EXISTS (SELECT 1 FROM permissions WHERE resource = 'vendor-contracts' AND organization_id IS NULL)
+    BEGIN
+        INSERT INTO permissions (resource, action, scope, organization_id, description) VALUES
         ('vendor-contracts', 'view', 'organization', NULL, 'View vendor contracts'),
         ('vendor-contracts', 'create', 'organization', NULL, 'Create vendor contracts'),
         ('vendor-contracts', 'edit', 'organization', NULL, 'Edit vendor contracts'),
@@ -1291,3 +1118,4 @@ BEGIN CATCH
     -- Silently ignore errors (permissions might already exist)
     PRINT 'Vendor management permissions already exist or could not be created. Continuing...';
 END CATCH;
+GO
