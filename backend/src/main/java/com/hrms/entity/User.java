@@ -28,6 +28,9 @@ public class User {
     @Column(name = "must_change_password", nullable = false)
     private boolean mustChangePassword = true;
 
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -86,6 +89,14 @@ public class User {
 
     public void setMustChangePassword(boolean mustChangePassword) {
         this.mustChangePassword = mustChangePassword;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public LocalDateTime getCreatedAt() {
