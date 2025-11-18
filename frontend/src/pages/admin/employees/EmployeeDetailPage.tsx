@@ -346,10 +346,10 @@ export const EmployeeDetailPage = () => {
               {!isDeleted && (
                 <Button
                   icon={<SafetyCertificateOutlined />}
-                  onClick={() => navigate(`/orgadmin/employees/${employeeId}/permissions`)}
+                  onClick={() => navigate(`/admin/permissions/employee/${employeeId}`)}
                   style={{ borderRadius: 8 }}
                 >
-                  Permissions
+                  Manage Permissions
                 </Button>
               )}
 

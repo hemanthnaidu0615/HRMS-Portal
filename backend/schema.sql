@@ -500,11 +500,252 @@ WHERE g.name = 'Payroll Management'
 AND p.resource = 'payroll';
 
 -- =====================================================
+-- VENDOR & CLIENT MANAGEMENT TABLES
+-- =====================================================
+
+-- Vendors table: Companies that provide resources to your organization
+CREATE TABLE vendors (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Vendor Information
+    name VARCHAR(255) NOT NULL,
+    vendor_code VARCHAR(50) UNIQUE NOT NULL,
+    vendor_type VARCHAR(50) NOT NULL,  -- staffing, consulting, contractor, freelance
+
+    -- Contact Information
+    primary_contact_name VARCHAR(255),
+    primary_contact_email VARCHAR(255),
+    primary_contact_phone VARCHAR(50),
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    postal_code VARCHAR(20),
+
+    -- Business Details
+    tax_id VARCHAR(50),
+    business_registration_number VARCHAR(100),
+    website VARCHAR(255),
+
+    -- Contract Details
+    contract_start_date DATE,
+    contract_end_date DATE,
+    contract_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, expired, terminated, suspended
+    contract_document_id UNIQUEIDENTIFIER,
+
+    -- Billing Configuration
+    billing_type VARCHAR(50) NOT NULL,  -- hourly, daily, monthly, project, fixed
+    default_billing_rate DECIMAL(10,2),
+    billing_currency VARCHAR(10) DEFAULT 'USD',
+    payment_terms VARCHAR(100),
+
+    -- Multi-tier Support
+    parent_vendor_id UNIQUEIDENTIFIER NULL,
+    tier_level INT DEFAULT 1,
+
+    -- Performance Tracking
+    performance_rating DECIMAL(3,2),
+    total_resources_supplied INT DEFAULT 0,
+    active_resources_count INT DEFAULT 0,
+
+    -- Status
+    is_active BIT NOT NULL DEFAULT 1,
+    is_preferred BIT NOT NULL DEFAULT 0,
+    blacklisted BIT NOT NULL DEFAULT 0,
+    blacklist_reason VARCHAR(500),
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (parent_vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- Clients table: End clients where employees are placed
+CREATE TABLE clients (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Client Information
+    name VARCHAR(255) NOT NULL,
+    client_code VARCHAR(50) UNIQUE NOT NULL,
+    client_type VARCHAR(50) NOT NULL,  -- corporate, government, nonprofit, individual
+    industry VARCHAR(100),
+
+    -- Contact Information
+    primary_contact_name VARCHAR(255),
+    primary_contact_email VARCHAR(255),
+    primary_contact_phone VARCHAR(50),
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    postal_code VARCHAR(20),
+
+    -- Business Details
+    tax_id VARCHAR(50),
+    website VARCHAR(255),
+
+    -- Relationship Details
+    relationship_start_date DATE,
+    relationship_status VARCHAR(50) NOT NULL DEFAULT 'active',
+    account_manager_id UNIQUEIDENTIFIER,
+
+    -- Business Metrics
+    total_active_projects INT DEFAULT 0,
+    total_active_resources INT DEFAULT 0,
+    lifetime_revenue DECIMAL(15,2) DEFAULT 0,
+
+    -- Status
+    is_active BIT NOT NULL DEFAULT 1,
+    is_strategic BIT NOT NULL DEFAULT 0,
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (account_manager_id) REFERENCES employees(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- Projects table: Client projects where resources are assigned
+CREATE TABLE projects (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    client_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Project Information
+    project_name VARCHAR(255) NOT NULL,
+    project_code VARCHAR(50) UNIQUE NOT NULL,
+    project_type VARCHAR(50),
+    description VARCHAR(2000),
+
+    -- Timeline
+    start_date DATE NOT NULL,
+    end_date DATE,
+    estimated_duration_months INT,
+    project_status VARCHAR(50) NOT NULL DEFAULT 'active',
+
+    -- Financial
+    project_budget DECIMAL(15,2),
+    billing_rate_type VARCHAR(50),
+    default_billing_rate DECIMAL(10,2),
+    currency VARCHAR(10) DEFAULT 'USD',
+
+    -- Management
+    project_manager_id UNIQUEIDENTIFIER,
+
+    -- Metrics
+    total_allocated_resources INT DEFAULT 0,
+    total_hours_logged DECIMAL(10,2) DEFAULT 0,
+    total_revenue DECIMAL(15,2) DEFAULT 0,
+
+    -- Status
+    is_billable BIT NOT NULL DEFAULT 1,
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (client_id) REFERENCES clients(id),
+    FOREIGN KEY (project_manager_id) REFERENCES employees(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- Vendor assignments: Track employee-vendor-client relationships
+CREATE TABLE vendor_assignments (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    employee_id UNIQUEIDENTIFIER NOT NULL,
+    vendor_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Assignment Details
+    assignment_type VARCHAR(50) NOT NULL,
+    assignment_start_date DATE NOT NULL,
+    assignment_end_date DATE,
+    assignment_status VARCHAR(50) NOT NULL DEFAULT 'active',
+
+    -- Project/Client Assignment
+    client_id UNIQUEIDENTIFIER,
+    project_id UNIQUEIDENTIFIER,
+
+    -- Financial Terms
+    billing_rate DECIMAL(10,2),
+    billing_rate_type VARCHAR(50),
+    billing_currency VARCHAR(10) DEFAULT 'USD',
+    markup_percentage DECIMAL(5,2),
+    vendor_cost_rate DECIMAL(10,2),
+    client_billing_rate DECIMAL(10,2),
+
+    -- Multi-tier tracking
+    source_vendor_id UNIQUEIDENTIFIER,
+    vendor_chain VARCHAR(500),
+
+    -- Performance
+    performance_rating DECIMAL(3,2),
+    feedback_notes VARCHAR(2000),
+
+    -- Termination
+    termination_date DATE,
+    termination_reason VARCHAR(500),
+    termination_initiated_by VARCHAR(50),
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (client_id) REFERENCES clients(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    FOREIGN KEY (source_vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
 -- INDEXES FOR PERFORMANCE
 -- =====================================================
 
 CREATE INDEX idx_users_org ON users(organization_id);
 CREATE INDEX idx_users_email ON users(email);
+
+CREATE INDEX idx_vendors_org ON vendors(organization_id);
+CREATE INDEX idx_vendors_status ON vendors(is_active, contract_status);
+CREATE INDEX idx_vendors_parent ON vendors(parent_vendor_id);
+
+CREATE INDEX idx_clients_org ON clients(organization_id);
+CREATE INDEX idx_clients_status ON clients(is_active, relationship_status);
+
+CREATE INDEX idx_projects_org ON projects(organization_id);
+CREATE INDEX idx_projects_client ON projects(client_id);
+CREATE INDEX idx_projects_status ON projects(project_status);
+
+CREATE INDEX idx_vendor_assignments_org ON vendor_assignments(organization_id);
+CREATE INDEX idx_vendor_assignments_employee ON vendor_assignments(employee_id);
+CREATE INDEX idx_vendor_assignments_vendor ON vendor_assignments(vendor_id);
 
 CREATE INDEX idx_employees_org ON employees(organization_id);
 CREATE INDEX idx_employees_dept ON employees(department_id);

@@ -21,23 +21,29 @@ import {
   TeamOutlined,
   BankOutlined,
   CheckCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
-import http from '../../api/http';
+import {
+  getEmployeeSimplePermissions,
+  updateEmployeeSimplePermissions,
+  ResourcePermission,
+} from '../../../api/simplePermissionsApi';
 
 const { Title, Text } = Typography;
 
-interface SimplePermission {
-  resource: string;
-  label: string;
-  icon: React.ReactNode;
-  description: string;
-  canViewOwn: boolean;
-  canEditOwn: boolean;
-  canViewTeam: boolean;
-  canEditTeam: boolean;
-  canViewOrg: boolean;
-  canEditOrg: boolean;
-}
+// Helper to get icon based on resource name
+const getResourceIcon = (resource: string): React.ReactNode => {
+  switch (resource) {
+    case 'employees':
+      return <UserOutlined />;
+    case 'documents':
+      return <FileTextOutlined />;
+    case 'departments':
+      return <BankOutlined />;
+    default:
+      return <TeamOutlined />;
+  }
+};
 
 export const SimplePermissionsPage = () => {
   const { employeeId } = useParams<{ employeeId: string }>();
@@ -46,56 +52,29 @@ export const SimplePermissionsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [employeeEmail, setEmployeeEmail] = useState('');
-  const [permissions, setPermissions] = useState<SimplePermission[]>([
-    {
-      resource: 'employees',
-      label: 'Employees',
-      icon: <UserOutlined />,
-      description: 'View and manage employee information',
-      canViewOwn: true,
-      canEditOwn: false,
-      canViewTeam: false,
-      canEditTeam: false,
-      canViewOrg: false,
-      canEditOrg: false,
-    },
-    {
-      resource: 'documents',
-      label: 'Documents',
-      icon: <TeamOutlined />,
-      description: 'View and manage documents',
-      canViewOwn: true,
-      canEditOwn: false,
-      canViewTeam: false,
-      canEditTeam: false,
-      canViewOrg: false,
-      canEditOrg: false,
-    },
-    {
-      resource: 'departments',
-      label: 'Organization Structure',
-      icon: <BankOutlined />,
-      description: 'View and manage departments and positions',
-      canViewOwn: false,
-      canEditOwn: false,
-      canViewTeam: false,
-      canEditTeam: false,
-      canViewOrg: false,
-      canEditOrg: false,
-    },
-  ]);
+  const [employeeName, setEmployeeName] = useState('');
+  const [permissions, setPermissions] = useState<ResourcePermission[]>([]);
 
   useEffect(() => {
     loadEmployee();
   }, [employeeId]);
 
   const loadEmployee = async () => {
+    if (!employeeId) {
+      message.error('Employee ID is required');
+      navigate('/admin/employees');
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await http.get(`/api/orgadmin/employees/${employeeId}`);
-      setEmployeeEmail(response.data.user.email);
+      const data = await getEmployeeSimplePermissions(employeeId);
+      setEmployeeEmail(data.email);
+      setEmployeeName(`${data.firstName || ''} ${data.lastName || ''}`.trim() || data.email);
+      setPermissions(data.permissions);
     } catch (err: any) {
-      message.error('Failed to load employee');
+      message.error(err.response?.data?.error || 'Failed to load employee permissions');
+      console.error('Load permissions error:', err);
     } finally {
       setLoading(false);
     }
@@ -103,7 +82,7 @@ export const SimplePermissionsPage = () => {
 
   const handlePermissionChange = (
     index: number,
-    field: keyof SimplePermission,
+    field: keyof ResourcePermission,
     value: boolean
   ) => {
     const updated = [...permissions];
@@ -124,15 +103,31 @@ export const SimplePermissionsPage = () => {
   };
 
   const handleSave = async () => {
+    if (!employeeId) return;
+
     try {
       setSaving(true);
 
-      // Convert simple permissions to permission group IDs
-      // For now, this is a simplified implementation
+      // Convert to API request format (exclude label and description)
+      const request = {
+        permissions: permissions.map(p => ({
+          resource: p.resource,
+          canViewOwn: p.canViewOwn,
+          canEditOwn: p.canEditOwn,
+          canViewTeam: p.canViewTeam,
+          canEditTeam: p.canEditTeam,
+          canViewOrg: p.canViewOrg,
+          canEditOrg: p.canEditOrg,
+        })),
+      };
+
+      const updatedData = await updateEmployeeSimplePermissions(employeeId, request);
+      setPermissions(updatedData.permissions);
       message.success('Permissions saved successfully');
 
     } catch (err: any) {
-      message.error('Failed to save permissions');
+      message.error(err.response?.data?.error || 'Failed to save permissions');
+      console.error('Save permissions error:', err);
     } finally {
       setSaving(false);
     }
@@ -154,7 +149,10 @@ export const SimplePermissionsPage = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <Title level={3} style={{ margin: 0 }}>Simple Permissions</Title>
-              <Text type="secondary">{employeeEmail}</Text>
+              <Text type="secondary">{employeeName}</Text>
+              {employeeName !== employeeEmail && (
+                <div><Text type="secondary" style={{ fontSize: 12 }}>{employeeEmail}</Text></div>
+              )}
             </div>
             <Space>
               <Button
@@ -198,7 +196,7 @@ export const SimplePermissionsPage = () => {
                   {/* Resource Header */}
                   <div>
                     <Space>
-                      <span style={{ fontSize: 20 }}>{perm.icon}</span>
+                      <span style={{ fontSize: 20 }}>{getResourceIcon(perm.resource)}</span>
                       <Title level={5} style={{ margin: 0 }}>{perm.label}</Title>
                     </Space>
                     <Text type="secondary" style={{ fontSize: 13 }}>

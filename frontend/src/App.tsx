@@ -57,6 +57,7 @@ import { BulkImportPage } from './pages/admin/employees/BulkImportPage';
 // Admin Pages - Permissions
 import { PermissionGroupsPage } from './pages/admin/permissions/PermissionGroupsPage';
 import { PermissionGroupDetailPage } from './pages/admin/permissions/PermissionGroupDetailPage';
+import { SimplePermissionsPage } from './pages/admin/permissions/SimplePermissionsPage';
 
 // Admin Pages - Roles
 import { RolesPage } from './pages/admin/roles/RolesPage';
@@ -384,6 +385,16 @@ function App() {
         />
 
         {/* Permission Management Routes */}
+        <Route
+          path="/admin/permissions/employee/:employeeId"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <SimplePermissionsPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/permissions/groups"
           element={
