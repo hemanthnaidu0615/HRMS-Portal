@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space, Tooltip, Modal, Input, Upload, message, Tag, Popconfirm } from 'antd';
+import {
+  Card, Table, Button, Alert, Typography, Space, Tooltip, Modal, Input,
+  Upload, message, Tag, Popconfirm, Tabs, Empty, Badge
+} from 'antd';
 import {
   FileOutlined,
   UploadOutlined,
@@ -10,8 +13,13 @@ import {
   CloseOutlined,
   DeleteOutlined,
   SwapOutlined,
+  FolderOutlined,
+  TeamOutlined,
+  BankOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import {
+  getMyDocuments,
   getOrganizationDocuments,
   downloadDocument,
   approveDocument,
@@ -22,7 +30,7 @@ import {
 import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 import { useAuth } from '../../auth/useAuth';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 interface Document {
@@ -41,11 +49,22 @@ interface Document {
 export const OrgDocumentsPage = () => {
   const navigate = useNavigate();
   const { roles } = useAuth();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('my');
+
+  // Document states for each tab
+  const [myDocuments, setMyDocuments] = useState<Document[]>([]);
+  const [orgDocuments, setOrgDocuments] = useState<Document[]>([]);
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [previewVisible, setPreviewVisible] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<{ id: string; fileName: string; fileType: string | null; filePath: string; createdAt: string } | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{
+    id: string;
+    fileName: string;
+    fileType: string | null;
+    filePath: string;
+    createdAt: string
+  } | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Reject modal state
@@ -59,14 +78,21 @@ export const OrgDocumentsPage = () => {
   const [replaceFile, setReplaceFile] = useState<File | null>(null);
 
   useEffect(() => {
-    loadDocuments();
-  }, []);
+    loadDocumentsForTab(activeTab);
+  }, [activeTab]);
 
-  const loadDocuments = async () => {
+  const loadDocumentsForTab = async (tab: string) => {
     try {
       setLoading(true);
-      const response = await getOrganizationDocuments();
-      setDocuments(response);
+      setError('');
+
+      if (tab === 'my') {
+        const docs = await getMyDocuments();
+        setMyDocuments(Array.isArray(docs) ? docs : []);
+      } else if (tab === 'org') {
+        const docs = await getOrganizationDocuments();
+        setOrgDocuments(Array.isArray(docs) ? docs : []);
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load documents');
     } finally {
@@ -74,15 +100,28 @@ export const OrgDocumentsPage = () => {
     }
   };
 
+  const getCurrentDocuments = (): Document[] => {
+    if (activeTab === 'my') return myDocuments;
+    if (activeTab === 'org') return orgDocuments;
+    return [];
+  };
+
   const openPreview = (doc: Document) => {
-    setPreviewDoc({ id: doc.id, fileName: doc.fileName, fileType: doc.fileType || null, filePath: doc.filePath, createdAt: doc.createdAt });
+    setPreviewDoc({
+      id: doc.id,
+      fileName: doc.fileName,
+      fileType: doc.fileType || null,
+      filePath: doc.filePath,
+      createdAt: doc.createdAt
+    });
     setPreviewVisible(true);
   };
 
   const handleDownload = async (doc: Document) => {
     try {
       const res = await downloadDocument(doc.id);
-      const contentType = (res as any)?.headers?.['content-type'] || (res as any)?.headers?.get?.('content-type') || undefined;
+      const contentType = (res as any)?.headers?.['content-type'] ||
+                         (res as any)?.headers?.get?.('content-type') || undefined;
       const blob = new Blob([res.data], contentType ? { type: contentType } : undefined);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -92,6 +131,7 @@ export const OrgDocumentsPage = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      message.success('Document downloaded successfully');
     } catch (e) {
       message.error('Failed to download document');
     }
@@ -102,7 +142,7 @@ export const OrgDocumentsPage = () => {
       setActionLoading(docId);
       await approveDocument(docId);
       message.success('Document approved successfully');
-      await loadDocuments();
+      await loadDocumentsForTab(activeTab);
     } catch (err: any) {
       message.error(err.response?.data?.error || 'Failed to approve document');
     } finally {
@@ -129,7 +169,7 @@ export const OrgDocumentsPage = () => {
       setRejectModalVisible(false);
       setRejectDocId(null);
       setRejectionReason('');
-      await loadDocuments();
+      await loadDocumentsForTab(activeTab);
     } catch (err: any) {
       message.error(err.response?.data?.error || 'Failed to reject document');
     } finally {
@@ -142,7 +182,7 @@ export const OrgDocumentsPage = () => {
       setActionLoading(docId);
       await deleteDocument(docId);
       message.success('Document deleted successfully');
-      await loadDocuments();
+      await loadDocumentsForTab(activeTab);
     } catch (err: any) {
       message.error(err.response?.data?.error || 'Failed to delete document');
     } finally {
@@ -169,7 +209,7 @@ export const OrgDocumentsPage = () => {
       setReplaceModalVisible(false);
       setReplaceDocId(null);
       setReplaceFile(null);
-      await loadDocuments();
+      await loadDocumentsForTab(activeTab);
     } catch (err: any) {
       message.error(err.response?.data?.error || 'Failed to replace document');
     } finally {
@@ -178,7 +218,7 @@ export const OrgDocumentsPage = () => {
   };
 
   const getApprovalStatusTag = (status?: string, reason?: string) => {
-    if (!status) return <Tag color="default">Pending</Tag>;
+    if (!status || status === 'PENDING') return <Tag color="warning">Pending</Tag>;
     if (status === 'APPROVED') return <Tag color="success">Approved</Tag>;
     if (status === 'REJECTED') return (
       <Tooltip title={reason || 'No reason provided'}>
@@ -190,66 +230,93 @@ export const OrgDocumentsPage = () => {
 
   const columns = [
     {
-      title: 'Employee ID',
-      dataIndex: 'employeeId',
-      key: 'employeeId',
-      sorter: (a: Document, b: Document) => a.employeeId.localeCompare(b.employeeId),
-    },
-    {
       title: 'File Name',
       dataIndex: 'fileName',
       key: 'fileName',
       sorter: (a: Document, b: Document) => a.fileName.localeCompare(b.fileName),
-      render: (text: string) => (
+      render: (text: string, record: Document) => (
         <Space>
-          <FileOutlined />
-          {text}
+          <FileOutlined style={{ color: '#1890ff', fontSize: 16 }} />
+          <div>
+            <div style={{ fontWeight: 500 }}>{text}</div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {record.fileType || 'Unknown type'}
+            </Text>
+          </div>
         </Space>
       ),
     },
+    ...(activeTab !== 'my' ? [{
+      title: 'Employee ID',
+      dataIndex: 'employeeId',
+      key: 'employeeId',
+      width: 280,
+      sorter: (a: Document, b: Document) => a.employeeId.localeCompare(b.employeeId),
+      render: (id: string) => <Text code>{id}</Text>,
+    }] : []),
     {
-      title: 'File Type',
-      dataIndex: 'fileType',
-      key: 'fileType',
-    },
-    {
-      title: 'Approval Status',
+      title: 'Status',
       dataIndex: 'approvalStatus',
       key: 'approvalStatus',
-      render: (status: string, record: Document) => getApprovalStatusTag(status, record.rejectionReason),
+      width: 120,
+      filters: [
+        { text: 'Pending', value: 'PENDING' },
+        { text: 'Approved', value: 'APPROVED' },
+        { text: 'Rejected', value: 'REJECTED' },
+      ],
+      onFilter: (value: any, record: Document) =>
+        (record.approvalStatus || 'PENDING') === value,
+      render: (status: string, record: Document) =>
+        getApprovalStatusTag(status, record.rejectionReason),
     },
     {
-      title: 'Created Date',
+      title: 'Uploaded',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 180,
       sorter: (a: Document, b: Document) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (date: string) => new Date(date).toLocaleString(),
+      render: (date: string) => (
+        <Tooltip title={new Date(date).toLocaleString()}>
+          <Text>{new Date(date).toLocaleDateString()}</Text>
+        </Tooltip>
+      ),
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 400,
+      width: 180,
+      fixed: 'right' as const,
       render: (record: Document) => (
         <Space size={4} wrap>
-          <Tooltip title="View">
-            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => openPreview(record)} />
+          <Tooltip title="Preview">
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => openPreview(record)}
+            />
           </Tooltip>
           <Tooltip title="Download">
-            <Button type="text" size="small" icon={<DownloadOutlined />} onClick={() => handleDownload(record)} />
+            <Button
+              type="text"
+              size="small"
+              icon={<DownloadOutlined />}
+              onClick={() => handleDownload(record)}
+            />
           </Tooltip>
 
-          {roles.includes('orgadmin') && (
+          {roles.includes('orgadmin') && activeTab === 'org' && (
             <>
               {record.approvalStatus !== 'APPROVED' && (
                 <Tooltip title="Approve">
                   <Button
-                    type="primary"
+                    type="link"
                     size="small"
                     icon={<CheckOutlined />}
                     onClick={() => handleApprove(record.id)}
                     loading={actionLoading === record.id}
-                    style={{ background: '#52c41a', borderColor: '#52c41a', borderRadius: 6 }}
+                    style={{ color: '#52c41a' }}
                   >
                     Approve
                   </Button>
@@ -259,12 +326,12 @@ export const OrgDocumentsPage = () => {
               {record.approvalStatus !== 'APPROVED' && (
                 <Tooltip title="Reject">
                   <Button
+                    type="link"
                     danger
                     size="small"
                     icon={<CloseOutlined />}
                     onClick={() => openRejectModal(record.id)}
                     loading={actionLoading === record.id}
-                    style={{ borderRadius: 6 }}
                   >
                     Reject
                   </Button>
@@ -273,13 +340,11 @@ export const OrgDocumentsPage = () => {
 
               <Tooltip title="Replace">
                 <Button
+                  type="text"
                   size="small"
                   icon={<SwapOutlined />}
                   onClick={() => openReplaceModal(record.id)}
-                  style={{ borderRadius: 6 }}
-                >
-                  Replace
-                </Button>
+                />
               </Tooltip>
 
               <Popconfirm
@@ -291,19 +356,124 @@ export const OrgDocumentsPage = () => {
               >
                 <Tooltip title="Delete">
                   <Button
+                    type="text"
                     danger
                     size="small"
                     icon={<DeleteOutlined />}
                     loading={actionLoading === record.id}
-                    style={{ borderRadius: 6 }}
-                  >
-                    Delete
-                  </Button>
+                  />
                 </Tooltip>
               </Popconfirm>
             </>
           )}
         </Space>
+      ),
+    },
+  ];
+
+  const tabItems = [
+    {
+      key: 'my',
+      label: (
+        <span>
+          <UserOutlined /> My Documents
+          <Badge
+            count={myDocuments.length}
+            style={{ marginLeft: 8, backgroundColor: '#1890ff' }}
+            showZero
+          />
+        </span>
+      ),
+      children: (
+        <div>
+          {error && <Alert message={error} type="error" showIcon closable style={{ marginBottom: 16 }} />}
+
+          {myDocuments.length === 0 && !loading ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div>
+                  <Text type="secondary">No documents uploaded yet</Text>
+                  <div style={{ marginTop: 8 }}>
+                    <Button
+                      type="primary"
+                      icon={<UploadOutlined />}
+                      onClick={() => navigate('/documents/upload-mine')}
+                    >
+                      Upload Your First Document
+                    </Button>
+                  </div>
+                </div>
+              }
+            />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={myDocuments}
+              loading={loading}
+              rowKey="id"
+              locale={{ emptyText: 'No documents found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} documents`,
+              }}
+              scroll={{ x: 900 }}
+            />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'org',
+      label: (
+        <span>
+          <BankOutlined /> Organization Documents
+          <Badge
+            count={orgDocuments.length}
+            style={{ marginLeft: 8, backgroundColor: '#52c41a' }}
+            showZero
+          />
+        </span>
+      ),
+      children: (
+        <div>
+          <Alert
+            message="Viewing based on your permissions"
+            description="You're seeing documents you have permission to access (own team, department, or full organization)"
+            type="info"
+            showIcon
+            closable
+            style={{ marginBottom: 16 }}
+          />
+
+          {error && <Alert message={error} type="error" showIcon closable style={{ marginBottom: 16 }} />}
+
+          {orgDocuments.length === 0 && !loading ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div>
+                  <Text type="secondary">No organization documents available</Text>
+                </div>
+              }
+            />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={orgDocuments}
+              loading={loading}
+              rowKey="id"
+              locale={{ emptyText: 'No documents found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} documents`,
+              }}
+              scroll={{ x: 1200 }}
+            />
+          )}
+        </div>
       ),
     },
   ];
@@ -319,36 +489,37 @@ export const OrgDocumentsPage = () => {
         >
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Title level={3} style={{ margin: 0 }}>Organization Documents</Title>
-              {roles.includes('orgadmin') && (
+              <Title level={3} style={{ margin: 0 }}>
+                <FolderOutlined style={{ marginRight: 8 }} />
+                Documents
+              </Title>
+              <Space>
                 <Button
-                  type="primary"
-                  size="large"
+                  type="default"
                   icon={<UploadOutlined />}
-                  onClick={() => navigate('/documents/upload')}
+                  onClick={() => navigate('/documents/upload-mine')}
                 >
-                  Upload Document
+                  Upload My Document
                 </Button>
-              )}
+                {roles.includes('orgadmin') && (
+                  <Button
+                    type="primary"
+                    icon={<UploadOutlined />}
+                    onClick={() => navigate('/documents/upload')}
+                  >
+                    Upload for Employee
+                  </Button>
+                )}
+              </Space>
             </div>
 
-            {error && (
-              <Alert message={error} type="error" showIcon closable />
-            )}
-
-            <Table
-              columns={columns}
-              dataSource={documents}
-              loading={loading}
-              rowKey="id"
-              locale={{ emptyText: 'No documents found' }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} documents`,
-              }}
-              scroll={{ x: 1200 }}
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={tabItems}
+              size="large"
             />
+
             {previewDoc && (
               <DocumentPreviewModal
                 document={previewDoc}
@@ -373,6 +544,7 @@ export const OrgDocumentsPage = () => {
         confirmLoading={actionLoading === rejectDocId}
       >
         <Space direction="vertical" style={{ width: '100%' }}>
+          <Text>Please provide a reason for rejecting this document:</Text>
           <TextArea
             rows={4}
             placeholder="Enter rejection reason..."
@@ -395,6 +567,7 @@ export const OrgDocumentsPage = () => {
         confirmLoading={actionLoading === replaceDocId}
       >
         <Space direction="vertical" style={{ width: '100%' }}>
+          <Text>Upload a new file to replace the existing document:</Text>
           <Upload
             beforeUpload={(file) => {
               setReplaceFile(file);
@@ -405,6 +578,9 @@ export const OrgDocumentsPage = () => {
           >
             <Button icon={<UploadOutlined />}>Select File</Button>
           </Upload>
+          {replaceFile && (
+            <Text type="secondary">Selected: {replaceFile.name}</Text>
+          )}
         </Space>
       </Modal>
     </div>
