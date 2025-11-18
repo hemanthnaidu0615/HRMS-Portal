@@ -39,6 +39,7 @@ import { OrgDocumentsPage } from './pages/documents/OrgDocumentsPage';
 import { MyIncomingRequestsPage } from './pages/documentRequests/MyIncomingRequestsPage';
 import { MyOutgoingRequestsPage } from './pages/documentRequests/MyOutgoingRequestsPage';
 import { OrgDocumentRequestsPage } from './pages/documentRequests/OrgDocumentRequestsPage';
+import { RequestDocumentPage } from './pages/documentRequests/RequestDocumentPage';
 
 // Admin Pages - Structure
 import { DepartmentsPage } from './pages/admin/structure/DepartmentsPage';
@@ -251,6 +252,16 @@ function App() {
         />
 
         {/* Document Request Routes */}
+        <Route
+          path="/document-requests/create"
+          element={
+            <ProtectedRoute>
+              <LayoutWrapper>
+                <RequestDocumentPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/document-requests/incoming"
           element={

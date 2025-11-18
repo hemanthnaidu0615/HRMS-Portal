@@ -73,6 +73,13 @@ export const DashboardPage: React.FC = () => {
   // Quick actions
   const quickActions = [
     {
+      title: 'Request Document',
+      description: 'Request a document from colleague',
+      icon: <FileTextOutlined />,
+      onClick: () => navigate('/document-requests/create'),
+      color: '#667eea',
+    },
+    {
       title: 'Upload Document',
       description: 'Add a new document to your profile',
       icon: <PlusOutlined />,
@@ -87,18 +94,11 @@ export const DashboardPage: React.FC = () => {
       color: '#1890ff',
     },
     {
-      title: 'Request Document',
-      description: 'Request a document from colleague',
-      icon: <FileTextOutlined />,
-      onClick: () => navigate('/document-requests/my'),
+      title: 'Incoming Requests',
+      description: 'View document requests you received',
+      icon: <ClockCircleOutlined />,
+      onClick: () => navigate('/document-requests/incoming'),
       color: '#52c41a',
-    },
-    {
-      title: 'View Calendar',
-      description: 'Check upcoming events',
-      icon: <CalendarOutlined />,
-      onClick: () => {},
-      color: '#faad14',
     },
   ];
 

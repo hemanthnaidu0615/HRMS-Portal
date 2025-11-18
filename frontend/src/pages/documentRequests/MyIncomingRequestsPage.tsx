@@ -246,23 +246,37 @@ export const MyIncomingRequestsPage: React.FC = () => {
 
   return (
     <div style={{ padding: 0 }}>
+      {/* Header Card with Gradient */}
       <Card
         bordered={false}
         style={{
-          borderRadius: 12,
-          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)',
+          borderRadius: 16,
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          marginBottom: 24,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+        }}
+        bodyStyle={{ padding: '32px' }}
+      >
+        <Space direction="vertical" size={8}>
+          <Title level={2} style={{ margin: 0, color: 'white' }}>
+            <InboxOutlined /> Incoming Document Requests
+          </Title>
+          <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 15 }}>
+            Requests from others asking you to upload documents
+          </Text>
+        </Space>
+      </Card>
+
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: 16,
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
         }}
       >
-        {/* Header */}
+        {/* Stats and Filters */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ marginBottom: 16 }}>
-            <Title level={3} style={{ margin: 0, marginBottom: 4 }}>
-              <InboxOutlined /> Incoming Document Requests
-            </Title>
-            <Text type="secondary">
-              Requests from others asking you to upload documents
-            </Text>
-          </div>
 
           {/* Stats */}
           <Space size={16} wrap style={{ marginBottom: 16 }}>
