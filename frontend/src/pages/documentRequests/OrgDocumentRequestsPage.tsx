@@ -1,10 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Card, Table, Button, Select, Input, Alert, Typography, Space, Tag } from 'antd';
-import { CheckOutlined, CloseOutlined, FileTextOutlined } from '@ant-design/icons';
-import { getOrgDocumentRequests, updateDocumentRequestStatus, createDocumentRequest } from '../../api/documentRequestsApi';
+import {
+  Card, Table, Button, Select, Input, Alert, Typography, Space, Tag,
+  Tabs, Empty, Badge, Modal, message, Tooltip
+} from 'antd';
+import {
+  CheckOutlined, CloseOutlined, FileTextOutlined, InboxOutlined,
+  SendOutlined, BankOutlined, UserOutlined, MailOutlined
+} from '@ant-design/icons';
+import {
+  getMyDocumentRequestsAsTarget,
+  getMyDocumentRequestsAsRequester,
+  getOrgDocumentRequests,
+  updateDocumentRequestStatus,
+  createDocumentRequest
+} from '../../api/documentRequestsApi';
 import { orgadminApi, Employee } from '../../api/orgadminApi';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface DocumentRequest {
   id: string;
@@ -23,10 +35,19 @@ interface DocumentRequest {
 }
 
 export const OrgDocumentRequestsPage = () => {
-  const [requests, setRequests] = useState<DocumentRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('incoming');
+
+  // Document request states for each tab
+  const [incomingRequests, setIncomingRequests] = useState<DocumentRequest[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<DocumentRequest[]>([]);
+  const [orgRequests, setOrgRequests] = useState<DocumentRequest[]>([]);
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Create request modal
+  const [createModalVisible, setCreateModalVisible] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [requestMessage, setRequestMessage] = useState('');
@@ -34,15 +55,28 @@ export const OrgDocumentRequestsPage = () => {
   const [createError, setCreateError] = useState('');
 
   useEffect(() => {
-    loadRequests();
+    loadRequestsForTab(activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
     loadEmployees();
   }, []);
 
-  const loadRequests = async () => {
+  const loadRequestsForTab = async (tab: string) => {
     try {
       setLoading(true);
-      const response = await getOrgDocumentRequests();
-      setRequests(response);
+      setError('');
+
+      if (tab === 'incoming') {
+        const response = await getMyDocumentRequestsAsTarget();
+        setIncomingRequests(Array.isArray(response) ? response : []);
+      } else if (tab === 'outgoing') {
+        const response = await getMyDocumentRequestsAsRequester();
+        setOutgoingRequests(Array.isArray(response) ? response : []);
+      } else if (tab === 'org') {
+        const response = await getOrgDocumentRequests();
+        setOrgRequests(Array.isArray(response) ? response : []);
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to load requests');
     } finally {
@@ -55,9 +89,15 @@ export const OrgDocumentRequestsPage = () => {
       const data = await orgadminApi.getEmployees();
       setEmployees(data);
     } catch (err: any) {
-      // Keep page usable even if employees fail to load
-      setCreateError(err.response?.data?.error || 'Failed to load employees for requests');
+      console.error('Failed to load employees:', err);
     }
+  };
+
+  const openCreateModal = () => {
+    setCreateModalVisible(true);
+    setSelectedEmployeeId('');
+    setRequestMessage('');
+    setCreateError('');
   };
 
   const handleCreateRequest = async () => {
@@ -70,9 +110,13 @@ export const OrgDocumentRequestsPage = () => {
       setCreateError('');
       setCreateLoading(true);
       await createDocumentRequest(selectedEmployeeId, requestMessage.trim());
+      message.success('Document request created successfully');
+      setCreateModalVisible(false);
       setRequestMessage('');
       setSelectedEmployeeId('');
-      await loadRequests();
+      // Refresh outgoing requests
+      await loadRequestsForTab('outgoing');
+      setActiveTab('outgoing');
     } catch (err: any) {
       setCreateError(err.response?.data?.error || 'Failed to create request');
     } finally {
@@ -84,9 +128,10 @@ export const OrgDocumentRequestsPage = () => {
     try {
       setActionLoading(requestId);
       await updateDocumentRequestStatus(requestId, status);
-      await loadRequests();
+      message.success(`Request ${status.toLowerCase()} successfully`);
+      await loadRequestsForTab(activeTab);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to update status');
+      message.error(err.response?.data?.error || 'Failed to update status');
     } finally {
       setActionLoading(null);
     }
@@ -98,24 +143,30 @@ export const OrgDocumentRequestsPage = () => {
     REJECTED: 'red',
   };
 
-  const columns = [
+  const getStatusTag = (status: string) => (
+    <Tag color={statusColors[status] || 'default'}>
+      {status}
+    </Tag>
+  );
+
+  const getNameDisplay = (firstName: string | null, lastName: string | null, email: string) => {
+    const fullName = `${firstName || ''} ${lastName || ''}`.trim();
+    return fullName || email;
+  };
+
+  const incomingColumns = [
     {
-      title: 'Requester',
-      dataIndex: 'requesterUserId',
-      key: 'requesterUserId',
-      render: (_: string, record: DocumentRequest) => {
-        const fullName = `${record.requesterFirstName || ''} ${record.requesterLastName || ''}`.trim();
-        return fullName || record.requesterEmail;
-      },
-    },
-    {
-      title: 'Target Employee',
-      dataIndex: 'targetEmployeeId',
-      key: 'targetEmployeeId',
-      render: (_: string, record: DocumentRequest) => {
-        const fullName = `${record.targetEmployeeFirstName || ''} ${record.targetEmployeeLastName || ''}`.trim();
-        return fullName || record.targetEmployeeEmail;
-      },
+      title: 'From',
+      dataIndex: 'requesterEmail',
+      key: 'requesterEmail',
+      render: (_: string, record: DocumentRequest) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>
+            {getNameDisplay(record.requesterFirstName, record.requesterLastName, record.requesterEmail)}
+          </div>
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.requesterEmail}</Text>
+        </div>
+      ),
     },
     {
       title: 'Message',
@@ -123,7 +174,7 @@ export const OrgDocumentRequestsPage = () => {
       key: 'message',
       render: (text: string) => (
         <Space>
-          <FileTextOutlined />
+          <FileTextOutlined style={{ color: '#1890ff' }} />
           {text}
         </Space>
       ),
@@ -132,59 +183,333 @@ export const OrgDocumentRequestsPage = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
-        <Tag color={statusColors[status] || 'default'} style={{ borderRadius: 6 }}>
-          {status}
-        </Tag>
-      ),
+      width: 120,
+      filters: [
+        { text: 'Requested', value: 'REQUESTED' },
+        { text: 'Completed', value: 'COMPLETED' },
+        { text: 'Rejected', value: 'REJECTED' },
+      ],
+      onFilter: (value: any, record: DocumentRequest) => record.status === value,
+      render: (status: string) => getStatusTag(status),
     },
     {
-      title: 'Created At',
+      title: 'Requested',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 180,
       sorter: (a: DocumentRequest, b: DocumentRequest) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (date: string) => new Date(date).toLocaleString(),
+      render: (date: string) => (
+        <Tooltip title={new Date(date).toLocaleString()}>
+          <Text>{new Date(date).toLocaleDateString()}</Text>
+        </Tooltip>
+      ),
     },
     {
       title: 'Actions',
       key: 'actions',
+      width: 180,
+      fixed: 'right' as const,
       render: (record: DocumentRequest) => {
         if (record.status !== 'REQUESTED') {
-          return <span style={{ color: '#999' }}>-</span>;
+          return <Text type="secondary">—</Text>;
         }
 
         return (
-          <Space>
+          <Space size={4}>
             <Button
-              type="primary"
+              type="link"
               size="small"
               icon={<CheckOutlined />}
               loading={actionLoading === record.id}
               disabled={actionLoading !== null}
               onClick={() => handleStatusUpdate(record.id, 'COMPLETED')}
-              style={{
-                background: '#52c41a',
-                borderColor: '#52c41a',
-                borderRadius: 6
-              }}
+              style={{ color: '#52c41a' }}
             >
-              Approve
+              Complete
             </Button>
             <Button
+              type="link"
               danger
               size="small"
               icon={<CloseOutlined />}
               loading={actionLoading === record.id}
               disabled={actionLoading !== null}
               onClick={() => handleStatusUpdate(record.id, 'REJECTED')}
-              style={{ borderRadius: 6 }}
             >
               Reject
             </Button>
           </Space>
         );
       },
+    },
+  ];
+
+  const outgoingColumns = [
+    {
+      title: 'To',
+      dataIndex: 'targetEmployeeEmail',
+      key: 'targetEmployeeEmail',
+      render: (_: string, record: DocumentRequest) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>
+            {getNameDisplay(record.targetEmployeeFirstName, record.targetEmployeeLastName, record.targetEmployeeEmail)}
+          </div>
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.targetEmployeeEmail}</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Message',
+      dataIndex: 'message',
+      key: 'message',
+      render: (text: string) => (
+        <Space>
+          <FileTextOutlined style={{ color: '#1890ff' }} />
+          {text}
+        </Space>
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      filters: [
+        { text: 'Requested', value: 'REQUESTED' },
+        { text: 'Completed', value: 'COMPLETED' },
+        { text: 'Rejected', value: 'REJECTED' },
+      ],
+      onFilter: (value: any, record: DocumentRequest) => record.status === value,
+      render: (status: string) => getStatusTag(status),
+    },
+    {
+      title: 'Requested',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 180,
+      sorter: (a: DocumentRequest, b: DocumentRequest) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (date: string) => (
+        <Tooltip title={new Date(date).toLocaleString()}>
+          <Text>{new Date(date).toLocaleDateString()}</Text>
+        </Tooltip>
+      ),
+    },
+  ];
+
+  const orgColumns = [
+    {
+      title: 'Requester',
+      dataIndex: 'requesterEmail',
+      key: 'requesterEmail',
+      render: (_: string, record: DocumentRequest) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>
+            {getNameDisplay(record.requesterFirstName, record.requesterLastName, record.requesterEmail)}
+          </div>
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.requesterEmail}</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Target',
+      dataIndex: 'targetEmployeeEmail',
+      key: 'targetEmployeeEmail',
+      render: (_: string, record: DocumentRequest) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>
+            {getNameDisplay(record.targetEmployeeFirstName, record.targetEmployeeLastName, record.targetEmployeeEmail)}
+          </div>
+          <Text type="secondary" style={{ fontSize: 12 }}>{record.targetEmployeeEmail}</Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Message',
+      dataIndex: 'message',
+      key: 'message',
+      render: (text: string) => (
+        <Space>
+          <FileTextOutlined style={{ color: '#1890ff' }} />
+          {text}
+        </Space>
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      filters: [
+        { text: 'Requested', value: 'REQUESTED' },
+        { text: 'Completed', value: 'COMPLETED' },
+        { text: 'Rejected', value: 'REJECTED' },
+      ],
+      onFilter: (value: any, record: DocumentRequest) => record.status === value,
+      render: (status: string) => getStatusTag(status),
+    },
+    {
+      title: 'Requested',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 160,
+      sorter: (a: DocumentRequest, b: DocumentRequest) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (date: string) => (
+        <Tooltip title={new Date(date).toLocaleString()}>
+          <Text>{new Date(date).toLocaleDateString()}</Text>
+        </Tooltip>
+      ),
+    },
+  ];
+
+  const tabItems = [
+    {
+      key: 'incoming',
+      label: (
+        <span>
+          <InboxOutlined /> Incoming Requests
+          <Badge
+            count={incomingRequests.filter(r => r.status === 'REQUESTED').length}
+            style={{ marginLeft: 8, backgroundColor: '#ff4d4f' }}
+          />
+        </span>
+      ),
+      children: (
+        <div>
+          {error && <Alert message={error} type="error" showIcon closable style={{ marginBottom: 16 }} />}
+
+          {incomingRequests.length === 0 && !loading ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div>
+                  <Text type="secondary">No incoming document requests</Text>
+                </div>
+              }
+            />
+          ) : (
+            <Table
+              columns={incomingColumns}
+              dataSource={incomingRequests}
+              loading={loading}
+              rowKey="id"
+              locale={{ emptyText: 'No requests found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} requests`,
+              }}
+              scroll={{ x: 900 }}
+            />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'outgoing',
+      label: (
+        <span>
+          <SendOutlined /> My Requests
+          <Badge
+            count={outgoingRequests.length}
+            style={{ marginLeft: 8, backgroundColor: '#1890ff' }}
+            showZero
+          />
+        </span>
+      ),
+      children: (
+        <div>
+          {error && <Alert message={error} type="error" showIcon closable style={{ marginBottom: 16 }} />}
+
+          {outgoingRequests.length === 0 && !loading ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div>
+                  <Text type="secondary">No outgoing requests</Text>
+                  <div style={{ marginTop: 8 }}>
+                    <Button
+                      type="primary"
+                      icon={<MailOutlined />}
+                      onClick={openCreateModal}
+                    >
+                      Create Your First Request
+                    </Button>
+                  </div>
+                </div>
+              }
+            />
+          ) : (
+            <Table
+              columns={outgoingColumns}
+              dataSource={outgoingRequests}
+              loading={loading}
+              rowKey="id"
+              locale={{ emptyText: 'No requests found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} requests`,
+              }}
+              scroll={{ x: 900 }}
+            />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'org',
+      label: (
+        <span>
+          <BankOutlined /> Organization Requests
+          <Badge
+            count={orgRequests.length}
+            style={{ marginLeft: 8, backgroundColor: '#52c41a' }}
+            showZero
+          />
+        </span>
+      ),
+      children: (
+        <div>
+          <Alert
+            message="Viewing based on your permissions"
+            description="You're seeing requests you have permission to access (own team, department, or full organization)"
+            type="info"
+            showIcon
+            closable
+            style={{ marginBottom: 16 }}
+          />
+
+          {error && <Alert message={error} type="error" showIcon closable style={{ marginBottom: 16 }} />}
+
+          {orgRequests.length === 0 && !loading ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div>
+                  <Text type="secondary">No organization requests available</Text>
+                </div>
+              }
+            />
+          ) : (
+            <Table
+              columns={orgColumns}
+              dataSource={orgRequests}
+              loading={loading}
+              rowKey="id"
+              locale={{ emptyText: 'No requests found' }}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Total ${total} requests`,
+              }}
+              scroll={{ x: 1100 }}
+            />
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -198,111 +523,92 @@ export const OrgDocumentRequestsPage = () => {
           }}
         >
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Title level={3}>Organization Document Requests</Title>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Title level={3} style={{ margin: 0 }}>
+                <FileTextOutlined style={{ marginRight: 8 }} />
+                Document Requests
+              </Title>
+              <Button
+                type="primary"
+                icon={<MailOutlined />}
+                onClick={openCreateModal}
+              >
+                Request Document
+              </Button>
+            </div>
 
-            {error && (
-              <Alert message={error} type="error" showIcon closable />
-            )}
-
-            <Card
-              title="Request Document from Employee"
-              style={{
-                background: '#f5f5f5',
-                borderRadius: 8,
-              }}
-              bodyStyle={{ padding: 16 }}
-            >
-              {createError && (
-                <Alert
-                  message={createError}
-                  type="error"
-                  showIcon
-                  closable
-                  style={{ marginBottom: 16 }}
-                />
-              )}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr auto',
-                gap: 12,
-                alignItems: 'end'
-              }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: 8,
-                    fontWeight: 500
-                  }}>
-                    Employee
-                  </label>
-                  <Select
-                    value={selectedEmployeeId}
-                    onChange={setSelectedEmployeeId}
-                    options={employees.map(emp => {
-                      const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
-                      const displayName = fullName || emp.email;
-                      return {
-                        label: displayName,
-                        value: emp.employeeId
-                      };
-                    })}
-                    placeholder="Select employee"
-                    style={{ width: '100%', borderRadius: 8 }}
-                    size="large"
-                    showSearch
-                    filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                    }
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: 8,
-                    fontWeight: 500
-                  }}>
-                    Message
-                  </label>
-                  <Input
-                    value={requestMessage}
-                    onChange={(e) => setRequestMessage(e.target.value)}
-                    placeholder="e.g. Please upload your ID proof"
-                    size="large"
-                    style={{ borderRadius: 8 }}
-                  />
-                </div>
-                <Button
-                  type="primary"
-                  onClick={handleCreateRequest}
-                  loading={createLoading}
-                  disabled={createLoading || !employees.length}
-                  size="large"
-                  style={{
-                    background: '#0a0d54',
-                    borderColor: '#0a0d54',
-                    borderRadius: 8
-                  }}
-                >
-                  Request Document
-                </Button>
-              </div>
-            </Card>
-
-            <Table
-              columns={columns}
-              dataSource={requests}
-              loading={loading}
-              rowKey="id"
-              locale={{ emptyText: 'No document requests yet. Create one using the form above to request documents from employees.' }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} requests`,
-              }}
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={tabItems}
+              size="large"
             />
           </Space>
         </Card>
       </div>
+
+      {/* Create Request Modal */}
+      <Modal
+        title="Request Document from Employee"
+        open={createModalVisible}
+        onOk={handleCreateRequest}
+        onCancel={() => {
+          setCreateModalVisible(false);
+          setSelectedEmployeeId('');
+          setRequestMessage('');
+          setCreateError('');
+        }}
+        confirmLoading={createLoading}
+        okText="Send Request"
+        cancelText="Cancel"
+        width={600}
+      >
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          {createError && (
+            <Alert message={createError} type="error" showIcon closable />
+          )}
+
+          <div>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+              Employee
+            </label>
+            <Select
+              value={selectedEmployeeId}
+              onChange={setSelectedEmployeeId}
+              options={employees.map(emp => {
+                const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+                const displayName = fullName || emp.email;
+                return {
+                  label: displayName,
+                  value: emp.employeeId,
+                  searchableText: `${displayName} ${emp.email}`
+                };
+              })}
+              placeholder="Select employee"
+              style={{ width: '100%' }}
+              size="large"
+              showSearch
+              filterOption={(input, option: any) =>
+                (option?.searchableText ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+              Message / Document Type
+            </label>
+            <Input.TextArea
+              value={requestMessage}
+              onChange={(e) => setRequestMessage(e.target.value)}
+              placeholder="e.g., Please upload your ID proof, tax documents, or educational certificates"
+              rows={4}
+              maxLength={500}
+              showCount
+            />
+          </div>
+        </Space>
+      </Modal>
     </div>
   );
 };

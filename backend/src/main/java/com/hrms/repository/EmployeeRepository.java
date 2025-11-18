@@ -21,4 +21,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     List<Employee> findByOrganization(Organization organization);
     Page<Employee> findByOrganization(Organization organization, Pageable pageable);
     List<Employee> findByDepartment(Department department);
+    long countByOrganizationAndDeletedAtIsNull(Organization organization);
 }

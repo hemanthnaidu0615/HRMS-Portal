@@ -5,6 +5,10 @@ import com.hrms.dto.CreateOrganizationRequest;
 import com.hrms.entity.Organization;
 import com.hrms.entity.User;
 import com.hrms.repository.OrganizationRepository;
+import com.hrms.repository.EmployeeRepository;
+import com.hrms.repository.DepartmentRepository;
+import com.hrms.repository.UserRepository;
+import com.hrms.repository.DocumentRepository;
 import com.hrms.service.EmailService;
 import com.hrms.service.UserService;
 import jakarta.validation.Valid;
@@ -30,13 +34,25 @@ public class SuperAdminController {
     private final OrganizationRepository organizationRepository;
     private final UserService userService;
     private final EmailService emailService;
+    private final EmployeeRepository employeeRepository;
+    private final DepartmentRepository departmentRepository;
+    private final UserRepository userRepository;
+    private final DocumentRepository documentRepository;
 
     public SuperAdminController(OrganizationRepository organizationRepository,
                                UserService userService,
-                               EmailService emailService) {
+                               EmailService emailService,
+                               EmployeeRepository employeeRepository,
+                               DepartmentRepository departmentRepository,
+                               UserRepository userRepository,
+                               DocumentRepository documentRepository) {
         this.organizationRepository = organizationRepository;
         this.userService = userService;
         this.emailService = emailService;
+        this.employeeRepository = employeeRepository;
+        this.departmentRepository = departmentRepository;
+        this.userRepository = userRepository;
+        this.documentRepository = documentRepository;
     }
 
     @PostMapping("/organizations")
@@ -61,6 +77,19 @@ public class SuperAdminController {
             map.put("id", org.getId());
             map.put("name", org.getName());
             map.put("createdAt", org.getCreatedAt());
+            map.put("deletedAt", org.getDeletedAt());
+
+            // Add organization metrics
+            long employeeCount = employeeRepository.countByOrganizationAndDeletedAtIsNull(org);
+            long departmentCount = departmentRepository.countByOrganizationAndDeletedAtIsNull(org);
+            long activeUserCount = userRepository.countByOrganizationAndEnabledTrue(org);
+            long documentCount = documentRepository.countByEmployee_Organization(org);
+
+            map.put("employeeCount", employeeCount);
+            map.put("departmentCount", departmentCount);
+            map.put("activeUserCount", activeUserCount);
+            map.put("documentCount", documentCount);
+
             return map;
         }).toList();
 

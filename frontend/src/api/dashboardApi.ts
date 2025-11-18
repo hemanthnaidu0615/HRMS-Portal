@@ -19,10 +19,17 @@ export interface AdminDashboardStats {
     totalEmployees: number;
     activeEmployees: number;
     inactiveEmployees: number;
+    onProbation: number;
+    departmentCount: number;
+    departmentDistribution: Record<string, number>;
+    employmentTypeDistribution: Record<string, number>;
     totalDocuments: number;
+    pendingDocuments: number;
+    approvedDocuments: number;
     pendingDocumentRequests: number;
     completedDocumentRequests: number;
     newEmployeesLast30Days: number;
+    newDocumentsLast30Days: number;
   };
   organizationInfo: {
     name: string;

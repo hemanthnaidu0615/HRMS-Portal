@@ -70,4 +70,15 @@ public interface PermissionRepository extends JpaRepository<Permission, UUID> {
      */
     @Query("SELECT DISTINCT p.scope FROM Permission p WHERE p.organization IS NULL ORDER BY p.scope")
     List<String> findAllScopes();
+
+    /**
+     * Find permission by resource, action, scope, and organization ID
+     */
+    @Query("SELECT p FROM Permission p WHERE p.resource = :resource AND p.action = :action AND p.scope = :scope AND (p.organization.id = :orgId OR (:orgId IS NULL AND p.organization IS NULL))")
+    Optional<Permission> findByResourceAndActionAndScopeAndOrganizationId(
+        @Param("resource") String resource,
+        @Param("action") String action,
+        @Param("scope") String scope,
+        @Param("orgId") UUID organizationId
+    );
 }

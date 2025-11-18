@@ -15,8 +15,106 @@ export interface Employee {
 }
 
 export interface CreateEmployeeRequest {
+  // Account
   email: string;
   temporaryPassword: string;
+  employeeCode?: string;
+
+  // Personal Details
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+  nationality?: string | null;
+  maritalStatus?: string | null;
+  bloodGroup?: string | null;
+
+  // Contact Information
+  personalEmail?: string | null;
+  phoneNumber?: string | null;
+  workPhone?: string | null;
+  alternatePhone?: string | null;
+
+  // Current Address
+  currentAddressLine1?: string | null;
+  currentAddressLine2?: string | null;
+  currentCity?: string | null;
+  currentState?: string | null;
+  currentCountry?: string | null;
+  currentPostalCode?: string | null;
+
+  // Permanent Address
+  sameAsCurrentAddress?: boolean;
+  permanentAddressLine1?: string | null;
+  permanentAddressLine2?: string | null;
+  permanentCity?: string | null;
+  permanentState?: string | null;
+  permanentCountry?: string | null;
+  permanentPostalCode?: string | null;
+
+  // Emergency Contact
+  emergencyContactName?: string | null;
+  emergencyContactRelationship?: string | null;
+  emergencyContactPhone?: string | null;
+  alternateEmergencyContactName?: string | null;
+  alternateEmergencyContactRelationship?: string | null;
+  alternateEmergencyContactPhone?: string | null;
+
+  // Employment Details
+  joiningDate?: string | null;
+  departmentId?: string | null;
+  positionId?: string | null;
+  reportsToId?: string | null;
+  employmentType?: string | null;
+  employmentStatus?: string | null;
+
+  // Vendor/Client/Project Assignment
+  vendorId?: string | null;
+  clientId?: string | null;
+  projectId?: string | null;
+
+  // Probation
+  isProbation?: boolean;
+  probationStartDate?: string | null;
+  probationEndDate?: string | null;
+  probationStatus?: string | null;
+
+  // Contract
+  contractStartDate?: string | null;
+  contractEndDate?: string | null;
+
+  // Compensation
+  basicSalary?: number | null;
+  currency?: string | null;
+  payFrequency?: string | null;
+
+  // Bank Details
+  bankAccountNumber?: string | null;
+  bankName?: string | null;
+  bankBranch?: string | null;
+  ifscCode?: string | null;
+  swiftCode?: string | null;
+
+  // Tax & Legal
+  taxIdentificationNumber?: string | null;
+
+  // India-Specific
+  panNumber?: string | null;
+  aadharNumber?: string | null;
+  uanNumber?: string | null;
+
+  // USA-Specific
+  ssnNumber?: string | null;
+  driversLicenseNumber?: string | null;
+  passportNumber?: string | null;
+
+  // Additional Info
+  linkedInProfile?: string | null;
+  githubProfile?: string | null;
+
+  // Permission Groups
+  permissionGroupIds?: string[];
 }
 
 export const orgadminApi = {
@@ -64,4 +162,30 @@ export const orgadminApi = {
       action: 'terminate'
     });
   },
+
+  getOrganizationChart: async (): Promise<OrgChartResponse> => {
+    const response = await http.get<OrgChartResponse>('/api/orgadmin/employees/org-chart');
+    return response.data;
+  },
 };
+
+export interface OrgChartNode {
+  id: string;
+  employeeCode: string | null;
+  firstName: string | null;
+  middleName: string | null;
+  lastName: string | null;
+  email: string;
+  positionName?: string;
+  positionLevel?: number;
+  departmentName?: string;
+  departmentCode?: string;
+  reportsToId?: string;
+  directReportCount: number;
+}
+
+export interface OrgChartResponse {
+  nodes: OrgChartNode[];
+  rootEmployeeIds: string[];
+  totalEmployees: number;
+}

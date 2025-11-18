@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Upload, Button, Typography, Space, Alert, Table, Progress, Steps, message } from 'antd';
 import { UploadOutlined, DownloadOutlined, CheckCircleOutlined, CloseCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
-import { createEmployee } from '../../../api/employeeManagementApi';
+import { orgadminApi } from '../../../api/orgadminApi';
 
 const { Title, Text, Paragraph } = Typography;
 const { Dragger } = Upload;
@@ -175,7 +175,7 @@ export const BulkImportPage = () => {
       setImportProgress(Math.round(((i + 1) / parsedData.length) * 100));
 
       try {
-        await createEmployee({
+        await orgadminApi.createEmployee({
           firstName: employee.firstName,
           lastName: employee.lastName,
           email: employee.email,
