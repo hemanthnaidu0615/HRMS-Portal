@@ -602,8 +602,11 @@ CREATE TABLE audit_logs (
 CREATE TABLE employee_code_sequences (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     organization_id UNIQUEIDENTIFIER NOT NULL,
-    department_id UNIQUEIDENTIFIER NOT NULL,
-    last_sequence_number INT DEFAULT 0,
+    department_id UNIQUEIDENTIFIER NULL,  -- NULL for default EMP codes
+    prefix VARCHAR(20) NOT NULL,           -- IT, HR, FIN, or EMP
+    current_number INT NOT NULL DEFAULT 0,
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_at DATETIME2,
     FOREIGN KEY (organization_id) REFERENCES organizations(id),
     FOREIGN KEY (department_id) REFERENCES departments(id),
     CONSTRAINT unique_dept_sequence UNIQUE (organization_id, department_id)
