@@ -335,6 +335,7 @@ export const MyIncomingRequestsPage: React.FC = () => {
             </Button>
           </Space>
         </div>
+        </div>
 
         {/* Error Alert */}
         {error && (

@@ -219,6 +219,7 @@ export const MyOutgoingRequestsPage: React.FC = () => {
             <Button icon={<ReloadOutlined />} onClick={loadRequests}>Refresh</Button>
           </Space>
         </div>
+        </div>
 
         {error && <Alert message="Error" description={error} type="error" showIcon closable onClose={() => setError('')} style={{ marginBottom: 16 }} />}
 
