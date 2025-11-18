@@ -815,4 +815,72 @@ public class EmployeeManagementController {
 
         return response;
     }
+
+    /**
+     * Get organization chart hierarchy
+     */
+    @GetMapping("/org-chart")
+    public ResponseEntity<?> getOrganizationChart(Authentication authentication) {
+        User currentUser = userService.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            return ResponseEntity.status(403).body(Map.of("error", "User has no organization"));
+        }
+
+        // Get all active employees in the organization
+        List<Employee> employees = employeeRepository.findByOrganization(organization).stream()
+                .filter(e -> e.getDeletedAt() == null)
+                .collect(Collectors.toList());
+
+        // Build org chart nodes
+        List<Map<String, Object>> nodes = employees.stream().map(emp -> {
+            Map<String, Object> node = new HashMap<>();
+            node.put("id", emp.getId().toString());
+            node.put("employeeCode", emp.getEmployeeCode());
+            node.put("firstName", emp.getFirstName());
+            node.put("middleName", emp.getMiddleName());
+            node.put("lastName", emp.getLastName());
+            node.put("email", emp.getUser().getEmail());
+
+            // Position info
+            if (emp.getPosition() != null) {
+                node.put("positionName", emp.getPosition().getName());
+                node.put("positionLevel", emp.getPosition().getSeniorityLevel());
+            }
+
+            // Department info
+            if (emp.getDepartment() != null) {
+                node.put("departmentName", emp.getDepartment().getName());
+                node.put("departmentCode", emp.getDepartment().getDepartmentCode());
+            }
+
+            // Reporting relationship
+            if (emp.getReportsTo() != null) {
+                node.put("reportsToId", emp.getReportsTo().getId().toString());
+            }
+
+            // Count direct reports
+            long directReportCount = employees.stream()
+                    .filter(e -> e.getReportsTo() != null && e.getReportsTo().getId().equals(emp.getId()))
+                    .count();
+            node.put("directReportCount", directReportCount);
+
+            return node;
+        }).collect(Collectors.toList());
+
+        // Find root employees (those without a manager)
+        List<String> rootEmployeeIds = nodes.stream()
+                .filter(n -> !n.containsKey("reportsToId"))
+                .map(n -> (String) n.get("id"))
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("nodes", nodes);
+        response.put("rootEmployeeIds", rootEmployeeIds);
+        response.put("totalEmployees", nodes.size());
+
+        return ResponseEntity.ok(response);
+    }
 }

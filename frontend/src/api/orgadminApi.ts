@@ -162,4 +162,30 @@ export const orgadminApi = {
       action: 'terminate'
     });
   },
+
+  getOrganizationChart: async (): Promise<OrgChartResponse> => {
+    const response = await http.get<OrgChartResponse>('/api/orgadmin/employees/org-chart');
+    return response.data;
+  },
 };
+
+export interface OrgChartNode {
+  id: string;
+  employeeCode: string | null;
+  firstName: string | null;
+  middleName: string | null;
+  lastName: string | null;
+  email: string;
+  positionName?: string;
+  positionLevel?: number;
+  departmentName?: string;
+  departmentCode?: string;
+  reportsToId?: string;
+  directReportCount: number;
+}
+
+export interface OrgChartResponse {
+  nodes: OrgChartNode[];
+  rootEmployeeIds: string[];
+  totalEmployees: number;
+}
