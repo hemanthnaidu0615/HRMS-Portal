@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, UUID> {
-    List<Department> findByOrganization(Organization organization);
-    Optional<Department> findByOrganizationAndName(Organization organization, String name);
+    List<Department> findByOrganizationAndDeletedAtIsNull(Organization organization);
+    Optional<Department> findByOrganizationAndNameAndDeletedAtIsNull(Organization organization, String name);
     long countByOrganizationAndDeletedAtIsNull(Organization organization);
 }
