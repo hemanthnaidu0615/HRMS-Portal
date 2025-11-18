@@ -1,6 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Button, Tag, Skeleton, Alert, Typography, Space, Descriptions, Popconfirm, Modal, Input, message, Select, DatePicker } from 'antd';
+import {
+  Card,
+  Button,
+  Tag,
+  Skeleton,
+  Alert,
+  Typography,
+  Space,
+  Descriptions,
+  Popconfirm,
+  Modal,
+  Input,
+  message,
+  Select,
+  DatePicker,
+  Tabs,
+  Empty,
+  Divider,
+} from 'antd';
 import {
   EditOutlined,
   HistoryOutlined,
@@ -10,20 +28,24 @@ import {
   LockOutlined,
   TeamOutlined,
   FileTextOutlined,
+  SafetyCertificateOutlined,
+  UserOutlined,
+  PhoneOutlined,
+  HomeOutlined,
+  ContactsOutlined,
+  BankOutlined,
+  IdcardOutlined,
+  DollarOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
-import { SafetyCertificateOutlined } from '@ant-design/icons';
 import { getEmployeeDetails, EmployeeDetailResponse } from '../../../api/employeeManagementApi';
 import { orgadminApi } from '../../../api/orgadminApi';
 import { roleApi } from '../../../api/roleApi';
 import { createDocumentRequest } from '../../../api/documentRequestsApi';
 import dayjs from 'dayjs';
+import type { Role } from '../../../api/roleApi';
 
-const { Title, TextArea } = Typography;
-
-interface Role {
-  id: string;
-  name: string;
-}
+const { Title } = Typography;
 
 export const EmployeeDetailPage = () => {
   const { employeeId } = useParams<{ employeeId: string }>();
@@ -71,7 +93,7 @@ export const EmployeeDetailPage = () => {
 
   const loadRoles = async () => {
     try {
-      const data = await roleApi.getRoles();
+      const data = await roleApi.getAllRoles();
       setRoles(data);
     } catch (err: any) {
       message.error('Failed to load roles');
@@ -114,12 +136,7 @@ export const EmployeeDetailPage = () => {
   };
 
   const handleResetPassword = async () => {
-    if (!employeeId || !newPassword.trim()) {
-      message.error('Please enter a new password');
-      return;
-    }
-
-    if (newPassword.length < 6) {
+    if (!employeeId || !newPassword.trim() || newPassword.length < 6) {
       message.error('Password must be at least 6 characters');
       return;
     }
@@ -242,25 +259,40 @@ export const EmployeeDetailPage = () => {
     }
   };
 
+  const formatCurrency = (amount: number | null, currency: string | null) => {
+    if (!amount) return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const employmentTypeColors: Record<string, string> = {
     internal: 'green',
     client: 'blue',
     contract: 'orange',
-    bench: 'red'
+    consultant: 'purple',
+    intern: 'cyan',
+  };
+
+  const employmentStatusColors: Record<string, string> = {
+    active: 'green',
+    on_notice: 'orange',
+    resigned: 'red',
+    terminated: 'volcano',
+    suspended: 'magenta',
+    on_leave: 'blue',
   };
 
   const isDeleted = employee?.deletedAt != null;
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-        <Card
-          style={{
-            borderRadius: 12,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          }}
-        >
-          <Skeleton active paragraph={{ rows: 6 }} />
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+        <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <Skeleton active paragraph={{ rows: 10 }} />
         </Card>
       </div>
     );
@@ -268,35 +300,56 @@ export const EmployeeDetailPage = () => {
 
   if (error || !employee) {
     return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-        <Card
-          style={{
-            borderRadius: 12,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          }}
-        >
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+        <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <Alert message={error || 'Employee not found'} type="error" showIcon />
         </Card>
       </div>
     );
   }
 
+  const fullName = `${employee.firstName || ''} ${employee.middleName || ''} ${employee.lastName || ''}`.trim() || employee.email;
+
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-      <Card
-        style={{
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        }}
-      >
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+      <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Header Section */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <Title level={3} style={{ margin: 0 }}>
-                Employee Details
+              <Title level={3} style={{ margin: 0, marginBottom: 8 }}>
+                {fullName}
                 {isDeleted && <Tag color="error" style={{ marginLeft: 8 }}>Deleted</Tag>}
               </Title>
+              <Space wrap>
+                {employee.employeeCode && (
+                  <Tag color="blue" style={{ borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
+                    {employee.employeeCode}
+                  </Tag>
+                )}
+                {employee.employmentType && (
+                  <Tag color={employmentTypeColors[employee.employmentType] || 'default'} style={{ borderRadius: 6 }}>
+                    {employee.employmentType}
+                  </Tag>
+                )}
+                {employee.employmentStatus && (
+                  <Tag color={employmentStatusColors[employee.employmentStatus] || 'default'} style={{ borderRadius: 6 }}>
+                    {employee.employmentStatus}
+                  </Tag>
+                )}
+                {employee.departmentName && (
+                  <Tag icon={<BankOutlined />} color="purple" style={{ borderRadius: 6 }}>
+                    {employee.departmentName}
+                  </Tag>
+                )}
+                {employee.positionName && (
+                  <Tag icon={<UserOutlined />} color="green" style={{ borderRadius: 6 }}>
+                    {employee.positionName}
+                  </Tag>
+                )}
+              </Space>
             </div>
+
             <Space wrap>
               {!isDeleted && (
                 <>
@@ -304,12 +357,7 @@ export const EmployeeDetailPage = () => {
                     type="primary"
                     icon={<FileTextOutlined />}
                     onClick={openRequestDocumentModal}
-                    style={{
-                      background: '#52c41a',
-                      borderColor: '#52c41a',
-                      borderRadius: 8,
-                      fontWeight: 600
-                    }}
+                    style={{ background: '#52c41a', borderColor: '#52c41a', borderRadius: 8 }}
                   >
                     Request Document
                   </Button>
@@ -321,17 +369,16 @@ export const EmployeeDetailPage = () => {
                     Edit Assignment
                   </Button>
                   <Button
-                    icon={<TeamOutlined />}
-                    onClick={openUpdateRolesModal}
+                    icon={<SafetyCertificateOutlined />}
+                    onClick={() => navigate(`/admin/permissions/employee/${employeeId}`)}
                     style={{ borderRadius: 8 }}
                   >
-                    Update Roles
+                    Permissions
                   </Button>
-                  <Button
-                    icon={<LockOutlined />}
-                    onClick={openResetPasswordModal}
-                    style={{ borderRadius: 8 }}
-                  >
+                  <Button icon={<TeamOutlined />} onClick={openUpdateRolesModal} style={{ borderRadius: 8 }}>
+                    Roles
+                  </Button>
+                  <Button icon={<LockOutlined />} onClick={openResetPasswordModal} style={{ borderRadius: 8 }}>
                     Reset Password
                   </Button>
                 </>
@@ -341,17 +388,8 @@ export const EmployeeDetailPage = () => {
                 onClick={() => navigate(`/admin/employees/${employeeId}/history`)}
                 style={{ borderRadius: 8 }}
               >
-                View History
+                History
               </Button>
-              {!isDeleted && (
-                <Button
-                  icon={<SafetyCertificateOutlined />}
-                  onClick={() => navigate(`/admin/permissions/employee/${employeeId}`)}
-                  style={{ borderRadius: 8 }}
-                >
-                  Manage Permissions
-                </Button>
-              )}
 
               {!isDeleted ? (
                 <Popconfirm
@@ -361,12 +399,7 @@ export const EmployeeDetailPage = () => {
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button
-                    danger
-                    icon={<DeleteOutlined />}
-                    loading={actionLoading}
-                    style={{ borderRadius: 8 }}
-                  >
+                  <Button danger icon={<DeleteOutlined />} loading={actionLoading} style={{ borderRadius: 8 }}>
                     Delete
                   </Button>
                 </Popconfirm>
@@ -386,115 +419,381 @@ export const EmployeeDetailPage = () => {
                 icon={<ArrowLeftOutlined />}
                 type="primary"
                 onClick={() => navigate('/admin/employees')}
-                style={{
-                  background: '#0a0d54',
-                  borderColor: '#0a0d54',
-                  borderRadius: 8
-                }}
+                style={{ background: '#0a0d54', borderColor: '#0a0d54', borderRadius: 8 }}
               >
                 Back
               </Button>
             </Space>
           </div>
 
-          <Descriptions bordered column={2}>
-            {(employee.firstName || employee.lastName) && (
-              <Descriptions.Item label="Name">
-                {employee.firstName} {employee.lastName}
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label="Email">{employee.email}</Descriptions.Item>
-            <Descriptions.Item label="Employment Type">
-              {employee.employmentType ? (
-                <Tag color={employmentTypeColors[employee.employmentType] || 'default'} style={{ borderRadius: 6 }}>
-                  {employee.employmentType}
-                </Tag>
-              ) : (
-                '—'
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Department">
-              {employee.departmentName ? (
-                <Tag color="blue" style={{ borderRadius: 6 }}>{employee.departmentName}</Tag>
-              ) : (
-                '—'
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Position">
-              {employee.positionName ? (
-                <Tag color="green" style={{ borderRadius: 6 }}>{employee.positionName}</Tag>
-              ) : (
-                '—'
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Reports To">
-              {(() => {
-                if (!employee.reportsToEmployeeId) return '—';
-                const fullName = `${employee.reportsToFirstName || ''} ${employee.reportsToLastName || ''}`.trim();
-                return fullName || employee.reportsToEmail || '—';
-              })()}
-            </Descriptions.Item>
-            <Descriptions.Item label="Client ID">{employee.clientId || '—'}</Descriptions.Item>
-            <Descriptions.Item label="Project ID">{employee.projectId || '—'}</Descriptions.Item>
-            <Descriptions.Item label="Contract End Date">{employee.contractEndDate || '—'}</Descriptions.Item>
-          </Descriptions>
-
-          {/* Probation Section */}
-          {employee.isProbation && (
-            <Card
-              title="Probation Period"
-              extra={<Tag color="orange">Active</Tag>}
-              style={{ borderRadius: 8, border: '1px solid #fa8c16' }}
-            >
-              <Descriptions bordered column={2}>
-                <Descriptions.Item label="Start Date">
-                  {employee.probationStartDate ? new Date(employee.probationStartDate).toLocaleDateString() : '—'}
-                </Descriptions.Item>
-                <Descriptions.Item label="End Date">
-                  {employee.probationEndDate ? new Date(employee.probationEndDate).toLocaleDateString() : '—'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Status">
-                  <Tag color={employee.probationStatus === 'extended' ? 'orange' : 'blue'}>
-                    {employee.probationStatus}
-                  </Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Actions">
-                  <Space>
-                    <Button
-                      size="small"
-                      onClick={openExtendProbationModal}
-                      style={{ borderRadius: 6 }}
-                    >
-                      Extend
-                    </Button>
-                    <Popconfirm
-                      title="Complete probation?"
-                      description="This will mark the probation as successfully completed."
-                      onConfirm={handleCompleteProbation}
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <Button type="primary" size="small" style={{ borderRadius: 6 }}>
-                        Complete
-                      </Button>
-                    </Popconfirm>
-                    <Popconfirm
-                      title="Terminate probation?"
-                      description="This will terminate the probation period."
-                      onConfirm={handleTerminateProbation}
-                      okText="Yes"
-                      cancelText="No"
-                      okButtonProps={{ danger: true }}
-                    >
-                      <Button danger size="small" style={{ borderRadius: 6 }}>
-                        Terminate
-                      </Button>
-                    </Popconfirm>
+          {/* Tabbed Content */}
+          <Tabs
+            defaultActiveKey="1"
+            items={[
+              {
+                key: '1',
+                label: (
+                  <span>
+                    <UserOutlined /> Overview
+                  </span>
+                ),
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Descriptions title="Basic Information" bordered column={2}>
+                      <Descriptions.Item label="Email">{employee.email}</Descriptions.Item>
+                      <Descriptions.Item label="Employee Code">
+                        {employee.employeeCode ? (
+                          <Tag color="blue" style={{ borderRadius: 6 }}>{employee.employeeCode}</Tag>
+                        ) : '—'}
+                      </Descriptions.Item>
+                      {employee.firstName && (
+                        <Descriptions.Item label="First Name">{employee.firstName}</Descriptions.Item>
+                      )}
+                      {employee.middleName && (
+                        <Descriptions.Item label="Middle Name">{employee.middleName}</Descriptions.Item>
+                      )}
+                      {employee.lastName && (
+                        <Descriptions.Item label="Last Name">{employee.lastName}</Descriptions.Item>
+                      )}
+                      <Descriptions.Item label="Joining Date">
+                        {employee.joiningDate ? new Date(employee.joiningDate).toLocaleDateString() : '—'}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Employment Type">
+                        {employee.employmentType ? (
+                          <Tag color={employmentTypeColors[employee.employmentType] || 'default'}>
+                            {employee.employmentType}
+                          </Tag>
+                        ) : '—'}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Employment Status">
+                        {employee.employmentStatus ? (
+                          <Tag color={employmentStatusColors[employee.employmentStatus] || 'default'}>
+                            {employee.employmentStatus}
+                          </Tag>
+                        ) : '—'}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Department">
+                        {employee.departmentName ? (
+                          <>
+                            {employee.departmentName}
+                            {employee.departmentCode && ` (${employee.departmentCode})`}
+                          </>
+                        ) : '—'}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Position">{employee.positionName || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Reports To">
+                        {(() => {
+                          if (!employee.reportsToEmployeeId) return '—';
+                          const managerName = `${employee.reportsToFirstName || ''} ${employee.reportsToLastName || ''}`.trim();
+                          return managerName || employee.reportsToEmail || '—';
+                        })()}
+                      </Descriptions.Item>
+                    </Descriptions>
                   </Space>
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-          )}
+                ),
+              },
+              {
+                key: '2',
+                label: (
+                  <span>
+                    <IdcardOutlined /> Personal & Contact
+                  </span>
+                ),
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Descriptions title="Personal Details" bordered column={2}>
+                      <Descriptions.Item label="Date of Birth">
+                        {employee.dateOfBirth ? new Date(employee.dateOfBirth).toLocaleDateString() : '—'}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Gender">{employee.gender || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Nationality">{employee.nationality || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Marital Status">{employee.maritalStatus || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Blood Group">{employee.bloodGroup || '—'}</Descriptions.Item>
+                    </Descriptions>
+
+                    <Descriptions title="Contact Information" bordered column={2}>
+                      <Descriptions.Item label="Personal Email">{employee.personalEmail || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Phone Number">{employee.phoneNumber || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Work Phone">{employee.workPhone || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Alternate Phone">{employee.alternatePhone || '—'}</Descriptions.Item>
+                    </Descriptions>
+
+                    <Descriptions title="Current Address" bordered column={2}>
+                      <Descriptions.Item label="Address Line 1">{employee.currentAddressLine1 || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Address Line 2">{employee.currentAddressLine2 || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="City">{employee.currentCity || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="State/Province">{employee.currentState || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Country">{employee.currentCountry || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Postal Code">{employee.currentPostalCode || '—'}</Descriptions.Item>
+                    </Descriptions>
+
+                    {!employee.sameAsCurrentAddress && (
+                      <Descriptions title="Permanent Address" bordered column={2}>
+                        <Descriptions.Item label="Address Line 1">{employee.permanentAddressLine1 || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Address Line 2">{employee.permanentAddressLine2 || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="City">{employee.permanentCity || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="State/Province">{employee.permanentState || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Country">{employee.permanentCountry || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Postal Code">{employee.permanentPostalCode || '—'}</Descriptions.Item>
+                      </Descriptions>
+                    )}
+                    {employee.sameAsCurrentAddress && (
+                      <Alert message="Permanent address is same as current address" type="info" showIcon />
+                    )}
+                  </Space>
+                ),
+              },
+              {
+                key: '3',
+                label: (
+                  <span>
+                    <ContactsOutlined /> Emergency Contacts
+                  </span>
+                ),
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    {(employee.emergencyContactName || employee.emergencyContactPhone) ? (
+                      <>
+                        <Descriptions title="Primary Emergency Contact" bordered column={2}>
+                          <Descriptions.Item label="Name">{employee.emergencyContactName || '—'}</Descriptions.Item>
+                          <Descriptions.Item label="Relationship">{employee.emergencyContactRelationship || '—'}</Descriptions.Item>
+                          <Descriptions.Item label="Phone" span={2}>{employee.emergencyContactPhone || '—'}</Descriptions.Item>
+                        </Descriptions>
+
+                        {(employee.alternateEmergencyContactName || employee.alternateEmergencyContactPhone) && (
+                          <Descriptions title="Alternate Emergency Contact" bordered column={2}>
+                            <Descriptions.Item label="Name">{employee.alternateEmergencyContactName || '—'}</Descriptions.Item>
+                            <Descriptions.Item label="Relationship">{employee.alternateEmergencyContactRelationship || '—'}</Descriptions.Item>
+                            <Descriptions.Item label="Phone" span={2}>{employee.alternateEmergencyContactPhone || '—'}</Descriptions.Item>
+                          </Descriptions>
+                        )}
+                      </>
+                    ) : (
+                      <Empty description="No emergency contact information available" />
+                    )}
+                  </Space>
+                ),
+              },
+              {
+                key: '4',
+                label: (
+                  <span>
+                    <GlobalOutlined /> Vendor/Client/Project
+                  </span>
+                ),
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    {(employee.vendorId || employee.clientId || employee.projectId) ? (
+                      <Descriptions title="Assignment Details" bordered column={2}>
+                        {employee.vendorId && (
+                          <Descriptions.Item label="Vendor" span={2}>
+                            {employee.vendorName} ({employee.vendorCode})
+                          </Descriptions.Item>
+                        )}
+                        {employee.clientId && (
+                          <Descriptions.Item label="Client" span={2}>
+                            {employee.clientName} ({employee.clientCode})
+                          </Descriptions.Item>
+                        )}
+                        {employee.projectId && (
+                          <Descriptions.Item label="Project" span={2}>
+                            {employee.projectName} ({employee.projectCode})
+                          </Descriptions.Item>
+                        )}
+                        <Descriptions.Item label="Contract Start">
+                          {employee.contractStartDate ? new Date(employee.contractStartDate).toLocaleDateString() : '—'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Contract End">
+                          {employee.contractEndDate ? new Date(employee.contractEndDate).toLocaleDateString() : '—'}
+                        </Descriptions.Item>
+                      </Descriptions>
+                    ) : (
+                      <Empty description="Not assigned to any vendor, client, or project" />
+                    )}
+
+                    {employee.isProbation && (
+                      <Card
+                        title="Probation Period"
+                        extra={<Tag color="orange">Active</Tag>}
+                        style={{ borderRadius: 8, border: '1px solid #fa8c16' }}
+                      >
+                        <Descriptions bordered column={2}>
+                          <Descriptions.Item label="Start Date">
+                            {employee.probationStartDate ? new Date(employee.probationStartDate).toLocaleDateString() : '—'}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="End Date">
+                            {employee.probationEndDate ? new Date(employee.probationEndDate).toLocaleDateString() : '—'}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Status">
+                            <Tag color={employee.probationStatus === 'extended' ? 'orange' : 'blue'}>
+                              {employee.probationStatus}
+                            </Tag>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Actions">
+                            <Space>
+                              <Button size="small" onClick={openExtendProbationModal}>Extend</Button>
+                              <Popconfirm
+                                title="Complete probation?"
+                                onConfirm={handleCompleteProbation}
+                                okText="Yes"
+                                cancelText="No"
+                              >
+                                <Button type="primary" size="small">Complete</Button>
+                              </Popconfirm>
+                              <Popconfirm
+                                title="Terminate probation?"
+                                onConfirm={handleTerminateProbation}
+                                okText="Yes"
+                                cancelText="No"
+                                okButtonProps={{ danger: true }}
+                              >
+                                <Button danger size="small">Terminate</Button>
+                              </Popconfirm>
+                            </Space>
+                          </Descriptions.Item>
+                        </Descriptions>
+                      </Card>
+                    )}
+                  </Space>
+                ),
+              },
+              {
+                key: '5',
+                label: (
+                  <span>
+                    <DollarOutlined /> Compensation & Bank
+                  </span>
+                ),
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    {employee.basicSalary ? (
+                      <Descriptions title="Compensation" bordered column={2}>
+                        <Descriptions.Item label="Basic Salary">
+                          {formatCurrency(employee.basicSalary, employee.currency)}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Currency">{employee.currency || 'USD'}</Descriptions.Item>
+                        <Descriptions.Item label="Pay Frequency" span={2}>{employee.payFrequency || '—'}</Descriptions.Item>
+                      </Descriptions>
+                    ) : (
+                      <Alert message="No compensation information available" type="info" showIcon />
+                    )}
+
+                    {(employee.bankAccountNumber || employee.bankName) ? (
+                      <Descriptions title="Bank Details" bordered column={2}>
+                        <Descriptions.Item label="Account Number">{employee.bankAccountNumber || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Bank Name">{employee.bankName || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Branch">{employee.bankBranch || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="IFSC/Routing Code">{employee.ifscCode || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="SWIFT Code" span={2}>{employee.swiftCode || '—'}</Descriptions.Item>
+                      </Descriptions>
+                    ) : (
+                      <Alert message="No bank details available" type="info" showIcon />
+                    )}
+                  </Space>
+                ),
+              },
+              {
+                key: '6',
+                label: (
+                  <span>
+                    <SafetyCertificateOutlined /> Compliance & Legal
+                  </span>
+                ),
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <Descriptions title="Tax Information" bordered column={2}>
+                      <Descriptions.Item label="Tax ID" span={2}>{employee.taxIdentificationNumber || '—'}</Descriptions.Item>
+                    </Descriptions>
+
+                    {(employee.panNumber || employee.aadharNumber || employee.uanNumber) && (
+                      <Descriptions title="India-Specific" bordered column={2}>
+                        <Descriptions.Item label="PAN Number">{employee.panNumber || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Aadhar Number">{employee.aadharNumber || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="UAN Number" span={2}>{employee.uanNumber || '—'}</Descriptions.Item>
+                      </Descriptions>
+                    )}
+
+                    {(employee.ssnNumber || employee.driversLicenseNumber) && (
+                      <Descriptions title="USA-Specific" bordered column={2}>
+                        <Descriptions.Item label="SSN">{employee.ssnNumber || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Driver's License">{employee.driversLicenseNumber || '—'}</Descriptions.Item>
+                      </Descriptions>
+                    )}
+
+                    {employee.passportNumber && (
+                      <Descriptions title="Travel Documents" bordered column={2}>
+                        <Descriptions.Item label="Passport Number" span={2}>{employee.passportNumber}</Descriptions.Item>
+                      </Descriptions>
+                    )}
+
+                    {(employee.linkedInProfile || employee.githubProfile) && (
+                      <Descriptions title="Professional Profiles" bordered column={2}>
+                        {employee.linkedInProfile && (
+                          <Descriptions.Item label="LinkedIn">
+                            <a href={employee.linkedInProfile} target="_blank" rel="noopener noreferrer">
+                              View Profile
+                            </a>
+                          </Descriptions.Item>
+                        )}
+                        {employee.githubProfile && (
+                          <Descriptions.Item label="GitHub">
+                            <a href={employee.githubProfile} target="_blank" rel="noopener noreferrer">
+                              View Profile
+                            </a>
+                          </Descriptions.Item>
+                        )}
+                      </Descriptions>
+                    )}
+                  </Space>
+                ),
+              },
+              {
+                key: '7',
+                label: (
+                  <span>
+                    <HistoryOutlined /> Exit & Audit
+                  </span>
+                ),
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    {(employee.resignationDate || employee.lastWorkingDate) ? (
+                      <Descriptions title="Exit Information" bordered column={2}>
+                        <Descriptions.Item label="Resignation Date">
+                          {employee.resignationDate ? new Date(employee.resignationDate).toLocaleDateString() : '—'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Last Working Date">
+                          {employee.lastWorkingDate ? new Date(employee.lastWorkingDate).toLocaleDateString() : '—'}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Exit Reason" span={2}>{employee.exitReason || '—'}</Descriptions.Item>
+                        <Descriptions.Item label="Exit Notes" span={2}>{employee.exitNotes || '—'}</Descriptions.Item>
+                      </Descriptions>
+                    ) : (
+                      <Alert message="No exit information" type="success" showIcon />
+                    )}
+
+                    <Descriptions title="Audit Trail" bordered column={2}>
+                      <Descriptions.Item label="Created At">
+                        {new Date(employee.createdAt).toLocaleString()}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Created By">{employee.createdByEmail || '—'}</Descriptions.Item>
+                      <Descriptions.Item label="Last Updated">
+                        {new Date(employee.updatedAt).toLocaleString()}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Updated By">{employee.updatedByEmail || '—'}</Descriptions.Item>
+                      {employee.deletedAt && (
+                        <>
+                          <Descriptions.Item label="Deleted At">
+                            {new Date(employee.deletedAt).toLocaleString()}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Deleted By">{employee.deletedByEmail || '—'}</Descriptions.Item>
+                        </>
+                      )}
+                    </Descriptions>
+                  </Space>
+                ),
+              },
+            ]}
+          />
         </Space>
       </Card>
 
@@ -509,15 +808,12 @@ export const EmployeeDetailPage = () => {
         }}
         confirmLoading={actionLoading}
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Input.Password
-            placeholder="Enter new password (min 6 characters)"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            size="large"
-            style={{ borderRadius: 8 }}
-          />
-        </Space>
+        <Input.Password
+          placeholder="Enter new password (min 6 characters)"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          size="large"
+        />
       </Modal>
 
       {/* Update Roles Modal */}
@@ -531,20 +827,15 @@ export const EmployeeDetailPage = () => {
         }}
         confirmLoading={actionLoading}
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Select
-            mode="multiple"
-            placeholder="Select roles"
-            value={selectedRoleIds}
-            onChange={setSelectedRoleIds}
-            style={{ width: '100%' }}
-            options={roles.map(role => ({
-              label: role.name,
-              value: role.id,
-            }))}
-            size="large"
-          />
-        </Space>
+        <Select
+          mode="multiple"
+          placeholder="Select roles"
+          value={selectedRoleIds}
+          onChange={setSelectedRoleIds}
+          style={{ width: '100%' }}
+          options={roles.map(role => ({ label: role.name, value: role.id }))}
+          size="large"
+        />
       </Modal>
 
       {/* Extend Probation Modal */}
@@ -558,28 +849,22 @@ export const EmployeeDetailPage = () => {
         }}
         confirmLoading={actionLoading}
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
-              New End Date
-            </label>
-            <DatePicker
-              value={newProbationEndDate}
-              onChange={setNewProbationEndDate}
-              style={{ width: '100%' }}
-              size="large"
-              placeholder="Select new end date"
-              disabledDate={(current) => {
-                if (!current) return false;
-                // Disable past dates
-                if (current < dayjs().startOf('day')) return true;
-                // Disable dates before or equal to current end date
-                if (employee?.probationEndDate && current <= dayjs(employee.probationEndDate)) return true;
-                return false;
-              }}
-            />
-          </div>
-        </Space>
+        <div>
+          <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>New End Date</label>
+          <DatePicker
+            value={newProbationEndDate}
+            onChange={setNewProbationEndDate}
+            style={{ width: '100%' }}
+            size="large"
+            placeholder="Select new end date"
+            disabledDate={(current) => {
+              if (!current) return false;
+              if (current < dayjs().startOf('day')) return true;
+              if (employee?.probationEndDate && current <= dayjs(employee.probationEndDate)) return true;
+              return false;
+            }}
+          />
+        </div>
       </Modal>
 
       {/* Request Document Modal */}
@@ -587,7 +872,7 @@ export const EmployeeDetailPage = () => {
         title={
           <Space>
             <FileTextOutlined style={{ color: '#52c41a' }} />
-            <span>Request Document from {employee?.firstName} {employee?.lastName || employee?.email}</span>
+            <span>Request Document from {fullName}</span>
           </Space>
         }
         open={requestDocumentModalVisible}
@@ -598,12 +883,7 @@ export const EmployeeDetailPage = () => {
         }}
         confirmLoading={actionLoading}
         okText="Send Request"
-        okButtonProps={{
-          style: {
-            background: '#52c41a',
-            borderColor: '#52c41a'
-          }
-        }}
+        okButtonProps={{ style: { background: '#52c41a', borderColor: '#52c41a' } }}
         width={600}
       >
         <Space direction="vertical" style={{ width: '100%' }} size="large">
@@ -614,15 +894,12 @@ export const EmployeeDetailPage = () => {
             showIcon
           />
           <div>
-            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
-              Request Message *
-            </label>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>Request Message *</label>
             <Input.TextArea
               placeholder="e.g., Please upload your ID proof, passport copy, or latest address proof"
               value={documentRequestMessage}
               onChange={(e) => setDocumentRequestMessage(e.target.value)}
               rows={4}
-              style={{ borderRadius: 8 }}
               maxLength={500}
               showCount
             />

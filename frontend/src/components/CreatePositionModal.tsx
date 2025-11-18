@@ -19,7 +19,6 @@ export const CreatePositionModal = ({ open, onCancel, onSuccess }: CreatePositio
         name: values.name,
         description: values.description,
         level: values.level,
-        isActive: true,
       });
 
       message.success('Position created successfully');

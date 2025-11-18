@@ -18,28 +18,139 @@ export interface EmployeeSummaryResponse {
 }
 
 export interface EmployeeDetailResponse {
+  // Basic IDs
   employeeId: string;
   userId: string;
   email: string;
+  organizationId: string;
+
+  // Employee Code
+  employeeCode: string | null;
+
+  // Personal Details
   firstName: string | null;
+  middleName: string | null;
   lastName: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  nationality: string | null;
+  maritalStatus: string | null;
+  bloodGroup: string | null;
+
+  // Contact Information
+  personalEmail: string | null;
+  phoneNumber: string | null;
+  workPhone: string | null;
+  alternatePhone: string | null;
+
+  // Current Address
+  currentAddressLine1: string | null;
+  currentAddressLine2: string | null;
+  currentCity: string | null;
+  currentState: string | null;
+  currentCountry: string | null;
+  currentPostalCode: string | null;
+
+  // Permanent Address
+  sameAsCurrentAddress: boolean | null;
+  permanentAddressLine1: string | null;
+  permanentAddressLine2: string | null;
+  permanentCity: string | null;
+  permanentState: string | null;
+  permanentCountry: string | null;
+  permanentPostalCode: string | null;
+
+  // Emergency Contacts
+  emergencyContactName: string | null;
+  emergencyContactRelationship: string | null;
+  emergencyContactPhone: string | null;
+  alternateEmergencyContactName: string | null;
+  alternateEmergencyContactRelationship: string | null;
+  alternateEmergencyContactPhone: string | null;
+
+  // Employment Details
+  joiningDate: string | null;
+  employmentStatus: string | null;
+  employmentType: string | null;
+
+  // Department
   departmentId: string | null;
   departmentName: string | null;
+  departmentCode: string | null;
+
+  // Position
   positionId: string | null;
   positionName: string | null;
+
+  // Reporting
   reportsToEmployeeId: string | null;
   reportsToEmail: string | null;
   reportsToFirstName: string | null;
   reportsToLastName: string | null;
-  employmentType: string | null;
+
+  // Vendor/Client/Project
+  vendorId: string | null;
+  vendorName: string | null;
+  vendorCode: string | null;
+  clientId: string | null;
   clientName: string | null;
+  clientCode: string | null;
   projectId: string | null;
+  projectName: string | null;
+  projectCode: string | null;
+
+  // Contract
+  contractStartDate: string | null;
   contractEndDate: string | null;
+
+  // Probation
   isProbation: boolean;
   probationStartDate: string | null;
   probationEndDate: string | null;
   probationStatus: string | null;
+
+  // Compensation
+  basicSalary: number | null;
+  currency: string | null;
+  payFrequency: string | null;
+
+  // Bank Details
+  bankAccountNumber: string | null;
+  bankName: string | null;
+  bankBranch: string | null;
+  ifscCode: string | null;
+  swiftCode: string | null;
+
+  // Tax & Legal
+  taxIdentificationNumber: string | null;
+
+  // India-Specific
+  panNumber: string | null;
+  aadharNumber: string | null;
+  uanNumber: string | null;
+
+  // USA-Specific
+  ssnNumber: string | null;
+  driversLicenseNumber: string | null;
+  passportNumber: string | null;
+
+  // Resignation/Exit
+  resignationDate: string | null;
+  lastWorkingDate: string | null;
+  exitReason: string | null;
+  exitNotes: string | null;
+
+  // Additional Info
+  linkedInProfile: string | null;
+  githubProfile: string | null;
+
+  // Audit
+  createdAt: string;
+  createdByEmail: string | null;
+  updatedAt: string;
+  updatedByEmail: string | null;
   deletedAt?: string | null;
+  deletedByEmail?: string | null;
 }
 
 export interface EmployeeAssignmentUpdateRequest {
@@ -98,25 +209,19 @@ export async function getEmployeeTree() {
 
 export interface CreateEmployeeRequest {
   email: string;
-  firstName: string;
-  lastName: string;
   temporaryPassword: string;
+  firstName?: string;
+  lastName?: string;
+  departmentId?: string;
+  positionId?: string;
+  reportsToId?: string;
   employmentType?: string;
-  isProbation?: boolean;
-  probationEndDate?: string;
+  clientName?: string;
+  projectId?: string;
   contractEndDate?: string;
-}
-
-export interface CreateEmployeeResponse {
-  id: string;
-  email: string;
-  organizationId: string;
-  mustChangePassword: boolean;
-  emailStatus?: string;
-  warning?: string;
-}
-
-export async function createEmployee(payload: CreateEmployeeRequest) {
-  const response = await http.post<CreateEmployeeResponse>("/api/orgadmin/employees", payload);
-  return response.data;
+  isProbation?: boolean;
+  probationStartDate?: string;
+  probationEndDate?: string;
+  probationStatus?: string;
+  permissionGroupIds?: string[];
 }
