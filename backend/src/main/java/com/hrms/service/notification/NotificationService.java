@@ -112,4 +112,54 @@ public class NotificationService {
         log.info("Deleted {} old notifications", count);
         return count;
     }
+
+    /**
+     * Get recent notifications for an employee (limited to 10)
+     * @param employeeId The employee ID
+     * @return List of recent notifications
+     */
+    public List<Notification> getRecentNotificationsByEmployee(UUID employeeId) {
+        log.debug("Fetching recent notifications for employee: {}", employeeId);
+        List<Notification> notifications = repository.findByEmployeeIdAndDeletedAtIsNullOrderByCreatedAtDesc(employeeId);
+        // Limit to 10 most recent
+        return notifications.stream().limit(10).toList();
+    }
+
+    /**
+     * Get unread notification count for an employee
+     * @param employeeId The employee ID
+     * @return Count of unread notifications
+     */
+    public long getUnreadCountByEmployee(UUID employeeId) {
+        log.debug("Fetching unread count for employee: {}", employeeId);
+        return repository.countByEmployeeIdAndIsReadFalseAndDeletedAtIsNull(employeeId);
+    }
+
+    /**
+     * Get all unread notifications for an employee
+     * @param employeeId The employee ID
+     * @return List of unread notifications
+     */
+    public List<Notification> getUnreadNotificationsByEmployee(UUID employeeId) {
+        log.debug("Fetching unread notifications for employee: {}", employeeId);
+        return repository.findByEmployeeIdAndIsReadFalseAndDeletedAtIsNullOrderByCreatedAtDesc(employeeId);
+    }
+
+    /**
+     * Mark a notification as read
+     * @param id Notification ID
+     * @param employeeId Employee ID
+     */
+    public void markAsRead(UUID id, UUID employeeId) {
+        log.debug("Marking notification {} as read for employee: {}", id, employeeId);
+        Notification notification = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + id));
+
+        if (!notification.getEmployee().getId().equals(employeeId)) {
+            throw new ResourceNotFoundException("Notification not found for this employee");
+        }
+
+        notification.markAsRead();
+        repository.save(notification);
+    }
 }

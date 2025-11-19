@@ -290,7 +290,7 @@ public class DemoDataLoader {
             createEmployeeWithPermissions(
                     "susan.contract@demotech.com", demoPassword, "EMP-009",
                     "Susan", "White", "susan.contract@personal.com", "+1-555-2009",
-                    "contractual", "active", LocalDate.of(2024, 1, 1),
+                    "contract", "active", LocalDate.of(2024, 1, 1),
                     deptIT1, posDev1, emp1, null, null, null, null, null,
                     "Contract Software Engineer", new BigDecimal("78000"), "USD",
                     "Female", LocalDate.of(1992, 4, 12), "USA",
@@ -303,7 +303,7 @@ public class DemoDataLoader {
             createEmployeeWithPermissions(
                     "tom.contract@demotech.com", demoPassword, "EMP-010",
                     "Tom", "Garcia", "tom.contract@personal.com", "+1-555-2010",
-                    "contractual", "active", LocalDate.of(2024, 3, 1),
+                    "contract", "active", LocalDate.of(2024, 3, 1),
                     deptIT1, posDev1, emp1, null, null, null, null, null,
                     "Contract QA Engineer", new BigDecimal("70000"), "USD",
                     "Male", LocalDate.of(1991, 9, 30), "USA",
@@ -316,7 +316,7 @@ public class DemoDataLoader {
             createEmployeeWithPermissions(
                     "alice.vendor@demotech.com", demoPassword, "EMP-011",
                     "Alice", "Taylor", "alice.vendor@demostaffing.com", "+1-555-2011",
-                    "vendor", "active", LocalDate.of(2024, 2, 1),
+                    "consultant", "active", LocalDate.of(2024, 2, 1),
                     deptIT1, posDev1, emp1, vendor1, null, null, null, null,
                     "Vendor Developer", new BigDecimal("72000"), "USD",
                     "Female", LocalDate.of(1994, 2, 14), "USA",
@@ -329,7 +329,7 @@ public class DemoDataLoader {
             createEmployeeWithPermissions(
                     "chris.vendor@demotech.com", demoPassword, "EMP-012",
                     "Chris", "Johnson", "chris.vendor@demotechcon.com", "+1-555-2012",
-                    "vendor", "active", LocalDate.of(2024, 4, 1),
+                    "consultant", "active", LocalDate.of(2024, 4, 1),
                     deptIT1, posDev1, emp1, vendor2, null, null, null, null,
                     "Vendor DevOps Engineer", new BigDecimal("75000"), "USD",
                     "Male", LocalDate.of(1992, 6, 22), "USA",
@@ -355,7 +355,7 @@ public class DemoDataLoader {
             createEmployeeWithPermissions(
                     "kevin.subvendor@demotech.com", demoPassword, "EMP-014",
                     "Kevin", "Moore", "kevin.moore@subvendor.com", "+1-555-2014",
-                    "sub_vendor", "active", LocalDate.of(2024, 5, 1),
+                    "consultant", "active", LocalDate.of(2024, 5, 1),
                     deptIT1, posJuniorDev1, emp2, vendor1, null, null, null, null,
                     "Sub-Vendor Junior Dev", new BigDecimal("58000"), "USD",
                     "Male", LocalDate.of(1996, 8, 15), "USA",
@@ -448,7 +448,7 @@ public class DemoDataLoader {
             createEmployeeWithPermissions(
                     "william.contract@demohealthcare.com", demoPassword, "EMP-021",
                     "William", "Thomas", "william.thomas@personal.com", "+1-555-3006",
-                    "contractual", "active", LocalDate.of(2024, 1, 1),
+                    "contract", "active", LocalDate.of(2024, 1, 1),
                     deptMedical2, posNurse2, orgAdmin2, null, null, null, null, null,
                     "Contract Nurse", new BigDecimal("70000"), "USD",
                     "Male", LocalDate.of(1990, 7, 22), "USA",
@@ -567,7 +567,7 @@ public class DemoDataLoader {
             createEmployeeWithPermissions(
                     "matthew.contract@demofinance.com", demoPassword, "EMP-030",
                     "Matthew", "Taylor", "matthew.taylor@personal.com", "+1-555-4005",
-                    "contractual", "active", LocalDate.of(2024, 2, 1),
+                    "contract", "active", LocalDate.of(2024, 2, 1),
                     deptFinance3, posAnalyst3, orgAdmin3, null, null, null, null, null,
                     "Contract Financial Advisor", new BigDecimal("85000"), "USD",
                     "Male", LocalDate.of(1989, 4, 8), "USA",

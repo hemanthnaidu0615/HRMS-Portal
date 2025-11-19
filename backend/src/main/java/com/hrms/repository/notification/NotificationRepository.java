@@ -24,4 +24,13 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     List<Notification> findActiveByOrganization(@Param("organizationId") UUID organizationId);
 
     List<Notification> findByCreatedAtBeforeAndDeletedAtIsNull(LocalDateTime cutoffDate);
+
+    // Find notifications by employee
+    List<Notification> findByEmployeeIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID employeeId);
+
+    // Find unread notifications by employee
+    List<Notification> findByEmployeeIdAndIsReadFalseAndDeletedAtIsNullOrderByCreatedAtDesc(UUID employeeId);
+
+    // Count unread notifications by employee
+    long countByEmployeeIdAndIsReadFalseAndDeletedAtIsNull(UUID employeeId);
 }
