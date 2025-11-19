@@ -26,6 +26,7 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
   PlayCircleOutlined,
   SearchOutlined,
   FilterOutlined,

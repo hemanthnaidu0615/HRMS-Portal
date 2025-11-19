@@ -458,7 +458,7 @@ public class EmailService {
         String statusColor = status.equalsIgnoreCase("APPROVED") ? "#52c41a" :
                            status.equalsIgnoreCase("REJECTED") ? "#ff4d4f" : "#faad14";
 
-        return """
+        return String.format("""
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -467,10 +467,8 @@ public class EmailService {
                         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                         .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
                         .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-                        .leave-box { background: white; padding: 20px; border-left: 4px solid """
-                + statusColor + """; margin: 20px 0; }
-                        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 4px; background: """
-                + statusColor + """; color: white; font-weight: bold; margin: 10px 0; }
+                        .leave-box { background: white; padding: 20px; border-left: 4px solid %s; margin: 20px 0; }
+                        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 4px; background: %s; color: white; font-weight: bold; margin: 10px 0; }
                         .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
                         .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
                     </style>
@@ -481,23 +479,14 @@ public class EmailService {
                             <h1>Leave Request Update</h1>
                         </div>
                         <div class="content">
-                            <p>Hello """
-                + employeeName + """,</p>
+                            <p>Hello %s,</p>
                             <p>Your leave request has been updated.</p>
 
                             <div class="leave-box">
-                                <p><strong>Leave Type:</strong> """
-                + leaveType + """
-                                </p>
-                                <p><strong>Start Date:</strong> """
-                + startDate + """
-                                </p>
-                                <p><strong>End Date:</strong> """
-                + endDate + """
-                                </p>
-                                <p><strong>Status:</strong> <span class="status-badge">"""
-                + status + """
-                                </span></p>
+                                <p><strong>Leave Type:</strong> %s</p>
+                                <p><strong>Start Date:</strong> %s</p>
+                                <p><strong>End Date:</strong> %s</p>
+                                <p><strong>Status:</strong> <span class="status-badge">%s</span></p>
                             </div>
 
                             <p>Please log in to the HRMS portal to view full details.</p>
@@ -510,11 +499,11 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """;
+                """, statusColor, statusColor, employeeName, leaveType, startDate, endDate, status);
     }
 
     private String buildTimesheetReminderEmail(String employeeName, String periodStart, String periodEnd) {
-        return """
+        return String.format("""
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -534,14 +523,11 @@ public class EmailService {
                             <h1>Timesheet Reminder</h1>
                         </div>
                         <div class="content">
-                            <p>Hello """
-                + employeeName + """,</p>
+                            <p>Hello %s,</p>
                             <p>This is a friendly reminder to submit your timesheet.</p>
 
                             <div class="reminder-box">
-                                <p><strong>Period:</strong> """
-                + periodStart + """ to """ + periodEnd + """
-                                </p>
+                                <p><strong>Period:</strong> %s to %s</p>
                                 <p>Please ensure your timesheet is submitted before the deadline to avoid any delays in processing.</p>
                             </div>
 
@@ -555,11 +541,11 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """;
+                """, employeeName, periodStart, periodEnd);
     }
 
     private String buildPayrollGeneratedEmail(String employeeName, String month, String netPay) {
-        return """
+        return String.format("""
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -580,19 +566,13 @@ public class EmailService {
                             <h1>Payslip Available</h1>
                         </div>
                         <div class="content">
-                            <p>Hello """
-                + employeeName + """,</p>
-                            <p>Your payslip for """
-                + month + """ is now available.</p>
+                            <p>Hello %s,</p>
+                            <p>Your payslip for %s is now available.</p>
 
                             <div class="payroll-box">
-                                <p><strong>Month:</strong> """
-                + month + """
-                                </p>
+                                <p><strong>Month:</strong> %s</p>
                                 <p><strong>Net Pay:</strong></p>
-                                <p class="amount">"""
-                + netPay + """
-                                </p>
+                                <p class="amount">%s</p>
                             </div>
 
                             <p>Please log in to the HRMS portal to view and download your complete payslip.</p>
@@ -605,7 +585,7 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """;
+                """, employeeName, month, month, netPay);
     }
 
     private String buildGenericNotificationEmail(String title, String message, String actionUrl) {
@@ -613,7 +593,7 @@ public class EmailService {
             ? "<a href=\"" + actionUrl + "\" class=\"button\">View Details</a>"
             : "";
 
-        return """
+        return String.format("""
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -630,21 +610,16 @@ public class EmailService {
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>"""
-                + title + """
-                        </h1>
+                            <h1>%s</h1>
                         </div>
                         <div class="content">
                             <p>Hello,</p>
 
                             <div class="message-box">
-                                <p>"""
-                + message + """
-                                </p>
+                                <p>%s</p>
                             </div>
 
-                            """
-                + actionButton + """
+                            %s
 
                             <p>Best regards,<br>HRMS Team</p>
                         </div>
@@ -654,6 +629,6 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """;
+                """, title, message, actionButton);
     }
 }

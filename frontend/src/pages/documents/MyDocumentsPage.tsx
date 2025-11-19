@@ -49,7 +49,7 @@ import {
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { getMyDocuments, downloadDocument, deleteDocument, uploadDocument } from '../../api/documentsApi';
+import { getMyDocuments, downloadDocument, deleteDocument, uploadMyDocument } from '../../api/documentsApi';
 import { DocumentPreviewModal } from '../../components/DocumentPreviewModal';
 
 dayjs.extend(relativeTime);
@@ -517,7 +517,7 @@ export const MyDocumentsPage: React.FC = () => {
       try {
         const formData = new FormData();
         formData.append('file', file);
-        await uploadDocument(formData);
+        await uploadMyDocument(formData);
         onSuccess?.(null, file);
         message.success(`${file.name} uploaded successfully`);
         loadDocuments();
