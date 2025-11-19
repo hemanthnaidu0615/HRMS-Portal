@@ -1171,7 +1171,7 @@ BEGIN TRY
 
         -- Assign permissions to Team Lead group
         INSERT INTO group_permissions (group_id, permission_id)
-        SELECT @TeamLeadGroupId, id FROM permissions WHERE permission_string IN (
+        SELECT @TeamLeadGroupId, id FROM permissions WHERE CONCAT(resource, ':', action, ':', scope) IN (
             -- Employee management (team scope)
             'employees:view:team',
             'employees:edit:team',
@@ -1205,7 +1205,7 @@ BEGIN TRY
         (@DeptManagerGroupId, 'Department Manager', 'Can view and manage all employees in their department, approve department-level requests');
 
         INSERT INTO group_permissions (group_id, permission_id)
-        SELECT @DeptManagerGroupId, id FROM permissions WHERE permission_string IN (
+        SELECT @DeptManagerGroupId, id FROM permissions WHERE CONCAT(resource, ':', action, ':', scope) IN (
             -- Employee management (department scope)
             'employees:view:department',
             'employees:edit:department',
@@ -1250,7 +1250,7 @@ BEGIN TRY
         (@HRManagerGroupId, 'HR Manager', 'Human Resources manager with full access to employee data, documents, and onboarding');
 
         INSERT INTO group_permissions (group_id, permission_id)
-        SELECT @HRManagerGroupId, id FROM permissions WHERE permission_string IN (
+        SELECT @HRManagerGroupId, id FROM permissions WHERE CONCAT(resource, ':', action, ':', scope) IN (
             -- Full employee management (organization scope)
             'employees:view:organization',
             'employees:edit:organization',
@@ -1297,7 +1297,7 @@ BEGIN TRY
         (@VPGroupId, 'VP / Senior Leadership', 'Executive level access to view and approve organization-wide data');
 
         INSERT INTO group_permissions (group_id, permission_id)
-        SELECT @VPGroupId, id FROM permissions WHERE permission_string IN (
+        SELECT @VPGroupId, id FROM permissions WHERE CONCAT(resource, ':', action, ':', scope) IN (
             -- Full view access
             'employees:view:organization',
             'employees:edit:organization',
@@ -1338,7 +1338,7 @@ BEGIN TRY
         (@AccountantGroupId, 'Accountant / Finance', 'Access to employee payroll and financial information');
 
         INSERT INTO group_permissions (group_id, permission_id)
-        SELECT @AccountantGroupId, id FROM permissions WHERE permission_string IN (
+        SELECT @AccountantGroupId, id FROM permissions WHERE CONCAT(resource, ':', action, ':', scope) IN (
             -- View employee data (for payroll purposes)
             'employees:view:organization',
 
@@ -1370,7 +1370,7 @@ BEGIN TRY
         (@DocApproverGroupId, 'Document Approver', 'Can approve or reject employee document uploads');
 
         INSERT INTO group_permissions (group_id, permission_id)
-        SELECT @DocApproverGroupId, id FROM permissions WHERE permission_string IN (
+        SELECT @DocApproverGroupId, id FROM permissions WHERE CONCAT(resource, ':', action, ':', scope) IN (
             -- View employees (to know whose documents they're approving)
             'employees:view:organization',
 
@@ -1398,7 +1398,7 @@ BEGIN TRY
         (@RecruitmentGroupId, 'Recruitment / Onboarding', 'Can create new employees and manage onboarding process');
 
         INSERT INTO group_permissions (group_id, permission_id)
-        SELECT @RecruitmentGroupId, id FROM permissions WHERE permission_string IN (
+        SELECT @RecruitmentGroupId, id FROM permissions WHERE CONCAT(resource, ':', action, ':', scope) IN (
             -- Create and view employees
             'employees:view:organization',
             'employees:create:organization',
