@@ -1,10 +1,50 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select, Modal, message } from 'antd';
-import { EyeOutlined, EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import {
+  Card,
+  Table,
+  Button,
+  Alert,
+  Typography,
+  Space,
+  Skeleton,
+  Tag,
+  Input,
+  Select,
+  Modal,
+  message,
+  Row,
+  Col,
+  Dropdown,
+  Avatar,
+  Tabs
+} from 'antd';
+import type { MenuProps } from 'antd';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  MoreOutlined,
+  UserOutlined,
+  TeamOutlined,
+  ProjectOutlined,
+  DollarOutlined,
+  CheckCircleOutlined,
+  AppstoreOutlined,
+  TableOutlined
+} from '@ant-design/icons';
 import { getAllClients, deleteClient, ClientListItem } from '../../../api/clientApi';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+interface ClientStats {
+  total: number;
+  active: number;
+  projects: number;
+  revenue: number;
+}
 
 export const ClientListPage = () => {
   const navigate = useNavigate();
@@ -17,6 +57,7 @@ export const ClientListPage = () => {
   const [selectedIndustry, setSelectedIndustry] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   useEffect(() => {
     loadClients();
@@ -125,6 +166,47 @@ export const ClientListPage = () => {
       },
     });
   };
+
+  const getActionMenu = (client: ClientListItem): MenuProps => ({
+    items: [
+      {
+        key: 'view',
+        label: 'View Details',
+        icon: <EyeOutlined />,
+        onClick: () => navigate(`/admin/clients/${client.id}`),
+      },
+      {
+        key: 'edit',
+        label: 'Edit Client',
+        icon: <EditOutlined />,
+        onClick: () => navigate(`/admin/clients/${client.id}/edit`),
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        icon: <DeleteOutlined />,
+        danger: true,
+        onClick: () => handleDelete(client.id, client.name),
+      },
+    ],
+  });
+
+  const calculateStats = (): ClientStats => {
+    const activeClients = clients.filter(c => c.isActive);
+    const totalProjects = clients.reduce((sum, c) => sum + c.totalActiveProjects, 0);
+
+    return {
+      total: clients.length,
+      active: activeClients.length,
+      projects: totalProjects,
+      revenue: 0,
+    };
+  };
+
+  const stats = calculateStats();
 
   // Extract unique client types and industries for filters
   const uniqueTypes = Array.from(
@@ -244,102 +326,235 @@ export const ClientListPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 220,
+      width: 80,
       render: (record: ClientListItem) => (
-        <Space size="small">
+        <Dropdown menu={getActionMenu(record)} trigger={['click']}>
           <Button
-            type="primary"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => navigate(`/admin/clients/${record.id}`)}
-            style={{
-              background: '#0a0d54',
-              borderColor: '#0a0d54',
-              borderRadius: 6,
-            }}
-          >
-            View
-          </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/admin/clients/${record.id}/edit`)}
-            style={{ borderRadius: 6 }}
-          >
-            Edit
-          </Button>
-          <Button
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id, record.name)}
-            loading={deleteLoading}
-            style={{ borderRadius: 6 }}
-          >
-            Delete
-          </Button>
-        </Space>
+            type="text"
+            icon={<MoreOutlined />}
+            style={{ padding: 4 }}
+          />
+        </Dropdown>
       ),
     },
   ];
 
+  const renderStatsCards = () => (
+    <Row gutter={[16, 16]}>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>Total Clients</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>{stats.total}</Title>
+            <UserOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>Active</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>{stats.active}</Title>
+            <CheckCircleOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>Active Projects</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>{stats.projects}</Title>
+            <ProjectOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+      <Col xs={24} sm={12} lg={6}>
+        <Card
+          style={{
+            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            borderRadius: 12,
+            border: 'none',
+          }}
+        >
+          <Space direction="vertical" size={4}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>Revenue (UI)</Text>
+            <Title level={2} style={{ color: '#fff', margin: 0 }}>$0</Title>
+            <DollarOutlined style={{ fontSize: 24, color: 'rgba(255,255,255,0.8)' }} />
+          </Space>
+        </Card>
+      </Col>
+    </Row>
+  );
+
+  const renderCardsView = () => (
+    <Row gutter={[16, 16]}>
+      {filteredClients.map(client => (
+        <Col xs={24} sm={12} lg={8} xl={6} key={client.id}>
+          <Card
+            hoverable
+            style={{
+              borderRadius: 12,
+              border: '1px solid #f0f0f0',
+              transition: 'all 0.3s ease',
+            }}
+            styles={{
+              body: { padding: 20 }
+            }}
+          >
+            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Space>
+                  <Avatar
+                    size={48}
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    }}
+                  >
+                    {client.name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div>
+                    <Title level={5} style={{ margin: 0 }}>{client.name}</Title>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{client.clientCode}</Text>
+                  </div>
+                </Space>
+                <Dropdown menu={getActionMenu(client)} trigger={['click']}>
+                  <Button
+                    type="text"
+                    icon={<MoreOutlined />}
+                    style={{ padding: 4 }}
+                  />
+                </Dropdown>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {client.clientType && (
+                  <Tag color={clientTypeColors[client.clientType.toLowerCase()] || 'default'} style={{ borderRadius: 6 }}>
+                    {client.clientType}
+                  </Tag>
+                )}
+                {client.industry && (
+                  <Tag style={{ borderRadius: 6 }}>{client.industry}</Tag>
+                )}
+              </div>
+
+              <div>
+                <Space size={16}>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>Projects:</Text>
+                    <br />
+                    <Text strong>{client.totalActiveProjects}</Text>
+                  </div>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>Resources:</Text>
+                    <br />
+                    <Text strong>{client.totalActiveResources}</Text>
+                  </div>
+                </Space>
+              </div>
+
+              <div>
+                <Text type="secondary" style={{ fontSize: 12 }}>Contact:</Text>
+                <br />
+                {client.primaryContactName ? (
+                  <>
+                    <Text strong style={{ fontSize: 13 }}>{client.primaryContactName}</Text>
+                    <br />
+                    {client.primaryContactEmail && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>{client.primaryContactEmail}</Text>
+                    )}
+                  </>
+                ) : (
+                  <Text type="secondary">Not set</Text>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Tag
+                  color={client.isActive ? 'green' : 'red'}
+                  icon={client.isActive ? <CheckCircleOutlined /> : undefined}
+                  style={{ borderRadius: 6 }}
+                >
+                  {client.isActive ? 'Active' : 'Inactive'}
+                </Tag>
+                {client.isStrategic && (
+                  <Tag color="gold" style={{ borderRadius: 6 }}>
+                    Strategic
+                  </Tag>
+                )}
+              </div>
+            </Space>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  );
+
   return (
     <div style={{ maxWidth: 1600, margin: '0 auto', padding: 24 }}>
-      <Card
-        style={{
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        }}
-      >
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
-              <Title level={3} style={{ margin: 0 }}>Clients</Title>
-              <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: 14 }}>
-                Manage client relationships and engagements
-              </p>
-            </div>
-            <Space wrap>
-              <Input
-                placeholder="Search clients..."
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: 250, borderRadius: 6 }}
-                allowClear
-              />
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate('/admin/clients/create')}
-                style={{
-                  background: '#0a0d54',
-                  borderColor: '#0a0d54',
-                  borderRadius: 6,
-                }}
-              >
-                Create Client
-              </Button>
-            </Space>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <Title level={2} style={{ margin: 0 }}>
+              <UserOutlined /> Clients
+            </Title>
+            <Text type="secondary">Manage client relationships and engagements</Text>
           </div>
+          <Space wrap>
+            <Input
+              placeholder="Search clients..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: 250, borderRadius: 8 }}
+              allowClear
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/admin/clients/create')}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                borderRadius: 8,
+              }}
+            >
+              Create Client
+            </Button>
+          </Space>
+        </div>
 
-          {/* Advanced Filters */}
-          <div style={{
-            background: '#f5f5f5',
-            padding: '16px',
-            borderRadius: 8,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            flexWrap: 'wrap'
-          }}>
-            <span style={{ fontWeight: 500, color: '#666' }}>Filters:</span>
+        {/* Stats Cards */}
+        {renderStatsCards()}
+
+        {/* Filters */}
+        <Card style={{ borderRadius: 12 }}>
+          <Space wrap size="middle" style={{ width: '100%' }}>
+            <Text strong>Filters:</Text>
             <Select
               placeholder="Client Type"
               value={selectedType}
               onChange={handleTypeChange}
               allowClear
-              style={{ width: 180, borderRadius: 6 }}
+              style={{ width: 180 }}
             >
               {uniqueTypes.map(type => (
                 <Select.Option key={type} value={type}>
@@ -352,7 +567,7 @@ export const ClientListPage = () => {
               value={selectedIndustry}
               onChange={handleIndustryChange}
               allowClear
-              style={{ width: 180, borderRadius: 6 }}
+              style={{ width: 180 }}
             >
               {uniqueIndustries.map(industry => (
                 <Select.Option key={industry} value={industry}>
@@ -365,53 +580,91 @@ export const ClientListPage = () => {
               value={selectedStatus}
               onChange={handleStatusChange}
               allowClear
-              style={{ width: 150, borderRadius: 6 }}
+              style={{ width: 150 }}
             >
               <Select.Option value="active">Active</Select.Option>
               <Select.Option value="inactive">Inactive</Select.Option>
             </Select>
             {(selectedType || selectedIndustry || selectedStatus || searchText) && (
-              <Button onClick={handleClearFilters} style={{ borderRadius: 6 }}>
-                Clear All Filters
-              </Button>
+              <Button onClick={handleClearFilters}>Clear All Filters</Button>
             )}
-            <span style={{ marginLeft: 'auto', color: '#666' }}>
+            <Text type="secondary" style={{ marginLeft: 'auto' }}>
               Showing {filteredClients.length} of {clients.length} clients
-            </span>
-          </div>
+            </Text>
+          </Space>
+        </Card>
 
-          {error && (
-            <Alert
-              message="Error Loading Clients"
-              description={error}
-              type="error"
-              showIcon
-              closable
-              onClose={() => setError('')}
-            />
-          )}
+        {/* Error Alert */}
+        {error && (
+          <Alert
+            message="Error Loading Clients"
+            description={error}
+            type="error"
+            showIcon
+            closable
+            onClose={() => setError('')}
+          />
+        )}
 
-          {loading ? (
-            <Skeleton active paragraph={{ rows: 8 }} />
-          ) : (
-            <Table
-              columns={columns}
-              dataSource={filteredClients}
-              rowKey="id"
-              locale={{
-                emptyText: searchText
-                  ? `No clients match "${searchText}"`
-                  : 'No clients found. Click "Create Client" to add one.'
-              }}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} clients`,
-              }}
-            />
-          )}
-        </Space>
-      </Card>
+        {/* View Mode Toggle */}
+        <Card style={{ borderRadius: 12 }}>
+          <Tabs
+            activeKey={viewMode}
+            onChange={(key) => setViewMode(key as 'cards' | 'table')}
+            items={[
+              {
+                key: 'cards',
+                label: (
+                  <span>
+                    <AppstoreOutlined /> Card View
+                  </span>
+                ),
+              },
+              {
+                key: 'table',
+                label: (
+                  <span>
+                    <TableOutlined /> Table View
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </Card>
+
+        {/* Content */}
+        {loading ? (
+          <Row gutter={[16, 16]}>
+            {[1, 2, 3, 4].map(i => (
+              <Col xs={24} sm={12} lg={8} xl={6} key={i}>
+                <Card style={{ borderRadius: 12 }}>
+                  <Skeleton active paragraph={{ rows: 4 }} />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          viewMode === 'cards' ? renderCardsView() : (
+            <Card style={{ borderRadius: 12 }}>
+              <Table
+                columns={columns}
+                dataSource={filteredClients}
+                rowKey="id"
+                locale={{
+                  emptyText: searchText
+                    ? `No clients match "${searchText}"`
+                    : 'No clients found. Click "Create Client" to add one.'
+                }}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} clients`,
+                }}
+              />
+            </Card>
+          )
+        )}
+      </Space>
     </div>
   );
 };

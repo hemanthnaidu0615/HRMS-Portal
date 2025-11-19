@@ -379,4 +379,256 @@ public class EmailService {
                         </html>
                         """;
     }
+
+    // New notification email templates
+
+    @Async("emailTaskExecutor")
+    public void sendLeaveApprovalEmail(String to, String employeeName, String leaveType, String startDate, String endDate, String status) {
+        String subject = "Leave Request " + status;
+        EmailLog emailLog = new EmailLog(to, "LEAVE_APPROVAL", subject, EmailLog.EmailStatus.SUCCESS);
+
+        try {
+            String htmlContent = buildLeaveApprovalEmail(employeeName, leaveType, startDate, endDate, status);
+            sendHtmlEmail(to, subject, htmlContent);
+            log.info("Leave approval email sent to: {}", to);
+            emailLogRepository.save(emailLog);
+        } catch (Exception e) {
+            log.error("Failed to send leave approval email to: {}", to, e);
+            emailLog.setStatus(EmailLog.EmailStatus.FAILED);
+            emailLog.setErrorMessage(e.getMessage());
+            emailLogRepository.save(emailLog);
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    public void sendTimesheetReminderEmail(String to, String employeeName, String periodStart, String periodEnd) {
+        String subject = "Timesheet Submission Reminder";
+        EmailLog emailLog = new EmailLog(to, "TIMESHEET_REMINDER", subject, EmailLog.EmailStatus.SUCCESS);
+
+        try {
+            String htmlContent = buildTimesheetReminderEmail(employeeName, periodStart, periodEnd);
+            sendHtmlEmail(to, subject, htmlContent);
+            log.info("Timesheet reminder email sent to: {}", to);
+            emailLogRepository.save(emailLog);
+        } catch (Exception e) {
+            log.error("Failed to send timesheet reminder email to: {}", to, e);
+            emailLog.setStatus(EmailLog.EmailStatus.FAILED);
+            emailLog.setErrorMessage(e.getMessage());
+            emailLogRepository.save(emailLog);
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    public void sendPayrollGeneratedEmail(String to, String employeeName, String month, String netPay) {
+        String subject = "Payslip Generated - " + month;
+        EmailLog emailLog = new EmailLog(to, "PAYROLL_GENERATED", subject, EmailLog.EmailStatus.SUCCESS);
+
+        try {
+            String htmlContent = buildPayrollGeneratedEmail(employeeName, month, netPay);
+            sendHtmlEmail(to, subject, htmlContent);
+            log.info("Payroll generated email sent to: {}", to);
+            emailLogRepository.save(emailLog);
+        } catch (Exception e) {
+            log.error("Failed to send payroll generated email to: {}", to, e);
+            emailLog.setStatus(EmailLog.EmailStatus.FAILED);
+            emailLog.setErrorMessage(e.getMessage());
+            emailLogRepository.save(emailLog);
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    public void sendGenericNotificationEmail(String to, String title, String message, String actionUrl) {
+        String subject = title;
+        EmailLog emailLog = new EmailLog(to, "GENERIC_NOTIFICATION", subject, EmailLog.EmailStatus.SUCCESS);
+
+        try {
+            String htmlContent = buildGenericNotificationEmail(title, message, actionUrl);
+            sendHtmlEmail(to, subject, htmlContent);
+            log.info("Generic notification email sent to: {}", to);
+            emailLogRepository.save(emailLog);
+        } catch (Exception e) {
+            log.error("Failed to send generic notification email to: {}", to, e);
+            emailLog.setStatus(EmailLog.EmailStatus.FAILED);
+            emailLog.setErrorMessage(e.getMessage());
+            emailLogRepository.save(emailLog);
+        }
+    }
+
+    private String buildLeaveApprovalEmail(String employeeName, String leaveType, String startDate, String endDate, String status) {
+        String statusColor = status.equalsIgnoreCase("APPROVED") ? "#52c41a" :
+                           status.equalsIgnoreCase("REJECTED") ? "#ff4d4f" : "#faad14";
+
+        return String.format("""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .leave-box { background: white; padding: 20px; border-left: 4px solid %s; margin: 20px 0; }
+                        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 4px; background: %s; color: white; font-weight: bold; margin: 10px 0; }
+                        .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Leave Request Update</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello %s,</p>
+                            <p>Your leave request has been updated.</p>
+
+                            <div class="leave-box">
+                                <p><strong>Leave Type:</strong> %s</p>
+                                <p><strong>Start Date:</strong> %s</p>
+                                <p><strong>End Date:</strong> %s</p>
+                                <p><strong>Status:</strong> <span class="status-badge">%s</span></p>
+                            </div>
+
+                            <p>Please log in to the HRMS portal to view full details.</p>
+
+                            <p>Best regards,<br>HRMS Team</p>
+                        </div>
+                        <div class="footer">
+                            <p>This is an automated message. Please do not reply to this email.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """, statusColor, statusColor, employeeName, leaveType, startDate, endDate, status);
+    }
+
+    private String buildTimesheetReminderEmail(String employeeName, String periodStart, String periodEnd) {
+        return String.format("""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .reminder-box { background: #fff3cd; padding: 20px; border-left: 4px solid #ffc107; margin: 20px 0; }
+                        .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Timesheet Reminder</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello %s,</p>
+                            <p>This is a friendly reminder to submit your timesheet.</p>
+
+                            <div class="reminder-box">
+                                <p><strong>Period:</strong> %s to %s</p>
+                                <p>Please ensure your timesheet is submitted before the deadline to avoid any delays in processing.</p>
+                            </div>
+
+                            <p>Please log in to the HRMS portal to submit your timesheet.</p>
+
+                            <p>Best regards,<br>HRMS Team</p>
+                        </div>
+                        <div class="footer">
+                            <p>This is an automated message. Please do not reply to this email.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """, employeeName, periodStart, periodEnd);
+    }
+
+    private String buildPayrollGeneratedEmail(String employeeName, String month, String netPay) {
+        return String.format("""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .payroll-box { background: white; padding: 20px; border-left: 4px solid #52c41a; margin: 20px 0; }
+                        .amount { font-size: 24px; font-weight: bold; color: #0a0d54; margin: 10px 0; }
+                        .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Payslip Available</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello %s,</p>
+                            <p>Your payslip for %s is now available.</p>
+
+                            <div class="payroll-box">
+                                <p><strong>Month:</strong> %s</p>
+                                <p><strong>Net Pay:</strong></p>
+                                <p class="amount">%s</p>
+                            </div>
+
+                            <p>Please log in to the HRMS portal to view and download your complete payslip.</p>
+
+                            <p>Best regards,<br>HRMS Team</p>
+                        </div>
+                        <div class="footer">
+                            <p>This is an automated message. Please do not reply to this email.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """, employeeName, month, month, netPay);
+    }
+
+    private String buildGenericNotificationEmail(String title, String message, String actionUrl) {
+        String actionButton = actionUrl != null && !actionUrl.isEmpty()
+            ? "<a href=\"" + actionUrl + "\" class=\"button\">View Details</a>"
+            : "";
+
+        return String.format("""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #0a0d54; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .message-box { background: white; padding: 20px; border-left: 4px solid #1890ff; margin: 20px 0; }
+                        .button { display: inline-block; background: #0a0d54; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>%s</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello,</p>
+
+                            <div class="message-box">
+                                <p>%s</p>
+                            </div>
+
+                            %s
+
+                            <p>Best regards,<br>HRMS Team</p>
+                        </div>
+                        <div class="footer">
+                            <p>This is an automated message. Please do not reply to this email.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """, title, message, actionButton);
+    }
 }

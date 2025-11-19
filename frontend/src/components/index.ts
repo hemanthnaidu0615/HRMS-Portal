@@ -8,3 +8,4 @@ export { DocumentPreviewModal } from './DocumentPreviewModal';
 export { UploadButton } from './UploadButton';
 export { EmployeeSelector } from './EmployeeSelector';
 export { Toolbar } from './Toolbar';
+export { ErrorBoundary } from './ErrorBoundary';

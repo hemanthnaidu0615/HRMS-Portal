@@ -22,6 +22,23 @@ export interface OrgAdminResponse {
   mustChangePassword: boolean;
 }
 
+export interface OrganizationModule {
+  id?: number;
+  moduleName: string;
+  isEnabled: boolean;
+  userLimit?: number;
+  expiryDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UpdateModulesRequest {
+  moduleName: string;
+  isEnabled: boolean;
+  userLimit?: number;
+  expiryDate?: string;
+}
+
 export const superadminApi = {
   getOrganizations: async (): Promise<Organization[]> => {
     const response = await http.get<Organization[]>('/api/superadmin/organizations');
@@ -47,5 +64,27 @@ export const superadminApi = {
 
   reactivateOrganization: async (orgId: string): Promise<void> => {
     await http.post(`/api/superadmin/organizations/${orgId}/reactivate`);
+  },
+
+  // Module Management APIs
+  getOrganizationModules: async (orgId: string): Promise<OrganizationModule[]> => {
+    const response = await http.get<OrganizationModule[]>(
+      `/api/superadmin/organizations/${orgId}/modules`
+    );
+    return response.data;
+  },
+
+  updateOrganizationModules: async (
+    orgId: string,
+    modules: UpdateModulesRequest[]
+  ): Promise<void> => {
+    await http.put(`/api/superadmin/organizations/${orgId}/modules`, modules);
+  },
+
+  getEnabledModulesCount: async (orgId: string): Promise<number> => {
+    const response = await http.get<{ enabledModulesCount: number }>(
+      `/api/superadmin/organizations/${orgId}/modules/count`
+    );
+    return response.data.enabledModulesCount;
   },
 };
