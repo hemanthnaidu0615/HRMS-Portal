@@ -89,13 +89,6 @@ export const UploadMyDocumentPage: React.FC = () => {
       return;
     }
 
-    try {
-      await form.validateFields();
-    } catch {
-      message.warning('Please fill in all required fields');
-      return;
-    }
-
     setUploading(true);
     setTotalCount(fileList.length);
     setUploadedCount(0);
@@ -103,24 +96,20 @@ export const UploadMyDocumentPage: React.FC = () => {
     try {
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
-        const formData = new FormData();
 
         if (file.originFileObj) {
-          formData.append('file', file.originFileObj);
-
-          // Add metadata
-          const values = form.getFieldsValue();
-          formData.append('category', values.category || 'Other');
-          formData.append('description', values.description || '');
-          formData.append('documentName', values.documentName || file.name);
-
-          if (requestId) {
-            await uploadMyDocumentForRequest(requestId, file.originFileObj);
-          } else {
-            await uploadMyDocument(file.originFileObj);
+          try {
+            if (requestId) {
+              await uploadMyDocumentForRequest(requestId, file.originFileObj);
+            } else {
+              await uploadMyDocument(file.originFileObj);
+            }
+            setUploadedCount(i + 1);
+          } catch (err: any) {
+            console.error('Upload error for file:', file.name, err);
+            const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Upload failed';
+            throw new Error(`Failed to upload ${file.name}: ${errorMessage}`);
           }
-
-          setUploadedCount(i + 1);
         }
       }
 
@@ -135,7 +124,8 @@ export const UploadMyDocumentPage: React.FC = () => {
         navigate(requestId ? '/document-requests/me' : '/documents/me');
       }, 2000);
     } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to upload document(s)');
+      console.error('Upload error:', err);
+      message.error(err.message || err.response?.data?.error || 'Failed to upload document(s)');
     } finally {
       setUploading(false);
     }

@@ -74,53 +74,88 @@ public class DocumentController {
     public ResponseEntity<?> uploadForSelf(@RequestParam("file") MultipartFile file,
                                            @RequestParam(value = "requestId", required = false) UUID requestId,
                                            Authentication authentication) {
-        String email = authentication.getName();
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            // Validate file
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "File is required and cannot be empty"));
+            }
 
-        Employee employee = getOrCreateEmployee(user);
+            // Validate file size (10MB max)
+            long maxFileSize = 10 * 1024 * 1024; // 10MB
+            if (file.getSize() > maxFileSize) {
+                return ResponseEntity.badRequest().body(Map.of("error", "File size exceeds maximum allowed size of 10MB"));
+            }
 
-        if (!permissionService.has(employee, "UPLOAD_OWN_DOCS")) {
-            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
-        }
+            String email = authentication.getName();
+            User user = userService.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String filePath = fileStorageService.store(file, employee.getId(), employee.getOrganization().getId());
-        Document document = documentService.uploadForEmployee(
-                employee,
-                user,
-                file.getOriginalFilename(),
-                filePath,
-                file.getContentType()
-        );
+            Employee employee = getOrCreateEmployee(user);
 
-        if (requestId != null) {
-            documentRequestRepository.findById(requestId).ifPresent(req -> {
-                if (req.getTargetEmployee().getId().equals(employee.getId())) {
-                    req.setFulfilledDocument(document);
-                    req.setStatus("COMPLETED");
-                    req.setCompletedAt(LocalDateTime.now());
-                    documentRequestRepository.save(req);
+            if (!permissionService.has(employee, "UPLOAD_OWN_DOCS")) {
+                return ResponseEntity.status(403).body(Map.of("error", "You do not have permission to upload documents"));
+            }
 
-                    // Send email notification to requester
-                    try {
-                        String uploaderName = user.getEmail().split("@")[0];
-                        String requesterEmail = req.getRequester().getEmail();
-                        emailService.sendDocumentUploadedEmail(
-                            requesterEmail,
-                            uploaderName,
-                            user.getEmail(),
-                            document.getFileType() != null ? document.getFileType() : "Document",
-                            document.getId().toString()
-                        );
-                    } catch (Exception e) {
-                        logger.error("Failed to send document uploaded email to {}: {}", req.getRequester().getEmail(), e.getMessage(), e);
-                    }
+            String filePath = fileStorageService.store(file, employee.getId(), employee.getOrganization().getId());
+            Document document = documentService.uploadForEmployee(
+                    employee,
+                    user,
+                    file.getOriginalFilename(),
+                    filePath,
+                    file.getContentType()
+            );
+
+            if (requestId != null) {
+                var requestOpt = documentRequestRepository.findById(requestId);
+                if (!requestOpt.isPresent()) {
+                    logger.warn("Document request not found with ID: {}", requestId);
+                    return ResponseEntity.badRequest().body(Map.of("error", "Document request not found"));
                 }
-            });
-        }
 
-        DocumentResponse response = toDocumentResponse(document);
-        return ResponseEntity.ok(new DocumentUploadResponse("Document uploaded successfully", response));
+                var req = requestOpt.get();
+
+                // Verify the current user is the target employee
+                if (!req.getTargetEmployee().getId().equals(employee.getId())) {
+                    logger.warn("User {} attempted to fulfill request {} meant for employee {}",
+                        employee.getId(), requestId, req.getTargetEmployee().getId());
+                    return ResponseEntity.status(403).body(Map.of("error", "You are not authorized to fulfill this document request"));
+                }
+
+                // Verify request is still in REQUESTED status
+                if (!"REQUESTED".equals(req.getStatus())) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "This document request has already been " + req.getStatus().toLowerCase()));
+                }
+
+                req.setFulfilledDocument(document);
+                req.setStatus("COMPLETED");
+                req.setCompletedAt(LocalDateTime.now());
+                documentRequestRepository.save(req);
+
+                logger.info("Document request {} fulfilled by employee {} with document {}",
+                    requestId, employee.getId(), document.getId());
+
+                // Send email notification to requester
+                try {
+                    String uploaderName = user.getEmail().split("@")[0];
+                    String requesterEmail = req.getRequester().getEmail();
+                    emailService.sendDocumentUploadedEmail(
+                        requesterEmail,
+                        uploaderName,
+                        user.getEmail(),
+                        document.getFileType() != null ? document.getFileType() : "Document",
+                        document.getId().toString()
+                    );
+                } catch (Exception e) {
+                    logger.error("Failed to send document uploaded email to {}: {}", req.getRequester().getEmail(), e.getMessage(), e);
+                }
+            }
+
+            DocumentResponse response = toDocumentResponse(document);
+            return ResponseEntity.ok(new DocumentUploadResponse("Document uploaded successfully", response));
+        } catch (Exception e) {
+            logger.error("Error uploading document: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to upload document: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/employee/{employeeId}/upload")
