@@ -16,6 +16,14 @@ import {
   IdcardOutlined,
   ProjectOutlined,
   HistoryOutlined,
+  ClockCircleOutlined,
+  CalendarOutlined,
+  FieldTimeOutlined,
+  DollarOutlined,
+  TrophyOutlined,
+  LaptopOutlined,
+  WalletOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -48,6 +56,10 @@ function getItem(
 export const superAdminMenuItems: MenuItem[] = [
   getItem('Dashboard', '/superadmin/dashboard', <DashboardOutlined />),
   getItem('Organizations', '/superadmin/organizations', <BankOutlined />),
+  getItem('Notifications', 'notifications', <BellOutlined />, [
+    getItem('All Notifications', '/notifications'),
+    getItem('Notification Preferences', '/notifications/preferences'),
+  ]),
   getItem('Profile', '/profile', <UserOutlined />),
   getItem('My Permissions', '/permissions', <SafetyCertificateOutlined />),
 ];
@@ -81,13 +93,60 @@ export const orgAdminMenuItems: MenuItem[] = [
   ]),
 
   getItem('Projects', 'projects', <ProjectOutlined />, [
-    getItem('All Projects', '/admin/projects'),
-    getItem('Add Project', '/admin/projects/create'),
+    getItem('All Projects', '/admin/projects/projects'),
+    getItem('Project Tasks', '/admin/projects/tasks'),
+    getItem('Add Project', '/admin/projects/projects/create'),
   ]),
 
   getItem('Access Control', 'permissions', <SafetyCertificateOutlined />, [
     getItem('Roles', '/admin/roles'),
     getItem('Permission Groups', '/admin/permissions/groups'),
+  ]),
+
+  getItem('Attendance', 'attendance', <ClockCircleOutlined />, [
+    getItem('Attendance Records', '/admin/attendance/records'),
+    getItem('Regularization Requests', '/admin/attendance/regularization'),
+    getItem('Shift Management', '/admin/attendance/shifts'),
+  ]),
+
+  getItem('Leave', 'leave', <CalendarOutlined />, [
+    getItem('Leave Applications', '/admin/leave/applications'),
+    getItem('Leave Balances', '/admin/leave/balances'),
+    getItem('Leave Types', '/admin/leave/types'),
+  ]),
+
+  getItem('Timesheet', 'timesheet', <FieldTimeOutlined />, [
+    getItem('Timesheet Entries', '/admin/timesheet/entries'),
+    getItem('Pending Approvals', '/admin/timesheet/approvals'),
+  ]),
+
+  getItem('Payroll', 'payroll', <DollarOutlined />, [
+    getItem('Payroll Runs', '/admin/payroll/runs'),
+    getItem('Payslips', '/admin/payroll/payslips'),
+    getItem('Salary Components', '/admin/payroll/components'),
+  ]),
+
+  getItem('Performance', 'performance', <TrophyOutlined />, [
+    getItem('Performance Reviews', '/admin/performance/reviews'),
+    getItem('Employee Goals', '/admin/performance/goals'),
+    getItem('Review Cycles', '/admin/performance/cycles'),
+  ]),
+
+  getItem('Recruitment', 'recruitment', <TeamOutlined />, [
+    getItem('Job Postings', '/admin/recruitment/jobs'),
+    getItem('Applications', '/admin/recruitment/applications'),
+    getItem('Interview Schedules', '/admin/recruitment/interviews'),
+  ]),
+
+  getItem('Assets', 'assets', <LaptopOutlined />, [
+    getItem('All Assets', '/admin/assets/assets'),
+    getItem('Asset Assignments', '/admin/assets/assignments'),
+    getItem('Asset Categories', '/admin/assets/categories'),
+  ]),
+
+  getItem('Expenses', 'expenses', <WalletOutlined />, [
+    getItem('Expense Claims', '/admin/expenses/claims'),
+    getItem('Expense Categories', '/admin/expenses/categories'),
   ]),
 
   getItem('Audit Logs', '/admin/audit-logs', <HistoryOutlined />),
@@ -96,6 +155,11 @@ export const orgAdminMenuItems: MenuItem[] = [
     getItem('All Documents', '/documents/org'),
     getItem('All Document Requests', '/document-requests/org'),
     getItem('Request Document', '/document-requests/create'),
+  ]),
+
+  getItem('Notifications', 'notifications', <BellOutlined />, [
+    getItem('All Notifications', '/notifications'),
+    getItem('Notification Preferences', '/notifications/preferences'),
   ]),
 
   getItem('Profile', '/profile', <UserOutlined />),
@@ -117,6 +181,11 @@ export const employeeMenuItems: MenuItem[] = [
     getItem('Request Document', '/document-requests/create'),
     getItem('Requests I Received', '/document-requests/incoming'),
     getItem('Requests I Sent', '/document-requests/outgoing'),
+  ]),
+
+  getItem('Notifications', 'notifications', <BellOutlined />, [
+    getItem('All Notifications', '/notifications'),
+    getItem('Notification Preferences', '/notifications/preferences'),
   ]),
 
   getItem('Profile', '/profile', <UserOutlined />),

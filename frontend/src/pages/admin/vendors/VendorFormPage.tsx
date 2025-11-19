@@ -183,25 +183,47 @@ export const VendorFormPage = () => {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-      <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Gradient Header */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '32px 24px',
+            margin: '-24px -24px 24px -24px',
+            color: '#fff',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <Title level={3} style={{ margin: 0 }}>
+              <Title level={3} style={{ color: '#fff', margin: 0 }}>
                 {isEditMode ? 'Edit Vendor' : 'Create Vendor'}
               </Title>
-              <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: 14 }}>
+              <Text style={{ color: 'rgba(255,255,255,0.9)' }}>
                 {isEditMode ? 'Update vendor information' : 'Add a new vendor to the system'}
-              </p>
+              </Text>
             </div>
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate('/admin/vendors')}
-              style={{ borderRadius: 6 }}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                borderColor: 'rgba(255,255,255,0.3)',
+                color: '#fff',
+                borderRadius: 8,
+              }}
             >
-              Back to Vendors
+              Back
             </Button>
           </div>
+        </div>
+
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
 
           {error && (
             <Alert
@@ -487,9 +509,9 @@ export const VendorFormPage = () => {
                 loading={saveLoading}
                 size="large"
                 style={{
-                  background: '#0a0d54',
-                  borderColor: '#0a0d54',
-                  borderRadius: 6,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                  borderRadius: 8,
                 }}
               >
                 {isEditMode ? 'Update Vendor' : 'Create Vendor'}

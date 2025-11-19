@@ -310,47 +310,109 @@ export const EmployeeDetailPage = () => {
   }
 
   const fullName = `${employee.firstName || ''} ${employee.middleName || ''} ${employee.lastName || ''}`.trim() || employee.email;
+  const initials = fullName
+    ? `${employee.firstName?.[0] || ''}${employee.middleName?.[0] || ''}${employee.lastName?.[0] || ''}`.toUpperCase()
+    : employee.email.substring(0, 2).toUpperCase();
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
-      <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* Header Section */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <Title level={3} style={{ margin: 0, marginBottom: 8 }}>
-                {fullName}
-                {isDeleted && <Tag color="error" style={{ marginLeft: 8 }}>Deleted</Tag>}
-              </Title>
-              <Space wrap>
-                {employee.employeeCode && (
-                  <Tag color="blue" style={{ borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
-                    {employee.employeeCode}
-                  </Tag>
-                )}
-                {employee.employmentType && (
-                  <Tag color={employmentTypeColors[employee.employmentType] || 'default'} style={{ borderRadius: 6 }}>
-                    {employee.employmentType}
-                  </Tag>
-                )}
-                {employee.employmentStatus && (
-                  <Tag color={employmentStatusColors[employee.employmentStatus] || 'default'} style={{ borderRadius: 6 }}>
-                    {employee.employmentStatus}
-                  </Tag>
-                )}
-                {employee.departmentName && (
-                  <Tag icon={<BankOutlined />} color="purple" style={{ borderRadius: 6 }}>
-                    {employee.departmentName}
-                  </Tag>
-                )}
-                {employee.positionName && (
-                  <Tag icon={<UserOutlined />} color="green" style={{ borderRadius: 6 }}>
-                    {employee.positionName}
-                  </Tag>
-                )}
-              </Space>
+      {/* Premium Header Card with Photo */}
+      <Card
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          marginBottom: 24,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          border: 'none',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div
+            style={{
+              position: 'relative',
+              width: 120,
+              height: 120,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '4px solid rgba(255,255,255,0.3)',
+              fontSize: 36,
+              fontWeight: 700,
+              color: '#fff',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+            }}
+            title="Click to upload photo"
+          >
+            {initials}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                background: '#fff',
+                borderRadius: '50%',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#667eea',
+                fontSize: 18,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+            >
+              <EditOutlined />
             </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <Title level={2} style={{ margin: 0, color: '#fff' }}>
+                {fullName}
+              </Title>
+              {isDeleted && <Tag color="error">Deleted</Tag>}
+            </div>
+            <Space wrap>
+              {employee.employeeCode && (
+                <Tag style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 6, fontSize: 13, fontWeight: 600, border: 'none' }}>
+                  {employee.employeeCode}
+                </Tag>
+              )}
+              {employee.employmentType && (
+                <Tag style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 6, border: 'none' }}>
+                  {employee.employmentType}
+                </Tag>
+              )}
+              {employee.employmentStatus && (
+                <Tag style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 6, border: 'none' }}>
+                  {employee.employmentStatus}
+                </Tag>
+              )}
+              {employee.departmentName && (
+                <Tag icon={<BankOutlined />} style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 6, border: 'none' }}>
+                  {employee.departmentName}
+                </Tag>
+              )}
+              {employee.positionName && (
+                <Tag icon={<UserOutlined />} style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 6, border: 'none' }}>
+                  {employee.positionName}
+                </Tag>
+              )}
+            </Space>
+            <div style={{ marginTop: 12, color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>
+              {employee.email}
+            </div>
+          </div>
+        </div>
+      </Card>
 
+      {/* Action Buttons Card */}
+      <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: 24 }}>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+            <Title level={4} style={{ margin: 0 }}>Actions</Title>
             <Space wrap>
               {!isDeleted && (
                 <>
@@ -433,8 +495,12 @@ export const EmployeeDetailPage = () => {
               </Button>
             </Space>
           </div>
+        </Space>
+      </Card>
 
-          {/* Tabbed Content */}
+      {/* Tabbed Content Card */}
+      <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Tabs
             defaultActiveKey="1"
             items={[

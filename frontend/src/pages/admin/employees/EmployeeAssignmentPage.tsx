@@ -148,41 +148,67 @@ export const EmployeeAssignmentPage = () => {
 
           <form onSubmit={handleSubmit}>
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              <div>
-                <Title level={5}>Reporting</Title>
-                <Divider style={{ margin: '12px 0' }} />
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: 8,
-                    fontWeight: 500
-                  }}>
-                    Reports To
-                  </label>
-                  <Select
-                    value={reportsToEmployeeId}
-                    onChange={setReportsToEmployeeId}
-                    options={employees.map(emp => {
-                      const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
-                      const displayName = fullName || emp.email;
-                      return {
-                        label: `${displayName}${emp.positionName ? ` (${emp.positionName})` : ''}`,
-                        value: emp.employeeId
-                      };
-                    })}
-                    placeholder="Select manager"
-                    allowClear
-                    size="large"
-                    style={{ width: '100%', borderRadius: 8 }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Title level={5}>Structure</Title>
-                <Divider style={{ margin: '12px 0' }} />
+              {/* Reporting Section */}
+              <Card
+                size="small"
+                style={{
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                }}
+              >
                 <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  <div>
+                  <Title level={5} style={{ color: '#fff', margin: 0 }}>
+                    Reporting Structure
+                  </Title>
+                  <div style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      fontWeight: 500
+                    }}>
+                      Reports To
+                    </label>
+                    <Select
+                      value={reportsToEmployeeId}
+                      onChange={setReportsToEmployeeId}
+                      options={employees.map(emp => {
+                        const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+                        const displayName = fullName || emp.email;
+                        return {
+                          label: `${displayName}${emp.positionName ? ` (${emp.positionName})` : ''}`,
+                          value: emp.employeeId
+                        };
+                      })}
+                      placeholder="Select manager"
+                      allowClear
+                      size="large"
+                      style={{ width: '100%', borderRadius: 8 }}
+                      showSearch
+                      filterOption={(input, option) =>
+                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      }
+                    />
+                  </div>
+                </Space>
+              </Card>
+
+              {/* Organizational Structure */}
+              <Card
+                size="small"
+                style={{
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                  border: 'none',
+                }}
+              >
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <Title level={5} style={{ color: '#fff', margin: 0 }}>
+                    Organizational Structure
+                  </Title>
+                  <div style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <div>
                     <label style={{
                       display: 'block',
                       marginBottom: 8,
@@ -224,14 +250,27 @@ export const EmployeeAssignmentPage = () => {
                       style={{ width: '100%', borderRadius: 8 }}
                     />
                   </div>
+                    </Space>
+                  </div>
                 </Space>
-              </div>
+              </Card>
 
-              <div>
-                <Title level={5}>Employment</Title>
-                <Divider style={{ margin: '12px 0' }} />
+              {/* Employment Details */}
+              <Card
+                size="small"
+                style={{
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                  border: 'none',
+                }}
+              >
                 <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  <div>
+                  <Title level={5} style={{ color: '#fff', margin: 0 }}>
+                    Employment Details
+                  </Title>
+                  <div style={{ background: '#fff', padding: 16, borderRadius: 8 }}>
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <div>
                     <label style={{
                       display: 'block',
                       marginBottom: 8,
@@ -300,10 +339,13 @@ export const EmployeeAssignmentPage = () => {
                       style={{ width: '100%', borderRadius: 8 }}
                     />
                   </div>
+                    </Space>
+                  </div>
                 </Space>
-              </div>
+              </Card>
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'center' }}>
                 <Button
                   type="primary"
                   htmlType="submit"

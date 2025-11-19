@@ -1,9 +1,12 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AppLayout } from './layouts/AppLayout';
 import { useAuth } from './auth/useAuth';
 import { getMenuItemsByRole } from './config/navigation';
+import { premiumTheme } from './theme/premiumTheme';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Auth Pages
 import { LoginPage, SetPasswordPage, ForgotPasswordPage, ResetPasswordPage } from './pages/auth';
@@ -12,22 +15,24 @@ import { LoginPage, SetPasswordPage, ForgotPasswordPage, ResetPasswordPage } fro
 import { OrganizationsPage } from './pages/superadmin/OrganizationsPage';
 import { CreateOrganizationPage } from './pages/superadmin/CreateOrganizationPage';
 import { CreateOrgAdminPage } from './pages/superadmin/CreateOrgAdminPage';
+import { OrganizationModulesPage } from './pages/superadmin/OrganizationModulesPage';
 
 // OrgAdmin Pages (Legacy - being phased out)
 import { CreateEmployeePage } from './pages/orgadmin/CreateEmployeePage';
 import { EmployeePermissionsPage } from './pages/orgadmin/EmployeePermissionsPage';
 
-// Employee Pages
-import { DashboardPage } from './pages/employee/DashboardPage';
-
 // Dashboard Pages
 import { EmployeeDashboardPage } from './pages/dashboards/EmployeeDashboardPage';
-import { AdminDashboardPage } from './pages/dashboards/AdminDashboardPage';
+import { EnhancedAdminDashboard } from './pages/dashboards/EnhancedAdminDashboard';
 import { SuperAdminDashboardPage } from './pages/dashboards/SuperAdminDashboardPage';
 
 // Profile Pages
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { PermissionsPage } from './pages/profile/PermissionsPage';
+
+// Notification Pages
+import NotificationsPage from './pages/notifications/NotificationsPage';
+import NotificationPreferencesPage from './pages/notifications/NotificationPreferencesPage';
 
 // Document Pages
 import { MyDocumentsPage } from './pages/documents/MyDocumentsPage';
@@ -80,6 +85,74 @@ import { ClientFormPage } from './pages/admin/clients/ClientFormPage';
 import { ProjectListPage } from './pages/admin/projects/ProjectListPage';
 import { ProjectFormPage } from './pages/admin/projects/ProjectFormPage';
 
+// Attendance Pages
+import AttendanceRecordsListPage from './pages/admin/attendance/records';
+import AttendanceRecordsFormPage from './pages/admin/attendance/records/FormPage';
+import RegularizationListPage from './pages/admin/attendance/regularization';
+import RegularizationFormPage from './pages/admin/attendance/regularization/FormPage';
+import ShiftsListPage from './pages/admin/attendance/shifts';
+import ShiftsFormPage from './pages/admin/attendance/shifts/FormPage';
+
+// Leave Pages
+import LeaveApplicationsListPage from './pages/admin/leave/applications';
+import LeaveApplicationsFormPage from './pages/admin/leave/applications/FormPage';
+import LeaveBalancesListPage from './pages/admin/leave/balances';
+import LeaveTypesListPage from './pages/admin/leave/types';
+import LeaveTypesFormPage from './pages/admin/leave/types/FormPage';
+
+// Timesheet Pages
+import TimesheetEntriesListPage from './pages/admin/timesheet/entries';
+import TimesheetEntriesFormPage from './pages/admin/timesheet/entries/FormPage';
+import TimesheetApprovalsListPage from './pages/admin/timesheet/approvals';
+import TimesheetApprovalsFormPage from './pages/admin/timesheet/approvals/FormPage';
+
+// Payroll Pages
+import PayrollRunsListPage from './pages/admin/payroll/runs';
+import PayrollRunsFormPage from './pages/admin/payroll/runs/FormPage';
+import PayslipsListPage from './pages/admin/payroll/payslips';
+import PayslipsFormPage from './pages/admin/payroll/payslips/FormPage';
+import SalaryComponentsListPage from './pages/admin/payroll/components';
+import SalaryComponentsFormPage from './pages/admin/payroll/components/FormPage';
+
+// Performance Pages
+import PerformanceReviewsListPage from './pages/admin/performance/reviews';
+import PerformanceReviewsFormPage from './pages/admin/performance/reviews/FormPage';
+import EmployeeGoalsListPage from './pages/admin/performance/goals';
+import EmployeeGoalsFormPage from './pages/admin/performance/goals/FormPage';
+import ReviewCyclesListPage from './pages/admin/performance/cycles';
+import ReviewCyclesFormPage from './pages/admin/performance/cycles/FormPage';
+
+// Recruitment Pages
+import JobPostingsListPage from './pages/admin/recruitment/jobs';
+import JobPostingsFormPage from './pages/admin/recruitment/jobs/FormPage';
+import JobApplicationsListPage from './pages/admin/recruitment/applications';
+import JobApplicationsFormPage from './pages/admin/recruitment/applications/FormPage';
+import InterviewSchedulesListPage from './pages/admin/recruitment/interviews';
+import InterviewSchedulesFormPage from './pages/admin/recruitment/interviews/FormPage';
+
+// Assets Pages
+import AssetsListPage from './pages/admin/assets/assets';
+import AssetsFormPage from './pages/admin/assets/assets/FormPage';
+import AssetAssignmentsListPage from './pages/admin/assets/assignments';
+import AssetAssignmentsFormPage from './pages/admin/assets/assignments/FormPage';
+import AssetCategoriesListPage from './pages/admin/assets/categories';
+import AssetCategoriesFormPage from './pages/admin/assets/categories/FormPage';
+
+// Expenses Pages
+import ExpenseClaimsListPage from './pages/admin/expenses/claims';
+import ExpenseClaimsFormPage from './pages/admin/expenses/claims/FormPage';
+import ExpenseCategoriesListPage from './pages/admin/expenses/categories';
+import ExpenseCategoriesFormPage from './pages/admin/expenses/categories/FormPage';
+
+// Projects Pages (New Structure)
+import ProjectsListPage from './pages/admin/projects/projects';
+import ProjectsFormPage from './pages/admin/projects/projects/FormPage';
+import ProjectTasksListPage from './pages/admin/projects/tasks';
+import ProjectTasksFormPage from './pages/admin/projects/tasks/FormPage';
+
+// Error Pages
+import { NotFoundPage } from './pages/NotFoundPage';
+
 /**
  * Layout Wrapper Component
  * Wraps authenticated routes with AppLayout and role-based navigation
@@ -98,8 +171,9 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
  */
 function App() {
   return (
-    <div>
-      <Routes>
+    <ErrorBoundary>
+      <ConfigProvider theme={premiumTheme}>
+        <Routes>
         {/* Public Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/set-password" element={<SetPasswordPage />} />
@@ -148,6 +222,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/superadmin/organizations/:orgId/modules"
+          element={
+            <ProtectedRoute requiredRole="superadmin">
+              <LayoutWrapper>
+                <OrganizationModulesPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
 
         {/* OrgAdmin Routes (Legacy - redirecting to new admin routes) */}
         <Route path="/orgadmin/employees" element={<Navigate to="/admin/employees" replace />} />
@@ -181,7 +265,7 @@ function App() {
           element={
             <ProtectedRoute requiredRole="orgadmin">
               <LayoutWrapper>
-                <AdminDashboardPage />
+                <EnhancedAdminDashboard />
               </LayoutWrapper>
             </ProtectedRoute>
           }
@@ -204,6 +288,28 @@ function App() {
             <ProtectedRoute>
               <LayoutWrapper>
                 <PermissionsPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Notification Routes */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <LayoutWrapper>
+                <NotificationsPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications/preferences"
+          element={
+            <ProtectedRoute>
+              <LayoutWrapper>
+                <NotificationPreferencesPage />
               </LayoutWrapper>
             </ProtectedRoute>
           }
@@ -550,43 +656,101 @@ function App() {
           }
         />
 
-        {/* Project Management Routes */}
-        <Route
-          path="/admin/projects"
-          element={
-            <ProtectedRoute requiredRole="orgadmin">
-              <LayoutWrapper>
-                <ProjectListPage />
-              </LayoutWrapper>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/projects/create"
-          element={
-            <ProtectedRoute requiredRole="orgadmin">
-              <LayoutWrapper>
-                <ProjectFormPage />
-              </LayoutWrapper>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/projects/:id/edit"
-          element={
-            <ProtectedRoute requiredRole="orgadmin">
-              <LayoutWrapper>
-                <ProjectFormPage />
-              </LayoutWrapper>
-            </ProtectedRoute>
-          }
-        />
+        {/* Attendance Module Routes */}
+        <Route path="/admin/attendance/records" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AttendanceRecordsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/records/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AttendanceRecordsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/records/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AttendanceRecordsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/regularization" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><RegularizationListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/regularization/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><RegularizationFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/regularization/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><RegularizationFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/shifts" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ShiftsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/shifts/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ShiftsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/attendance/shifts/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ShiftsFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Leave Module Routes */}
+        <Route path="/admin/leave/applications" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><LeaveApplicationsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/leave/applications/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><LeaveApplicationsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/leave/applications/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><LeaveApplicationsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/leave/balances" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><LeaveBalancesListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/leave/types" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><LeaveTypesListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/leave/types/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><LeaveTypesFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/leave/types/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><LeaveTypesFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Timesheet Module Routes */}
+        <Route path="/admin/timesheet/entries" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><TimesheetEntriesListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/timesheet/entries/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><TimesheetEntriesFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/timesheet/entries/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><TimesheetEntriesFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/timesheet/approvals" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><TimesheetApprovalsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/timesheet/approvals/:id" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><TimesheetApprovalsFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Payroll Module Routes */}
+        <Route path="/admin/payroll/runs" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PayrollRunsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/runs/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PayrollRunsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/runs/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PayrollRunsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/payslips" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PayslipsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/payslips/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PayslipsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/payslips/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PayslipsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/components" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><SalaryComponentsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/components/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><SalaryComponentsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/payroll/components/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><SalaryComponentsFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Performance Module Routes */}
+        <Route path="/admin/performance/reviews" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PerformanceReviewsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/reviews/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PerformanceReviewsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/reviews/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><PerformanceReviewsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/goals" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><EmployeeGoalsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/goals/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><EmployeeGoalsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/goals/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><EmployeeGoalsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/cycles" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ReviewCyclesListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/cycles/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ReviewCyclesFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/performance/cycles/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ReviewCyclesFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Recruitment Module Routes */}
+        <Route path="/admin/recruitment/jobs" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><JobPostingsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/jobs/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><JobPostingsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/jobs/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><JobPostingsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/applications" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><JobApplicationsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/applications/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><JobApplicationsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/applications/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><JobApplicationsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/interviews" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><InterviewSchedulesListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/interviews/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><InterviewSchedulesFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/recruitment/interviews/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><InterviewSchedulesFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Assets Module Routes */}
+        <Route path="/admin/assets/assets" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/assets/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/assets/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/assignments" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetAssignmentsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/assignments/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetAssignmentsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/assignments/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetAssignmentsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/categories" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetCategoriesListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/categories/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetCategoriesFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/assets/categories/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><AssetCategoriesFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Expenses Module Routes */}
+        <Route path="/admin/expenses/claims" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ExpenseClaimsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/expenses/claims/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ExpenseClaimsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/expenses/claims/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ExpenseClaimsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/expenses/categories" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ExpenseCategoriesListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/expenses/categories/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ExpenseCategoriesFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/expenses/categories/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ExpenseCategoriesFormPage /></LayoutWrapper></ProtectedRoute>} />
+
+        {/* Projects Module Routes (New Structure) */}
+        <Route path="/admin/projects/projects" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ProjectsListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/projects/projects/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ProjectsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/projects/projects/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ProjectsFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/projects/tasks" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ProjectTasksListPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/projects/tasks/create" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ProjectTasksFormPage /></LayoutWrapper></ProtectedRoute>} />
+        <Route path="/admin/projects/tasks/:id/edit" element={<ProtectedRoute requiredRole="orgadmin"><LayoutWrapper><ProjectTasksFormPage /></LayoutWrapper></ProtectedRoute>} />
 
         {/* Default Redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </div>
+
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </ConfigProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select, Modal, message } from 'antd';
-import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined, DownloadOutlined, UploadOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Alert, Typography, Space, Skeleton, Tag, Input, Select, Modal, message, Row, Col, Statistic, Dropdown, Menu, Avatar, Descriptions, Segmented } from 'antd';
+import { EyeOutlined, EditOutlined, HistoryOutlined, UserOutlined, PlusOutlined, SearchOutlined, DownloadOutlined, UploadOutlined, FileTextOutlined, MoreOutlined, AppstoreOutlined, UnorderedListOutlined, TeamOutlined, ClockCircleOutlined, UserAddOutlined, TrophyOutlined } from '@ant-design/icons';
 import { getEmployees, EmployeeSummaryResponse } from '../../../api/employeeManagementApi';
 import { createDocumentRequest } from '../../../api/documentRequestsApi';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 export const EmployeeListPage = () => {
@@ -23,6 +23,10 @@ export const EmployeeListPage = () => {
   const [documentRequestMessage, setDocumentRequestMessage] = useState('');
   const [requestLoading, setRequestLoading] = useState(false);
   const [singleEmployeeId, setSingleEmployeeId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
+  const [quickViewVisible, setQuickViewVisible] = useState(false);
+  const [quickViewEmployee, setQuickViewEmployee] = useState<EmployeeSummaryResponse | null>(null);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     loadEmployees();
@@ -111,6 +115,22 @@ export const EmployeeListPage = () => {
     setSelectedStatus(undefined);
     setFilteredEmployees(employees);
   };
+
+  const handleQuickView = (employee: EmployeeSummaryResponse) => {
+    setQuickViewEmployee(employee);
+    setQuickViewVisible(true);
+  };
+
+  // Calculate stats
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter(emp => !emp.isProbation).length;
+  const onProbation = employees.filter(emp => emp.isProbation).length;
+  const newThisMonth = employees.filter(emp => {
+    if (!emp.createdAt) return false;
+    const createdDate = new Date(emp.createdAt);
+    const now = new Date();
+    return createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear();
+  }).length;
 
   const openRequestModal = (employeeId?: string) => {
     if (employeeId) {
@@ -322,53 +342,51 @@ export const EmployeeListPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 450,
-      render: (record: EmployeeSummaryResponse) => (
-        <Space size="small" wrap>
-          <Button
-            type="primary"
-            size="small"
-            icon={<FileTextOutlined />}
-            onClick={() => openRequestModal(record.employeeId)}
-            style={{
-              background: '#52c41a',
-              borderColor: '#52c41a',
-              borderRadius: 6
-            }}
-          >
-            Request Doc
-          </Button>
-          <Button
-            type="primary"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => navigate(`/admin/employees/${record.employeeId}`)}
-            style={{
-              background: '#0a0d54',
-              borderColor: '#0a0d54',
-              borderRadius: 6
-            }}
-          >
-            Details
-          </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/admin/employees/${record.employeeId}/assignment`)}
-            style={{ borderRadius: 6 }}
-          >
-            Assignment
-          </Button>
-          <Button
-            size="small"
-            icon={<HistoryOutlined />}
-            onClick={() => navigate(`/admin/employees/${record.employeeId}/history`)}
-            style={{ borderRadius: 6 }}
-          >
-            History
-          </Button>
-        </Space>
-      ),
+      width: 200,
+      render: (record: EmployeeSummaryResponse) => {
+        const menu = (
+          <Menu>
+            <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => navigate(`/admin/employees/${record.employeeId}`)}>
+              View Details
+            </Menu.Item>
+            <Menu.Item key="quick" icon={<UserOutlined />} onClick={() => handleQuickView(record)}>
+              Quick View
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item key="assignment" icon={<EditOutlined />} onClick={() => navigate(`/admin/employees/${record.employeeId}/assignment`)}>
+              Edit Assignment
+            </Menu.Item>
+            <Menu.Item key="history" icon={<HistoryOutlined />} onClick={() => navigate(`/admin/employees/${record.employeeId}/history`)}>
+              View History
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item key="request" icon={<FileTextOutlined />} onClick={() => openRequestModal(record.employeeId)}>
+              Request Document
+            </Menu.Item>
+          </Menu>
+        );
+
+        return (
+          <Space size="small">
+            <Button
+              type="primary"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/admin/employees/${record.employeeId}`)}
+              style={{
+                background: '#0a0d54',
+                borderColor: '#0a0d54',
+                borderRadius: 6
+              }}
+            >
+              View
+            </Button>
+            <Dropdown overlay={menu} trigger={['click']}>
+              <Button size="small" icon={<MoreOutlined />} style={{ borderRadius: 6 }} />
+            </Dropdown>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -381,6 +399,50 @@ export const EmployeeListPage = () => {
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+      {/* Stats Cards */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: 12 }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.9)' }}>Total Employees</span>}
+              value={totalEmployees}
+              prefix={<TeamOutlined />}
+              valueStyle={{ color: '#fff', fontWeight: 600 }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', borderRadius: 12 }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.9)' }}>Active</span>}
+              value={activeEmployees}
+              prefix={<TrophyOutlined />}
+              valueStyle={{ color: '#fff', fontWeight: 600 }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', borderRadius: 12 }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.9)' }}>On Probation</span>}
+              value={onProbation}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: '#fff', fontWeight: 600 }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card bordered={false} style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', borderRadius: 12 }}>
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.9)' }}>New This Month</span>}
+              value={newThisMonth}
+              prefix={<UserAddOutlined />}
+              valueStyle={{ color: '#fff', fontWeight: 600 }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       <Card
         style={{
           borderRadius: 12,
@@ -398,6 +460,14 @@ export const EmployeeListPage = () => {
               )}
             </div>
             <Space wrap>
+              <Segmented
+                options={[
+                  { label: 'Card View', value: 'card', icon: <AppstoreOutlined /> },
+                  { label: 'Table View', value: 'table', icon: <UnorderedListOutlined /> },
+                ]}
+                value={viewMode}
+                onChange={(value) => setViewMode(value as 'card' | 'table')}
+              />
               {selectedRowKeys.length > 0 && (
                 <Button
                   type="primary"
@@ -521,6 +591,103 @@ export const EmployeeListPage = () => {
 
           {loading ? (
             <Skeleton active paragraph={{ rows: 8 }} />
+          ) : viewMode === 'card' ? (
+            <Row gutter={[16, 16]}>
+              {filteredEmployees.map((emp) => {
+                const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+                const displayName = fullName || emp.email;
+                const initials = fullName
+                  ? `${emp.firstName?.[0] || ''}${emp.lastName?.[0] || ''}`.toUpperCase()
+                  : emp.email.substring(0, 2).toUpperCase();
+                const menu = (
+                  <Menu>
+                    <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => navigate(`/admin/employees/${emp.employeeId}`)}>
+                      View Details
+                    </Menu.Item>
+                    <Menu.Item key="quick" icon={<UserOutlined />} onClick={() => handleQuickView(emp)}>
+                      Quick View
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item key="assignment" icon={<EditOutlined />} onClick={() => navigate(`/admin/employees/${emp.employeeId}/assignment`)}>
+                      Edit Assignment
+                    </Menu.Item>
+                    <Menu.Item key="history" icon={<HistoryOutlined />} onClick={() => navigate(`/admin/employees/${emp.employeeId}/history`)}>
+                      View History
+                    </Menu.Item>
+                    <Menu.Divider />
+                    <Menu.Item key="request" icon={<FileTextOutlined />} onClick={() => openRequestModal(emp.employeeId)}>
+                      Request Document
+                    </Menu.Item>
+                  </Menu>
+                );
+
+                return (
+                  <Col xs={24} sm={12} lg={8} xl={6} key={emp.employeeId}>
+                    <Card
+                      hoverable
+                      style={{
+                        borderRadius: 12,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        border: '1px solid #f0f0f0',
+                      }}
+                      bodyStyle={{ padding: 16 }}
+                      onClick={() => handleQuickView(emp)}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                        <Avatar
+                          size={48}
+                          style={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {initials}
+                        </Avatar>
+                        <Dropdown overlay={menu} trigger={['click']}>
+                          <Button
+                            size="small"
+                            icon={<MoreOutlined />}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ borderRadius: 6 }}
+                          />
+                        </Dropdown>
+                      </div>
+                      <div style={{ marginBottom: 8 }}>
+                        <Text strong style={{ fontSize: 16, display: 'block', marginBottom: 4 }}>
+                          {displayName}
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                          {emp.email}
+                        </Text>
+                      </div>
+                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        {emp.departmentName && (
+                          <Tag color="blue" style={{ borderRadius: 6 }}>
+                            {emp.departmentName}
+                          </Tag>
+                        )}
+                        {emp.positionName && (
+                          <Tag color="green" style={{ borderRadius: 6 }}>
+                            {emp.positionName}
+                          </Tag>
+                        )}
+                        {emp.employmentType && (
+                          <Tag color={employmentTypeColors[emp.employmentType] || 'default'} style={{ borderRadius: 6 }}>
+                            {emp.employmentType}
+                          </Tag>
+                        )}
+                        {emp.isProbation && (
+                          <Tag color="orange" style={{ borderRadius: 6 }}>
+                            Probation
+                          </Tag>
+                        )}
+                      </Space>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
           ) : (
             <Table
               rowSelection={rowSelection}
@@ -533,9 +700,10 @@ export const EmployeeListPage = () => {
                   : 'No employees found. Click "Add Employee" to create one.'
               }}
               pagination={{
-                pageSize: 10,
+                pageSize: pageSize,
                 showSizeChanger: true,
                 showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} employees`,
+                onShowSizeChange: (_, size) => setPageSize(size),
               }}
             />
           )}
@@ -597,6 +765,155 @@ export const EmployeeListPage = () => {
             />
           </div>
         </Space>
+      </Modal>
+
+      {/* Quick View Modal */}
+      <Modal
+        title={
+          <Space>
+            <UserOutlined style={{ color: '#0a0d54' }} />
+            <span>Employee Quick View</span>
+          </Space>
+        }
+        open={quickViewVisible}
+        onCancel={() => {
+          setQuickViewVisible(false);
+          setQuickViewEmployee(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => setQuickViewVisible(false)} style={{ borderRadius: 6 }}>
+            Close
+          </Button>,
+          <Button
+            key="view"
+            type="primary"
+            icon={<EyeOutlined />}
+            onClick={() => {
+              if (quickViewEmployee) {
+                navigate(`/admin/employees/${quickViewEmployee.employeeId}`);
+              }
+            }}
+            style={{
+              background: '#0a0d54',
+              borderColor: '#0a0d54',
+              borderRadius: 6,
+            }}
+          >
+            View Full Details
+          </Button>,
+        ]}
+        width={700}
+      >
+        {quickViewEmployee && (
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 0', borderBottom: '1px solid #f0f0f0' }}>
+              <Avatar
+                size={64}
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  fontWeight: 600,
+                }}
+              >
+                {`${quickViewEmployee.firstName?.[0] || ''}${quickViewEmployee.lastName?.[0] || ''}`.toUpperCase() ||
+                  quickViewEmployee.email.substring(0, 2).toUpperCase()}
+              </Avatar>
+              <div style={{ flex: 1 }}>
+                <Text strong style={{ fontSize: 18, display: 'block', marginBottom: 4 }}>
+                  {`${quickViewEmployee.firstName || ''} ${quickViewEmployee.lastName || ''}`.trim() || quickViewEmployee.email}
+                </Text>
+                <Text type="secondary">{quickViewEmployee.email}</Text>
+              </div>
+            </div>
+
+            <Descriptions bordered column={2} size="small">
+              <Descriptions.Item label="Employee Code" span={2}>
+                {quickViewEmployee.employeeCode ? (
+                  <Tag color="blue" style={{ borderRadius: 6 }}>
+                    {quickViewEmployee.employeeCode}
+                  </Tag>
+                ) : (
+                  '—'
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Department">
+                {quickViewEmployee.departmentName ? (
+                  <Tag color="blue" style={{ borderRadius: 6 }}>
+                    {quickViewEmployee.departmentName}
+                  </Tag>
+                ) : (
+                  '—'
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Position">
+                {quickViewEmployee.positionName ? (
+                  <Tag color="green" style={{ borderRadius: 6 }}>
+                    {quickViewEmployee.positionName}
+                  </Tag>
+                ) : (
+                  '—'
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Employment Type">
+                {quickViewEmployee.employmentType ? (
+                  <Tag color={employmentTypeColors[quickViewEmployee.employmentType] || 'default'} style={{ borderRadius: 6 }}>
+                    {quickViewEmployee.employmentType}
+                  </Tag>
+                ) : (
+                  '—'
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                {quickViewEmployee.isProbation ? (
+                  <Tag color="orange" style={{ borderRadius: 6 }}>
+                    Probation
+                    {quickViewEmployee.probationEndDate &&
+                      ` (ends ${new Date(quickViewEmployee.probationEndDate).toLocaleDateString()})`}
+                  </Tag>
+                ) : (
+                  <Tag color="green" style={{ borderRadius: 6 }}>
+                    Active
+                  </Tag>
+                )}
+              </Descriptions.Item>
+              {quickViewEmployee.contractEndDate && (
+                <Descriptions.Item label="Contract End" span={2}>
+                  {new Date(quickViewEmployee.contractEndDate).toLocaleDateString()}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+
+            <Space wrap>
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => {
+                  navigate(`/admin/employees/${quickViewEmployee.employeeId}/assignment`);
+                }}
+                style={{ borderRadius: 6 }}
+              >
+                Edit Assignment
+              </Button>
+              <Button
+                icon={<HistoryOutlined />}
+                onClick={() => {
+                  navigate(`/admin/employees/${quickViewEmployee.employeeId}/history`);
+                }}
+                style={{ borderRadius: 6 }}
+              >
+                View History
+              </Button>
+              <Button
+                icon={<FileTextOutlined />}
+                onClick={() => {
+                  setQuickViewVisible(false);
+                  openRequestModal(quickViewEmployee.employeeId);
+                }}
+                style={{ borderRadius: 6 }}
+              >
+                Request Document
+              </Button>
+            </Space>
+          </Space>
+        )}
       </Modal>
     </div>
   );
