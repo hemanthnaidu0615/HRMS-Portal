@@ -425,6 +425,7 @@ CREATE TABLE employees (
     emergency_contact_phone VARCHAR(50),
     emergency_contact_email VARCHAR(255),
     alternate_emergency_contact_name VARCHAR(255),
+    alternate_emergency_contact_relationship VARCHAR(100),
     alternate_emergency_contact_phone VARCHAR(50),
 
     -- Employment Details
