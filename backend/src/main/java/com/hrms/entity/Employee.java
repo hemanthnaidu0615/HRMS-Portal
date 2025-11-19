@@ -159,7 +159,7 @@ public class Employee {
     private String alternateEmergencyContactPhone;
 
     // Employment Details
-    @Column(name = "joining_date", nullable = false)
+    @Column(name = "joining_date")
     private LocalDate joiningDate;
 
     @Column(name = "confirmation_date")
@@ -168,10 +168,10 @@ public class Employee {
     @Column(name = "original_hire_date")
     private LocalDate originalHireDate;
 
-    @Column(name = "employment_type", length = 50, nullable = false)
+    @Column(name = "employment_type", length = 50)
     private String employmentType = "internal";
 
-    @Column(name = "employment_status", length = 50, nullable = false)
+    @Column(name = "employment_status", length = 50)
     private String employmentStatus = "active";
 
     @Column(name = "work_location", length = 255)
