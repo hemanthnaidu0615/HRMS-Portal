@@ -46,6 +46,13 @@ public class AssetCategory {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // AssetCategory specific fields
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +65,4 @@ public class AssetCategory {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for AssetCategory based on schema
 }

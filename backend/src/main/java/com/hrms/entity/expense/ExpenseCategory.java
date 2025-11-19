@@ -46,6 +46,16 @@ public class ExpenseCategory {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // ExpenseCategory specific fields
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "requires_receipt")
+    private Boolean requiresReceipt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +68,4 @@ public class ExpenseCategory {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for ExpenseCategory based on schema
 }

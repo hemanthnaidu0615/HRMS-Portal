@@ -46,6 +46,25 @@ public class AssetAssignment {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // AssetAssignment specific fields
+    @Column(name = "asset_id")
+    private UUID assetId;
+
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "assigned_date")
+    private LocalDate assignedDate;
+
+    @Column(name = "returned_date")
+    private LocalDate returnedDate;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "assignment_notes")
+    private String assignmentNotes;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +77,4 @@ public class AssetAssignment {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for AssetAssignment based on schema
 }

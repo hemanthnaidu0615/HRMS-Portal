@@ -46,6 +46,28 @@ public class EmployeeGoal {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // EmployeeGoal specific fields
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "cycle_id")
+    private UUID cycleId;
+
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "target_date")
+    private LocalDate targetDate;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "progress_percentage")
+    private Integer progressPercentage;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +80,4 @@ public class EmployeeGoal {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for EmployeeGoal based on schema
 }

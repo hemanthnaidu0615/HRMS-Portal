@@ -46,6 +46,28 @@ public class LeaveBalance {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // LeaveBalance specific fields
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "leave_type_id")
+    private UUID leaveTypeId;
+
+    @Column(name = "year")
+    private Integer year;
+
+    @Column(name = "total_quota")
+    private BigDecimal totalQuota;
+
+    @Column(name = "used")
+    private BigDecimal used;
+
+    @Column(name = "pending")
+    private BigDecimal pending;
+
+    @Column(name = "available")
+    private BigDecimal available;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +80,4 @@ public class LeaveBalance {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for LeaveBalance based on schema
 }

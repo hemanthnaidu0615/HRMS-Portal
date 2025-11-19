@@ -46,6 +46,25 @@ public class InterviewSchedule {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // InterviewSchedule specific fields
+    @Column(name = "application_id")
+    private UUID applicationId;
+
+    @Column(name = "interview_round")
+    private String interviewRound;
+
+    @Column(name = "scheduled_at")
+    private LocalDateTime scheduledAt;
+
+    @Column(name = "interview_mode")
+    private String interviewMode;
+
+    @Column(name = "meeting_link")
+    private String meetingLink;
+
+    @Column(name = "status")
+    private String status;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +77,4 @@ public class InterviewSchedule {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for InterviewSchedule based on schema
 }

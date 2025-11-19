@@ -46,9 +46,36 @@ public class NotificationPreference {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // NotificationPreference specific fields
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @Column(name = "notification_type", nullable = false, length = 50)
+    private String notificationType;
+
+    @Column(name = "email_enabled", nullable = false)
+    private Boolean emailEnabled = true;
+
+    @Column(name = "in_app_enabled", nullable = false)
+    private Boolean inAppEnabled = true;
+
+    @Column(name = "sms_enabled", nullable = false)
+    private Boolean smsEnabled = false;
+
+    @Column(name = "frequency", length = 20)
+    private String frequency = "REALTIME";
+
+    @Column(name = "quiet_hours_start", length = 5)
+    private String quietHoursStart;
+
+    @Column(name = "quiet_hours_end", length = 5)
+    private String quietHoursEnd;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
         if (isActive == null) {
             isActive = true;
         }
@@ -59,5 +86,30 @@ public class NotificationPreference {
         updatedAt = LocalDateTime.now();
     }
 
-    // TODO: Add specific fields for NotificationPreference based on schema
+    public boolean isInQuietHours() {
+        if (quietHoursStart == null || quietHoursEnd == null) {
+            return false;
+        }
+
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            int currentHour = now.getHour();
+            int currentMinute = now.getMinute();
+            int currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+            String[] startParts = quietHoursStart.split(":");
+            int startTimeInMinutes = Integer.parseInt(startParts[0]) * 60 + Integer.parseInt(startParts[1]);
+
+            String[] endParts = quietHoursEnd.split(":");
+            int endTimeInMinutes = Integer.parseInt(endParts[0]) * 60 + Integer.parseInt(endParts[1]);
+
+            if (startTimeInMinutes > endTimeInMinutes) {
+                return currentTimeInMinutes >= startTimeInMinutes || currentTimeInMinutes <= endTimeInMinutes;
+            } else {
+                return currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

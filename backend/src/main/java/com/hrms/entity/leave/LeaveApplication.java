@@ -46,6 +46,37 @@ public class LeaveApplication {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // LeaveApplication specific fields
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "leave_type_id")
+    private UUID leaveTypeId;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "total_days")
+    private BigDecimal totalDays;
+
+    @Column(name = "reason")
+    private String reason;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "approved_by")
+    private UUID approvedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +89,4 @@ public class LeaveApplication {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for LeaveApplication based on schema
 }

@@ -46,6 +46,19 @@ public class SalaryComponent {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // SalaryComponent specific fields
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "code")
+    private String code;
+
+    @Column(name = "type")
+    private String type;
+
+    @Column(name = "calculation_type")
+    private String calculationType;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +71,4 @@ public class SalaryComponent {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for SalaryComponent based on schema
 }

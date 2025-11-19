@@ -46,6 +46,28 @@ public class JobApplication {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // JobApplication specific fields
+    @Column(name = "job_posting_id")
+    private UUID jobPostingId;
+
+    @Column(name = "candidate_name")
+    private String candidateName;
+
+    @Column(name = "candidate_email")
+    private String candidateEmail;
+
+    @Column(name = "candidate_phone")
+    private String candidatePhone;
+
+    @Column(name = "resume_path")
+    private String resumePath;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "applied_at")
+    private LocalDateTime appliedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +80,4 @@ public class JobApplication {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for JobApplication based on schema
 }

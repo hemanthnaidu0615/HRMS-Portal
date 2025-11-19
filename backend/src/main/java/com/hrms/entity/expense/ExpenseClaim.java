@@ -46,6 +46,31 @@ public class ExpenseClaim {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // ExpenseClaim specific fields
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "claim_number")
+    private String claimNumber;
+
+    @Column(name = "claim_date")
+    private LocalDate claimDate;
+
+    @Column(name = "total_amount")
+    private BigDecimal totalAmount;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "approved_by")
+    private UUID approvedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +83,4 @@ public class ExpenseClaim {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for ExpenseClaim based on schema
 }

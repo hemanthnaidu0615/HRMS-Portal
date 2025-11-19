@@ -46,6 +46,34 @@ public class JobPosting {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // JobPosting specific fields
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "department_id")
+    private UUID departmentId;
+
+    @Column(name = "position_id")
+    private UUID positionId;
+
+    @Column(name = "employment_type")
+    private String employmentType;
+
+    @Column(name = "experience_level")
+    private String experienceLevel;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "posting_date")
+    private LocalDate postingDate;
+
+    @Column(name = "closing_date")
+    private LocalDate closingDate;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +86,4 @@ public class JobPosting {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for JobPosting based on schema
 }

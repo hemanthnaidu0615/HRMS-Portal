@@ -46,6 +46,19 @@ public class PerformanceCycle {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // PerformanceCycle specific fields
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "status")
+    private String status;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +71,4 @@ public class PerformanceCycle {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for PerformanceCycle based on schema
 }

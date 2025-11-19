@@ -46,6 +46,22 @@ public class LeaveType {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // LeaveType specific fields
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "code")
+    private String code;
+
+    @Column(name = "annual_quota")
+    private Integer annualQuota;
+
+    @Column(name = "is_paid")
+    private Boolean isPaid;
+
+    @Column(name = "requires_approval")
+    private Boolean requiresApproval;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +74,4 @@ public class LeaveType {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for LeaveType based on schema
 }

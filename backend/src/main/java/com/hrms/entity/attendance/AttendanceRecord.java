@@ -46,6 +46,28 @@ public class AttendanceRecord {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // AttendanceRecord specific fields
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "attendance_date")
+    private LocalDate attendanceDate;
+
+    @Column(name = "check_in")
+    private LocalTime checkIn;
+
+    @Column(name = "check_out")
+    private LocalTime checkOut;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "worked_minutes")
+    private Integer workedMinutes;
+
+    @Column(name = "remarks")
+    private String remarks;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +80,4 @@ public class AttendanceRecord {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for AttendanceRecord based on schema
 }
