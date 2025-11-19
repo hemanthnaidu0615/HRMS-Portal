@@ -89,15 +89,12 @@ public class OrganizationModuleController {
             Organization organization = organizationRepository.findById(orgId)
                     .orElseThrow(() -> new RuntimeException("Organization not found"));
 
-            // Validate that at least one module is enabled
+            // Count enabled modules for logging
             long enabledCount = modulesRequest.stream()
                     .filter(UpdateOrganizationModulesRequest::getIsEnabled)
                     .count();
 
-            if (enabledCount == 0) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "At least one module must be enabled"));
-            }
+            // Note: Module validation removed - core features work independently of modules
 
             // Get existing modules
             List<OrganizationModule> existingModules = moduleRepository.findByOrganizationId(orgId);
