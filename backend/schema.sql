@@ -193,6 +193,184 @@ CREATE TABLE positions (
 
 
 
+
+-- =====================================================
+-- VENDOR MANAGEMENT
+-- =====================================================
+
+CREATE TABLE vendors (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Vendor Information
+    name VARCHAR(255) NOT NULL,
+    vendor_code VARCHAR(50) UNIQUE NOT NULL,
+    vendor_type VARCHAR(50) NOT NULL,  -- staffing, consulting, contractor, freelance
+
+    -- Contact Information
+    primary_contact_name VARCHAR(255),
+    primary_contact_email VARCHAR(255),
+    primary_contact_phone VARCHAR(50),
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    postal_code VARCHAR(20),
+
+    -- Business Details
+    tax_id VARCHAR(50),
+    business_registration_number VARCHAR(100),
+    website VARCHAR(255),
+
+    -- Contract Details
+    contract_start_date DATE,
+    contract_end_date DATE,
+    contract_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, expired, terminated, suspended
+    contract_document_id UNIQUEIDENTIFIER,  -- Link to documents table
+
+    -- Billing Configuration
+    billing_type VARCHAR(50) NOT NULL,  -- hourly, daily, monthly, project, fixed
+    default_billing_rate DECIMAL(10,2),
+    billing_currency VARCHAR(10) DEFAULT 'USD',
+    payment_terms VARCHAR(100),  -- Net 30, Net 60, etc.
+
+    -- Multi-tier Support
+    parent_vendor_id UNIQUEIDENTIFIER NULL,  -- For sub-vendor relationships
+    tier_level INT DEFAULT 1,  -- 1 = direct vendor, 2 = sub-vendor, etc.
+
+    -- Performance Tracking
+    performance_rating DECIMAL(3,2),  -- 0.00 to 5.00
+    total_resources_supplied INT DEFAULT 0,
+    active_resources_count INT DEFAULT 0,
+
+    -- Status
+    is_active BIT NOT NULL DEFAULT 1,
+    is_preferred BIT NOT NULL DEFAULT 0,
+    blacklisted BIT NOT NULL DEFAULT 0,
+    blacklist_reason VARCHAR(500),
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    -- FOREIGN KEY (parent_vendor_id) REFERENCES vendors(id),  -- Removed: Circular FK, will be added via ALTER TABLE
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
+-- CLIENT MANAGEMENT
+-- =====================================================
+
+CREATE TABLE clients (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Client Information
+    name VARCHAR(255) NOT NULL,
+    client_code VARCHAR(50) UNIQUE NOT NULL,
+    client_type VARCHAR(50) NOT NULL,  -- corporate, government, nonprofit, individual
+    industry VARCHAR(100),
+
+    -- Contact Information
+    primary_contact_name VARCHAR(255),
+    primary_contact_email VARCHAR(255),
+    primary_contact_phone VARCHAR(50),
+    address_line1 VARCHAR(255),
+    address_line2 VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    postal_code VARCHAR(20),
+
+    -- Business Details
+    tax_id VARCHAR(50),
+    website VARCHAR(255),
+
+    -- Relationship Details
+    relationship_start_date DATE,
+    relationship_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, inactive, prospect
+    account_manager_id UNIQUEIDENTIFIER,  -- Employee managing this client
+
+    -- Business Metrics
+    total_active_projects INT DEFAULT 0,
+    total_active_resources INT DEFAULT 0,
+    lifetime_revenue DECIMAL(15,2) DEFAULT 0,
+
+    -- Status
+    is_active BIT NOT NULL DEFAULT 1,
+    is_strategic BIT NOT NULL DEFAULT 0,  -- Strategic/key client flag
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    -- FOREIGN KEY (account_manager_id) REFERENCES employees(id),  -- Removed: Circular FK, will be added via ALTER TABLE
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
+-- PROJECTS
+-- =====================================================
+
+CREATE TABLE projects (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    client_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Project Information
+    project_name VARCHAR(255) NOT NULL,
+    project_code VARCHAR(50) UNIQUE NOT NULL,
+    project_type VARCHAR(50),  -- fixed-price, time-material, retainer
+    description VARCHAR(2000),
+
+    -- Timeline
+    start_date DATE NOT NULL,
+    end_date DATE,
+    estimated_duration_months INT,
+    project_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, completed, on-hold, cancelled
+
+    -- Financial
+    project_budget DECIMAL(15,2),
+    billing_rate_type VARCHAR(50),  -- hourly, daily, monthly, fixed
+    default_billing_rate DECIMAL(10,2),
+    currency VARCHAR(10) DEFAULT 'USD',
+
+    -- Management
+    project_manager_id UNIQUEIDENTIFIER,
+
+    -- Metrics
+    total_allocated_resources INT DEFAULT 0,
+    total_hours_logged DECIMAL(10,2) DEFAULT 0,
+    total_revenue DECIMAL(15,2) DEFAULT 0,
+
+    -- Status
+    is_billable BIT NOT NULL DEFAULT 1,
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+    deleted_at DATETIME2 NULL,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (client_id) REFERENCES clients(id),
+    -- FOREIGN KEY (project_manager_id) REFERENCES employees(id),  -- Removed: Circular FK, will be added via ALTER TABLE
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
 -- =====================================================
 -- EMPLOYEE MANAGEMENT - COMPLETE PROFESSIONAL SCHEMA
 -- =====================================================
@@ -377,6 +555,182 @@ CREATE TABLE employee_permission_groups (
     FOREIGN KEY (group_id) REFERENCES permission_groups(id) ON DELETE CASCADE
 );
 
+-- =====================================================
+-- Add circular foreign keys after employees table is created
+-- =====================================================
+
+-- Add self-referencing FK for vendors (parent_vendor_id)
+ALTER TABLE vendors ADD CONSTRAINT FK_vendors_parent_vendor
+    FOREIGN KEY (parent_vendor_id) REFERENCES vendors(id);
+
+-- Add FK from clients to employees (account_manager_id)
+ALTER TABLE clients ADD CONSTRAINT FK_clients_account_manager  
+    FOREIGN KEY (account_manager_id) REFERENCES employees(id);
+
+-- Add FK from projects to employees (project_manager_id)
+ALTER TABLE projects ADD CONSTRAINT FK_projects_project_manager
+    FOREIGN KEY (project_manager_id) REFERENCES employees(id);
+
+
+-- =====================================================
+-- VENDOR ASSIGNMENTS
+-- =====================================================
+
+CREATE TABLE vendor_assignments (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    employee_id UNIQUEIDENTIFIER NOT NULL,
+    vendor_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Assignment Details
+    assignment_type VARCHAR(50) NOT NULL,  -- direct, sub-contract, temporary, permanent
+    assignment_start_date DATE NOT NULL,
+    assignment_end_date DATE,
+    assignment_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, completed, terminated
+
+    -- Project/Client Assignment (optional)
+    client_id UNIQUEIDENTIFIER,
+    project_id UNIQUEIDENTIFIER,
+
+    -- Financial Terms
+    billing_rate DECIMAL(10,2),
+    billing_rate_type VARCHAR(50),  -- hourly, daily, monthly, fixed
+    billing_currency VARCHAR(10) DEFAULT 'USD',
+    markup_percentage DECIMAL(5,2),  -- Your org's markup on vendor rate
+
+    -- Cost to your org from vendor
+    vendor_cost_rate DECIMAL(10,2),
+
+    -- Revenue from client (if applicable)
+    client_billing_rate DECIMAL(10,2),
+
+    -- Multi-tier tracking
+    source_vendor_id UNIQUEIDENTIFIER,  -- If employee came via sub-vendor
+    vendor_chain VARCHAR(500),  -- JSON array of vendor hierarchy
+
+    -- Performance
+    performance_rating DECIMAL(3,2),
+    feedback_notes VARCHAR(2000),
+
+    -- Termination details
+    termination_date DATE,
+    termination_reason VARCHAR(500),
+    termination_initiated_by VARCHAR(50),  -- vendor, client, organization, employee
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (client_id) REFERENCES clients(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    FOREIGN KEY (source_vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
+-- VENDOR CONTRACTS
+-- =====================================================
+
+-- Vendor contracts: Detailed contract tracking
+CREATE TABLE vendor_contracts (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    vendor_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Contract Details
+    contract_number VARCHAR(100) UNIQUE NOT NULL,
+    contract_title VARCHAR(255) NOT NULL,
+    contract_type VARCHAR(50) NOT NULL,  -- msa, sow, po, amendment
+
+    -- Timeline
+    effective_date DATE NOT NULL,
+    expiration_date DATE,
+    auto_renewal BIT DEFAULT 0,
+    renewal_notice_days INT,
+
+    -- Financial Terms
+    contract_value DECIMAL(15,2),
+    currency VARCHAR(10) DEFAULT 'USD',
+    payment_terms VARCHAR(100),
+
+    -- Resources
+    max_resources_allowed INT,
+
+    -- Status
+    contract_status VARCHAR(50) NOT NULL DEFAULT 'draft',  -- draft, active, expired, terminated, renewed
+
+    -- Documents
+    contract_document_id UNIQUEIDENTIFIER,
+    signed_document_id UNIQUEIDENTIFIER,
+
+    -- Approval
+    approved_by UNIQUEIDENTIFIER,
+    approved_at DATETIME2,
+
+    -- Metadata
+    notes VARCHAR(2000),
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    created_by UNIQUEIDENTIFIER,
+    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+    updated_by UNIQUEIDENTIFIER,
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id)
+);
+
+-- =====================================================
+-- VENDOR PERFORMANCE REVIEWS
+-- =====================================================
+
+-- Track vendor performance over time
+CREATE TABLE vendor_performance_reviews (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    organization_id UNIQUEIDENTIFIER NOT NULL,
+    vendor_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Review Details
+    review_period_start DATE NOT NULL,
+    review_period_end DATE NOT NULL,
+    review_date DATE NOT NULL,
+    reviewer_id UNIQUEIDENTIFIER NOT NULL,
+
+    -- Ratings (1-5 scale)
+    quality_rating DECIMAL(3,2),
+    timeliness_rating DECIMAL(3,2),
+    communication_rating DECIMAL(3,2),
+    cost_effectiveness_rating DECIMAL(3,2),
+    overall_rating DECIMAL(3,2),
+
+    -- Metrics
+    total_resources_period INT,
+    successful_placements INT,
+    failed_placements INT,
+    average_time_to_fill_days DECIMAL(5,1),
+
+    -- Feedback
+    strengths VARCHAR(2000),
+    areas_for_improvement VARCHAR(2000),
+    action_items VARCHAR(2000),
+
+    -- Recommendation
+    recommendation VARCHAR(50),  -- continue, probation, terminate
+
+    -- Metadata
+    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
+
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
+    FOREIGN KEY (reviewer_id) REFERENCES users(id)
+);
 -- =====================================================
 -- DOCUMENT MANAGEMENT
 -- =====================================================
@@ -696,353 +1050,7 @@ CREATE INDEX idx_audit_logs_org ON audit_logs(organization_id);
 CREATE INDEX idx_audit_logs_performed_by ON audit_logs(performed_by);
 CREATE INDEX idx_audit_logs_performed_at ON audit_logs(performed_at DESC);
 
--- =====================================================
--- ENTERPRISE VENDOR & CLIENT MANAGEMENT SYSTEM
--- Multi-tier vendor support with full contract tracking
--- =====================================================
 
--- =====================================================
--- VENDOR MANAGEMENT
--- =====================================================
-
--- Vendors table: Companies that provide resources to your organization
-CREATE TABLE vendors (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Vendor Information
-    name VARCHAR(255) NOT NULL,
-    vendor_code VARCHAR(50) UNIQUE NOT NULL,
-    vendor_type VARCHAR(50) NOT NULL,  -- staffing, consulting, contractor, freelance
-
-    -- Contact Information
-    primary_contact_name VARCHAR(255),
-    primary_contact_email VARCHAR(255),
-    primary_contact_phone VARCHAR(50),
-    address_line1 VARCHAR(255),
-    address_line2 VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(100),
-    country VARCHAR(100),
-    postal_code VARCHAR(20),
-
-    -- Business Details
-    tax_id VARCHAR(50),
-    business_registration_number VARCHAR(100),
-    website VARCHAR(255),
-
-    -- Contract Details
-    contract_start_date DATE,
-    contract_end_date DATE,
-    contract_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, expired, terminated, suspended
-    contract_document_id UNIQUEIDENTIFIER,  -- Link to documents table
-
-    -- Billing Configuration
-    billing_type VARCHAR(50) NOT NULL,  -- hourly, daily, monthly, project, fixed
-    default_billing_rate DECIMAL(10,2),
-    billing_currency VARCHAR(10) DEFAULT 'USD',
-    payment_terms VARCHAR(100),  -- Net 30, Net 60, etc.
-
-    -- Multi-tier Support
-    parent_vendor_id UNIQUEIDENTIFIER NULL,  -- For sub-vendor relationships
-    tier_level INT DEFAULT 1,  -- 1 = direct vendor, 2 = sub-vendor, etc.
-
-    -- Performance Tracking
-    performance_rating DECIMAL(3,2),  -- 0.00 to 5.00
-    total_resources_supplied INT DEFAULT 0,
-    active_resources_count INT DEFAULT 0,
-
-    -- Status
-    is_active BIT NOT NULL DEFAULT 1,
-    is_preferred BIT NOT NULL DEFAULT 0,
-    blacklisted BIT NOT NULL DEFAULT 0,
-    blacklist_reason VARCHAR(500),
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2 NULL,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (parent_vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
--- CLIENT MANAGEMENT
--- =====================================================
-
--- Clients table: End clients where employees are placed
-CREATE TABLE clients (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Client Information
-    name VARCHAR(255) NOT NULL,
-    client_code VARCHAR(50) UNIQUE NOT NULL,
-    client_type VARCHAR(50) NOT NULL,  -- corporate, government, nonprofit, individual
-    industry VARCHAR(100),
-
-    -- Contact Information
-    primary_contact_name VARCHAR(255),
-    primary_contact_email VARCHAR(255),
-    primary_contact_phone VARCHAR(50),
-    address_line1 VARCHAR(255),
-    address_line2 VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(100),
-    country VARCHAR(100),
-    postal_code VARCHAR(20),
-
-    -- Business Details
-    tax_id VARCHAR(50),
-    website VARCHAR(255),
-
-    -- Relationship Details
-    relationship_start_date DATE,
-    relationship_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, inactive, prospect
-    account_manager_id UNIQUEIDENTIFIER,  -- Employee managing this client
-
-    -- Business Metrics
-    total_active_projects INT DEFAULT 0,
-    total_active_resources INT DEFAULT 0,
-    lifetime_revenue DECIMAL(15,2) DEFAULT 0,
-
-    -- Status
-    is_active BIT NOT NULL DEFAULT 1,
-    is_strategic BIT NOT NULL DEFAULT 0,  -- Strategic/key client flag
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2 NULL,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (account_manager_id) REFERENCES employees(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
--- PROJECTS
--- =====================================================
-
--- Projects table: Client projects where resources are assigned
-CREATE TABLE projects (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-    client_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Project Information
-    project_name VARCHAR(255) NOT NULL,
-    project_code VARCHAR(50) UNIQUE NOT NULL,
-    project_type VARCHAR(50),  -- fixed-price, time-material, retainer
-    description VARCHAR(2000),
-
-    -- Timeline
-    start_date DATE NOT NULL,
-    end_date DATE,
-    estimated_duration_months INT,
-    project_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, completed, on-hold, cancelled
-
-    -- Financial
-    project_budget DECIMAL(15,2),
-    billing_rate_type VARCHAR(50),  -- hourly, daily, monthly, fixed
-    default_billing_rate DECIMAL(10,2),
-    currency VARCHAR(10) DEFAULT 'USD',
-
-    -- Management
-    project_manager_id UNIQUEIDENTIFIER,
-
-    -- Metrics
-    total_allocated_resources INT DEFAULT 0,
-    total_hours_logged DECIMAL(10,2) DEFAULT 0,
-    total_revenue DECIMAL(15,2) DEFAULT 0,
-
-    -- Status
-    is_billable BIT NOT NULL DEFAULT 1,
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-    deleted_at DATETIME2 NULL,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (client_id) REFERENCES clients(id),
-    FOREIGN KEY (project_manager_id) REFERENCES employees(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
--- VENDOR ASSIGNMENTS
--- =====================================================
-
--- Vendor assignments: Track which employees came through which vendors
-CREATE TABLE vendor_assignments (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-    employee_id UNIQUEIDENTIFIER NOT NULL,
-    vendor_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Assignment Details
-    assignment_type VARCHAR(50) NOT NULL,  -- direct, sub-contract, temporary, permanent
-    assignment_start_date DATE NOT NULL,
-    assignment_end_date DATE,
-    assignment_status VARCHAR(50) NOT NULL DEFAULT 'active',  -- active, completed, terminated
-
-    -- Project/Client Assignment (optional)
-    client_id UNIQUEIDENTIFIER,
-    project_id UNIQUEIDENTIFIER,
-
-    -- Financial Terms
-    billing_rate DECIMAL(10,2),
-    billing_rate_type VARCHAR(50),  -- hourly, daily, monthly, fixed
-    billing_currency VARCHAR(10) DEFAULT 'USD',
-    markup_percentage DECIMAL(5,2),  -- Your org's markup on vendor rate
-
-    -- Cost to your org from vendor
-    vendor_cost_rate DECIMAL(10,2),
-
-    -- Revenue from client (if applicable)
-    client_billing_rate DECIMAL(10,2),
-
-    -- Multi-tier tracking
-    source_vendor_id UNIQUEIDENTIFIER,  -- If employee came via sub-vendor
-    vendor_chain VARCHAR(500),  -- JSON array of vendor hierarchy
-
-    -- Performance
-    performance_rating DECIMAL(3,2),
-    feedback_notes VARCHAR(2000),
-
-    -- Termination details
-    termination_date DATE,
-    termination_reason VARCHAR(500),
-    termination_initiated_by VARCHAR(50),  -- vendor, client, organization, employee
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (employee_id) REFERENCES employees(id),
-    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (client_id) REFERENCES clients(id),
-    FOREIGN KEY (project_id) REFERENCES projects(id),
-    FOREIGN KEY (source_vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
--- VENDOR CONTRACTS
--- =====================================================
-
--- Vendor contracts: Detailed contract tracking
-CREATE TABLE vendor_contracts (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-    vendor_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Contract Details
-    contract_number VARCHAR(100) UNIQUE NOT NULL,
-    contract_title VARCHAR(255) NOT NULL,
-    contract_type VARCHAR(50) NOT NULL,  -- msa, sow, po, amendment
-
-    -- Timeline
-    effective_date DATE NOT NULL,
-    expiration_date DATE,
-    auto_renewal BIT DEFAULT 0,
-    renewal_notice_days INT,
-
-    -- Financial Terms
-    contract_value DECIMAL(15,2),
-    currency VARCHAR(10) DEFAULT 'USD',
-    payment_terms VARCHAR(100),
-
-    -- Resources
-    max_resources_allowed INT,
-
-    -- Status
-    contract_status VARCHAR(50) NOT NULL DEFAULT 'draft',  -- draft, active, expired, terminated, renewed
-
-    -- Documents
-    contract_document_id UNIQUEIDENTIFIER,
-    signed_document_id UNIQUEIDENTIFIER,
-
-    -- Approval
-    approved_by UNIQUEIDENTIFIER,
-    approved_at DATETIME2,
-
-    -- Metadata
-    notes VARCHAR(2000),
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    created_by UNIQUEIDENTIFIER,
-    updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-    updated_by UNIQUEIDENTIFIER,
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (approved_by) REFERENCES users(id),
-    FOREIGN KEY (created_by) REFERENCES users(id),
-    FOREIGN KEY (updated_by) REFERENCES users(id)
-);
-
--- =====================================================
--- VENDOR PERFORMANCE REVIEWS
--- =====================================================
-
--- Track vendor performance over time
-CREATE TABLE vendor_performance_reviews (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    organization_id UNIQUEIDENTIFIER NOT NULL,
-    vendor_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Review Details
-    review_period_start DATE NOT NULL,
-    review_period_end DATE NOT NULL,
-    review_date DATE NOT NULL,
-    reviewer_id UNIQUEIDENTIFIER NOT NULL,
-
-    -- Ratings (1-5 scale)
-    quality_rating DECIMAL(3,2),
-    timeliness_rating DECIMAL(3,2),
-    communication_rating DECIMAL(3,2),
-    cost_effectiveness_rating DECIMAL(3,2),
-    overall_rating DECIMAL(3,2),
-
-    -- Metrics
-    total_resources_period INT,
-    successful_placements INT,
-    failed_placements INT,
-    average_time_to_fill_days DECIMAL(5,1),
-
-    -- Feedback
-    strengths VARCHAR(2000),
-    areas_for_improvement VARCHAR(2000),
-    action_items VARCHAR(2000),
-
-    -- Recommendation
-    recommendation VARCHAR(50),  -- continue, probation, terminate
-
-    -- Metadata
-    created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    FOREIGN KEY (vendor_id) REFERENCES vendors(id),
-    FOREIGN KEY (reviewer_id) REFERENCES users(id)
-);
-
--- =====================================================
 -- INDEXES FOR VENDOR MANAGEMENT
 -- =====================================================
 
@@ -1138,8 +1146,7 @@ BEGIN TRY
     );
 
     -- Assign vendor management permissions to OrgAdmin role (idempotent)
-    DECLARE @OrgAdminRoleId INT = (SELECT id FROM roles WHERE name='orgadmin' AND is_system_role=1);
-
+    -- Note: @OrgAdminRoleId is already declared earlier in the script
     IF @OrgAdminRoleId IS NOT NULL
     BEGIN
         INSERT INTO role_permissions (role_id, permission_id)
@@ -1156,6 +1163,287 @@ END TRY
 BEGIN CATCH
     -- Silently ignore errors (permissions might already exist)
     PRINT 'Vendor management permissions already exist or could not be created. Continuing...';
+END CATCH;
+
+-- =====================================================
+-- PRE-DEFINED PERMISSION GROUPS
+-- Common permission groups for typical organizational roles
+-- =====================================================
+
+BEGIN TRY
+    -- =====================================================
+    -- 1. TEAM LEAD / MANAGER
+    -- Can view and manage their direct reports (team scope)
+    -- =====================================================
+
+    IF NOT EXISTS (SELECT 1 FROM permission_groups WHERE name = 'Team Lead')
+    BEGIN
+        DECLARE @TeamLeadGroupId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO permission_groups (id, name, description) VALUES
+        (@TeamLeadGroupId, 'Team Lead', 'Can view and manage direct reports, approve team timesheets and leaves');
+
+        -- Assign permissions to Team Lead group
+        INSERT INTO group_permissions (group_id, permission_id)
+        SELECT @TeamLeadGroupId, id FROM permissions WHERE permission_string IN (
+            -- Employee management (team scope)
+            'employees:view:team',
+            'employees:edit:team',
+
+            -- Document management (team scope)
+            'documents:view:team',
+            'documents:upload:team',
+            'documents:approve:team',
+            'document-requests:create:team',
+            'document-requests:view:team',
+
+            -- Self permissions
+            'employees:view:own',
+            'employees:edit:own',
+            'documents:view:own',
+            'documents:upload:own',
+            'document-requests:create:own',
+            'document-requests:view:own'
+        );
+    END
+
+    -- =====================================================
+    -- 2. DEPARTMENT MANAGER
+    -- Can view and manage entire department (department scope)
+    -- =====================================================
+
+    IF NOT EXISTS (SELECT 1 FROM permission_groups WHERE name = 'Department Manager')
+    BEGIN
+        DECLARE @DeptManagerGroupId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO permission_groups (id, name, description) VALUES
+        (@DeptManagerGroupId, 'Department Manager', 'Can view and manage all employees in their department, approve department-level requests');
+
+        INSERT INTO group_permissions (group_id, permission_id)
+        SELECT @DeptManagerGroupId, id FROM permissions WHERE permission_string IN (
+            -- Employee management (department scope)
+            'employees:view:department',
+            'employees:edit:department',
+            'employees:create:department',
+
+            -- Document management (department scope)
+            'documents:view:department',
+            'documents:upload:department',
+            'documents:approve:department',
+            'document-requests:create:department',
+            'document-requests:view:department',
+
+            -- Department structure
+            'departments:view:organization',
+            'positions:view:organization',
+
+            -- Also includes team scope
+            'employees:view:team',
+            'employees:edit:team',
+            'documents:view:team',
+            'documents:approve:team',
+
+            -- Self permissions
+            'employees:view:own',
+            'employees:edit:own',
+            'documents:view:own',
+            'documents:upload:own',
+            'document-requests:create:own',
+            'document-requests:view:own'
+        );
+    END
+
+    -- =====================================================
+    -- 3. HR MANAGER
+    -- Can view all employees, manage onboarding, access all documents
+    -- =====================================================
+
+    IF NOT EXISTS (SELECT 1 FROM permission_groups WHERE name = 'HR Manager')
+    BEGIN
+        DECLARE @HRManagerGroupId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO permission_groups (id, name, description) VALUES
+        (@HRManagerGroupId, 'HR Manager', 'Human Resources manager with full access to employee data, documents, and onboarding');
+
+        INSERT INTO group_permissions (group_id, permission_id)
+        SELECT @HRManagerGroupId, id FROM permissions WHERE permission_string IN (
+            -- Full employee management (organization scope)
+            'employees:view:organization',
+            'employees:edit:organization',
+            'employees:create:organization',
+            'employees:delete:organization',
+
+            -- Full document access
+            'documents:view:organization',
+            'documents:upload:organization',
+            'documents:approve:organization',
+            'documents:delete:organization',
+            'document-requests:create:organization',
+            'document-requests:view:organization',
+
+            -- Organizational structure
+            'departments:view:organization',
+            'departments:create:organization',
+            'departments:edit:organization',
+            'positions:view:organization',
+            'positions:create:organization',
+            'positions:edit:organization',
+
+            -- Vendor and client management
+            'vendors:view:organization',
+            'vendors:create:organization',
+            'vendors:edit:organization',
+            'clients:view:organization',
+            'projects:view:organization',
+
+            -- Audit logs
+            'audit-logs:view:organization'
+        );
+    END
+
+    -- =====================================================
+    -- 4. VP / SENIOR LEADERSHIP
+    -- Executive level access to view organization-wide data
+    -- =====================================================
+
+    IF NOT EXISTS (SELECT 1 FROM permission_groups WHERE name = 'VP / Senior Leadership')
+    BEGIN
+        DECLARE @VPGroupId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO permission_groups (id, name, description) VALUES
+        (@VPGroupId, 'VP / Senior Leadership', 'Executive level access to view and approve organization-wide data');
+
+        INSERT INTO group_permissions (group_id, permission_id)
+        SELECT @VPGroupId, id FROM permissions WHERE permission_string IN (
+            -- Full view access
+            'employees:view:organization',
+            'employees:edit:organization',
+            'documents:view:organization',
+            'documents:approve:organization',
+            'document-requests:view:organization',
+
+            -- Approve permissions
+            'documents:approve:organization',
+
+            -- View organizational structure
+            'departments:view:organization',
+            'positions:view:organization',
+            'vendors:view:organization',
+            'clients:view:organization',
+            'projects:view:organization',
+
+            -- Audit access
+            'audit-logs:view:organization',
+
+            -- Department and team scope also included
+            'employees:view:department',
+            'employees:view:team',
+            'documents:view:department',
+            'documents:view:team'
+        );
+    END
+
+    -- =====================================================
+    -- 5. ACCOUNTANT / FINANCE
+    -- Access to payroll and financial data
+    -- =====================================================
+
+    IF NOT EXISTS (SELECT 1 FROM permission_groups WHERE name = 'Accountant / Finance')
+    BEGIN
+        DECLARE @AccountantGroupId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO permission_groups (id, name, description) VALUES
+        (@AccountantGroupId, 'Accountant / Finance', 'Access to employee payroll and financial information');
+
+        INSERT INTO group_permissions (group_id, permission_id)
+        SELECT @AccountantGroupId, id FROM permissions WHERE permission_string IN (
+            -- View employee data (for payroll purposes)
+            'employees:view:organization',
+
+            -- View documents (for tax documents, bank details)
+            'documents:view:organization',
+            'document-requests:create:organization',
+
+            -- View vendors (for payment processing)
+            'vendors:view:organization',
+            'clients:view:organization',
+            'projects:view:organization',
+
+            -- Self permissions
+            'employees:view:own',
+            'documents:view:own',
+            'documents:upload:own'
+        );
+    END
+
+    -- =====================================================
+    -- 6. DOCUMENT APPROVER
+    -- Specialized role for approving uploaded documents
+    -- =====================================================
+
+    IF NOT EXISTS (SELECT 1 FROM permission_groups WHERE name = 'Document Approver')
+    BEGIN
+        DECLARE @DocApproverGroupId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO permission_groups (id, name, description) VALUES
+        (@DocApproverGroupId, 'Document Approver', 'Can approve or reject employee document uploads');
+
+        INSERT INTO group_permissions (group_id, permission_id)
+        SELECT @DocApproverGroupId, id FROM permissions WHERE permission_string IN (
+            -- View employees (to know whose documents they're approving)
+            'employees:view:organization',
+
+            -- Document approval
+            'documents:view:organization',
+            'documents:approve:organization',
+            'document-requests:view:organization',
+
+            -- Self permissions
+            'employees:view:own',
+            'documents:view:own',
+            'documents:upload:own'
+        );
+    END
+
+    -- =====================================================
+    -- 7. RECRUITMENT / ONBOARDING
+    -- Specialized role for hiring and onboarding new employees
+    -- =====================================================
+
+    IF NOT EXISTS (SELECT 1 FROM permission_groups WHERE name = 'Recruitment / Onboarding')
+    BEGIN
+        DECLARE @RecruitmentGroupId UNIQUEIDENTIFIER = NEWID();
+        INSERT INTO permission_groups (id, name, description) VALUES
+        (@RecruitmentGroupId, 'Recruitment / Onboarding', 'Can create new employees and manage onboarding process');
+
+        INSERT INTO group_permissions (group_id, permission_id)
+        SELECT @RecruitmentGroupId, id FROM permissions WHERE permission_string IN (
+            -- Create and view employees
+            'employees:view:organization',
+            'employees:create:organization',
+            'employees:edit:organization',
+
+            -- Document management for onboarding
+            'documents:view:organization',
+            'document-requests:create:organization',
+            'document-requests:view:organization',
+
+            -- View org structure
+            'departments:view:organization',
+            'positions:view:organization',
+            'vendors:view:organization',
+
+            -- Self permissions
+            'employees:view:own',
+            'documents:view:own'
+        );
+    END
+
+    PRINT 'Pre-defined permission groups created successfully:';
+    PRINT '  - Team Lead';
+    PRINT '  - Department Manager';
+    PRINT '  - HR Manager';
+    PRINT '  - VP / Senior Leadership';
+    PRINT '  - Accountant / Finance';
+    PRINT '  - Document Approver';
+    PRINT '  - Recruitment / Onboarding';
+END TRY
+BEGIN CATCH
+    PRINT 'Pre-defined permission groups already exist or could not be created. Continuing...';
 END CATCH;
 
 -- =====================================================
