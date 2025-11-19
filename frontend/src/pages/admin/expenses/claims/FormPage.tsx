@@ -23,6 +23,7 @@ import {
   DeleteOutlined,
   SaveOutlined,
   CloseOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import http from '../../../../api/http';

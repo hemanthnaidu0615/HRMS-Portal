@@ -48,7 +48,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   // Mock notifications - in real app, fetch from API
-  const notifications = [
+  const notifications: any[] = [
     // { id: 1, title: 'Document request approved', time: '2 hours ago', type: 'success' },
     // { id: 2, title: 'New employee added', time: '5 hours ago', type: 'info' },
   ];

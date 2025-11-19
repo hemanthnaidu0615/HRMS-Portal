@@ -20,10 +20,10 @@ interface Organization {
   name: string;
   createdAt: string;
   deletedAt?: string | null;
-  employeeCount: number;
-  departmentCount: number;
-  activeUserCount: number;
-  documentCount: number;
+  employeeCount?: number;
+  departmentCount?: number;
+  activeUserCount?: number;
+  documentCount?: number;
 }
 
 export const OrganizationsPage: React.FC = () => {

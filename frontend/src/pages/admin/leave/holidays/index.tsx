@@ -3,7 +3,7 @@ import { Table, Button, Space, Tag, message, Modal } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL } from '../../../../config/api';
 
 const HolidaysListPage: React.FC = () => {
   const [data, setData] = useState([]);

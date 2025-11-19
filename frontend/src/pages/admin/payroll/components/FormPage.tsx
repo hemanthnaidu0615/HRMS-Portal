@@ -22,6 +22,7 @@ import {
   PercentageOutlined,
   InfoCircleOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
   RiseOutlined,
   FallOutlined,
   SafetyOutlined

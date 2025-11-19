@@ -13,7 +13,7 @@ import {
   CheckCircle,
   Moon,
 } from 'lucide-react';
-import api from '../../utils/api';
+import http from '../../api/http';
 
 interface NotificationPreference {
   id: string;
@@ -95,7 +95,7 @@ const NotificationPreferencesPage: React.FC = () => {
   const fetchPreferences = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/notifications/preferences');
+      const response = await http.get('/notifications/preferences');
       setPreferences(response.data);
 
       // Set global settings from first preference if available
@@ -177,7 +177,7 @@ const NotificationPreferencesPage: React.FC = () => {
         };
       });
 
-      await api.put('/notifications/preferences/bulk', prefsToSave);
+      await http.put('/notifications/preferences/bulk', prefsToSave);
       setSaved(true);
       setSaving(false);
 

@@ -14,7 +14,7 @@ import {
   Filter,
   ChevronDown,
 } from 'lucide-react';
-import api from '../../utils/api';
+import http from '../../api/http';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
@@ -55,7 +55,7 @@ const NotificationsPage: React.FC = () => {
         params.type = 'SYSTEM_ANNOUNCEMENT';
       }
 
-      const response = await api.get('/notifications', { params });
+      const response = await http.get('/notifications', { params });
       const newNotifications = response.data.content || [];
 
       if (append) {
@@ -74,7 +74,7 @@ const NotificationsPage: React.FC = () => {
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const response = await api.get('/notifications/unread-count');
+      const response = await http.get('/notifications/unread-count');
       setUnreadCount(response.data.count || 0);
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
@@ -88,7 +88,7 @@ const NotificationsPage: React.FC = () => {
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      await api.put(`/notifications/${id}/read`);
+      await http.put(`/notifications/${id}/read`);
       setNotifications(prev =>
         prev.map(n => (n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
       );
@@ -100,7 +100,7 @@ const NotificationsPage: React.FC = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await api.put('/notifications/mark-all-read');
+      await http.put('/notifications/mark-all-read');
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() })));
       setUnreadCount(0);
     } catch (error) {
@@ -110,7 +110,7 @@ const NotificationsPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/notifications/${id}`);
+      await http.delete(`/notifications/${id}`);
       setNotifications(prev => prev.filter(n => n.id !== id));
       fetchUnreadCount();
     } catch (error) {
