@@ -1138,8 +1138,7 @@ BEGIN TRY
     );
 
     -- Assign vendor management permissions to OrgAdmin role (idempotent)
-    DECLARE @OrgAdminRoleId INT = (SELECT id FROM roles WHERE name='orgadmin' AND is_system_role=1);
-
+    -- Note: @OrgAdminRoleId is already declared earlier in the script
     IF @OrgAdminRoleId IS NOT NULL
     BEGIN
         INSERT INTO role_permissions (role_id, permission_id)
