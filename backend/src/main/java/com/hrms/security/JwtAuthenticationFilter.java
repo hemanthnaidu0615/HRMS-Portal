@@ -57,6 +57,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Extract user ID from JWT token in the request
+     */
+    public UUID getUserId(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("No valid authorization token found");
+        }
+
+        try {
+            String jwt = authHeader.substring(7);
+            String userId = jwtService.extractUserId(jwt);
+
+            if (userId == null) {
+                throw new RuntimeException("No user ID found in token");
+            }
+
+            return UUID.fromString(userId);
+        } catch (Exception e) {
+            logger.error("Failed to extract user ID from token: {}", e.getMessage());
+            throw new RuntimeException("Failed to extract user ID from token", e);
+        }
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
