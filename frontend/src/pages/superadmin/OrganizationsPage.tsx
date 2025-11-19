@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Table, Button, Card, Space, Typography, message, Alert, Empty, Tooltip,
-  Popconfirm, Tag, Statistic, Row, Col
+  Popconfirm, Tag, Statistic, Row, Col, Badge, Spin
 } from 'antd';
 import {
   BankOutlined, PlusOutlined, UserAddOutlined, ReloadOutlined, DeleteOutlined,
   UndoOutlined, TeamOutlined, UserOutlined, FileOutlined, ApartmentOutlined,
-  AppstoreOutlined
+  AppstoreOutlined, MailOutlined, PhoneOutlined, CheckCircleOutlined, CloseCircleOutlined,
+  CrownOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { superadminApi } from '../../api/superadminApi';
+import { superadminApi, OrgAdmin } from '../../api/superadminApi';
 
 const { Title, Text } = Typography;
 
@@ -24,6 +25,7 @@ interface Organization {
   departmentCount?: number;
   activeUserCount?: number;
   documentCount?: number;
+  orgAdminCount?: number;
 }
 
 export const OrganizationsPage: React.FC = () => {
@@ -32,6 +34,9 @@ export const OrganizationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const [orgAdminsCache, setOrgAdminsCache] = useState<Record<string, OrgAdmin[]>>({});
+  const [loadingOrgAdmins, setLoadingOrgAdmins] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadOrganizations();
@@ -76,6 +81,175 @@ export const OrganizationsPage: React.FC = () => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const loadOrgAdmins = async (orgId: string) => {
+    // Return cached data if available
+    if (orgAdminsCache[orgId]) {
+      return;
+    }
+
+    try {
+      setLoadingOrgAdmins(prev => ({ ...prev, [orgId]: true }));
+      const admins = await superadminApi.getOrgAdmins(orgId);
+      setOrgAdminsCache(prev => ({ ...prev, [orgId]: admins }));
+    } catch (err: any) {
+      message.error(`Failed to load org admins: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setLoadingOrgAdmins(prev => ({ ...prev, [orgId]: false }));
+    }
+  };
+
+  const handleExpand = async (expanded: boolean, record: Organization) => {
+    if (expanded) {
+      setExpandedRowKeys([...expandedRowKeys, record.id]);
+      await loadOrgAdmins(record.id);
+    } else {
+      setExpandedRowKeys(expandedRowKeys.filter(key => key !== record.id));
+    }
+  };
+
+  const expandedRowRender = (record: Organization) => {
+    const admins = orgAdminsCache[record.id] || [];
+    const isLoading = loadingOrgAdmins[record.id];
+
+    if (isLoading) {
+      return (
+        <div style={{ textAlign: 'center', padding: 24 }}>
+          <Spin tip="Loading org admins..." />
+        </div>
+      );
+    }
+
+    if (admins.length === 0) {
+      return (
+        <Card style={{ margin: '12px 48px', background: '#fafafa' }}>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <Space direction="vertical" size={8}>
+                <Text type="secondary">No org admins found for this organization</Text>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<UserAddOutlined />}
+                  onClick={() => navigate(`/superadmin/orgadmin/${record.id}`)}
+                >
+                  Add First Org Admin
+                </Button>
+              </Space>
+            }
+          />
+        </Card>
+      );
+    }
+
+    const adminColumns: ColumnsType<OrgAdmin> = [
+      {
+        title: 'Name',
+        key: 'name',
+        render: (_, admin) => (
+          <Space>
+            <CrownOutlined style={{ fontSize: 16, color: '#faad14' }} />
+            <div>
+              <div style={{ fontWeight: 600 }}>
+                {admin.fullName || `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || 'N/A'}
+              </div>
+              {admin.designation && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {admin.designation}
+                </Text>
+              )}
+            </div>
+          </Space>
+        ),
+      },
+      {
+        title: 'Email',
+        dataIndex: 'email',
+        key: 'email',
+        render: (email) => (
+          <Space>
+            <MailOutlined style={{ color: '#1890ff' }} />
+            <Text copyable>{email}</Text>
+          </Space>
+        ),
+      },
+      {
+        title: 'Phone',
+        dataIndex: 'phoneNumber',
+        key: 'phoneNumber',
+        render: (phone) =>
+          phone ? (
+            <Space>
+              <PhoneOutlined style={{ color: '#52c41a' }} />
+              <Text>{phone}</Text>
+            </Space>
+          ) : (
+            <Text type="secondary">-</Text>
+          ),
+      },
+      {
+        title: 'Status',
+        key: 'status',
+        width: 120,
+        render: (_, admin) => (
+          <Space direction="vertical" size={4}>
+            {admin.enabled ? (
+              <Tag icon={<CheckCircleOutlined />} color="success">
+                Active
+              </Tag>
+            ) : (
+              <Tag icon={<CloseCircleOutlined />} color="error">
+                Disabled
+              </Tag>
+            )}
+            {admin.mustChangePassword && (
+              <Tag color="warning" style={{ fontSize: 11 }}>
+                Must Change Password
+              </Tag>
+            )}
+          </Space>
+        ),
+      },
+      {
+        title: 'Created',
+        dataIndex: 'createdAt',
+        key: 'createdAt',
+        width: 150,
+        render: (date) => dayjs(date).format('MMM DD, YYYY'),
+      },
+    ];
+
+    return (
+      <Card
+        style={{ margin: '12px 48px', background: '#fafafa' }}
+        title={
+          <Space>
+            <CrownOutlined style={{ color: '#faad14' }} />
+            <Text strong>Organization Admins ({admins.length})</Text>
+          </Space>
+        }
+        extra={
+          <Button
+            type="primary"
+            size="small"
+            icon={<UserAddOutlined />}
+            onClick={() => navigate(`/superadmin/orgadmin/${record.id}`)}
+          >
+            Add Admin
+          </Button>
+        }
+      >
+        <Table
+          columns={adminColumns}
+          dataSource={admins}
+          rowKey="id"
+          pagination={false}
+          size="small"
+        />
+      </Card>
+    );
   };
 
   // Calculate totals
@@ -167,6 +341,27 @@ export const OrganizationsPage: React.FC = () => {
           value={count || 0}
           valueStyle={{ fontSize: 18, fontWeight: 600, color: '#fa8c16' }}
           prefix={<FileOutlined />}
+        />
+      ),
+    },
+    {
+      title: 'Org Admins',
+      dataIndex: 'orgAdminCount',
+      key: 'orgAdminCount',
+      width: 130,
+      align: 'center' as const,
+      sorter: (a, b) => (a.orgAdminCount || 0) - (b.orgAdminCount || 0),
+      render: (count: number) => (
+        <Badge
+          count={count || 0}
+          showZero
+          style={{
+            backgroundColor: count > 0 ? '#faad14' : '#d9d9d9',
+            fontWeight: 600,
+            fontSize: 14,
+            padding: '4px 12px',
+            height: 'auto',
+          }}
         />
       ),
     },
@@ -364,12 +559,18 @@ export const OrganizationsPage: React.FC = () => {
             dataSource={organizations}
             rowKey="id"
             loading={loading}
+            expandable={{
+              expandedRowRender,
+              expandedRowKeys,
+              onExpand: handleExpand,
+              rowExpandable: (record) => !record.deletedAt, // Only allow expansion for active orgs
+            }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
               showTotal: (total) => `Total ${total} organizations`,
             }}
-            scroll={{ x: 1200 }}
+            scroll={{ x: 1300 }}
             locale={{
               emptyText: (
                 <Empty

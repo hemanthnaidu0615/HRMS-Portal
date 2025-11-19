@@ -4,6 +4,26 @@ export interface Organization {
   id: string;
   name: string;
   createdAt: string;
+  deletedAt?: string | null;
+  employeeCount?: number;
+  departmentCount?: number;
+  activeUserCount?: number;
+  documentCount?: number;
+  orgAdminCount?: number;
+}
+
+export interface OrgAdmin {
+  id: string;
+  email: string;
+  enabled: boolean;
+  createdAt: string;
+  mustChangePassword: boolean;
+  employeeId?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  designation?: string;
 }
 
 export interface CreateOrganizationRequest {
@@ -54,6 +74,13 @@ export const superadminApi = {
     const response = await http.post<OrgAdminResponse>(
       `/api/superadmin/organizations/${orgId}/orgadmin`,
       data
+    );
+    return response.data;
+  },
+
+  getOrgAdmins: async (orgId: string): Promise<OrgAdmin[]> => {
+    const response = await http.get<OrgAdmin[]>(
+      `/api/superadmin/organizations/${orgId}/orgadmins`
     );
     return response.data;
   },

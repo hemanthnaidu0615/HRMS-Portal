@@ -90,6 +90,42 @@ public class SuperAdminController {
             map.put("activeUserCount", activeUserCount);
             map.put("documentCount", documentCount);
 
+            // Add org admin count
+            long orgAdminCount = userRepository.countByOrganizationAndRoles_NameAndEnabledTrue(org, "ORGADMIN");
+            map.put("orgAdminCount", orgAdminCount);
+
+            return map;
+        }).toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/organizations/{orgId}/orgadmins")
+    public ResponseEntity<?> getOrgAdmins(@PathVariable UUID orgId) {
+        Organization organization = organizationRepository.findById(orgId)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        // Find all users with ORGADMIN role for this organization
+        List<User> orgAdmins = userRepository.findByOrganizationAndRoles_Name(organization, "ORGADMIN");
+
+        List<Map<String, Object>> response = orgAdmins.stream().map(user -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", user.getId());
+            map.put("email", user.getEmail());
+            map.put("enabled", user.isEnabled());
+            map.put("createdAt", user.getCreatedAt());
+            map.put("mustChangePassword", user.isMustChangePassword());
+
+            // Get employee details if exists
+            employeeRepository.findByUser(user).ifPresent(emp -> {
+                map.put("employeeId", emp.getId());
+                map.put("firstName", emp.getFirstName());
+                map.put("lastName", emp.getLastName());
+                map.put("fullName", emp.getFullName());
+                map.put("phoneNumber", emp.getPhoneNumber());
+                map.put("designation", emp.getDesignation());
+            });
+
             return map;
         }).toList();
 
