@@ -16,7 +16,7 @@ public class Department {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
-    @Column(name = "department_code", length = 50, unique = true)
+    @Column(name = "code", length = 20)
     private String departmentCode;
 
     @Column(nullable = false)
