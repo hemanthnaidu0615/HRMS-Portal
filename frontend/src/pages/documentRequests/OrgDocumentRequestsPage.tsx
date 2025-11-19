@@ -87,9 +87,11 @@ export const OrgDocumentRequestsPage = () => {
   const loadEmployees = async () => {
     try {
       const data = await orgadminApi.getEmployees();
-      setEmployees(data);
+      const employeesList = Array.isArray(data) ? data : (data.content || []);
+      setEmployees(Array.isArray(employeesList) ? employeesList : []);
     } catch (err: any) {
       console.error('Failed to load employees:', err);
+      setEmployees([]);
     }
   };
 

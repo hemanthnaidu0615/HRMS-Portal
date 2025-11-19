@@ -162,7 +162,8 @@ export const CreateEmployeePage = () => {
       if (posRes.ok) setPositions(await posRes.json());
       if (empsRes.ok) {
         const empsData = await empsRes.json();
-        setEmployees(empsData.content || empsData);
+        const employeesList = empsData.content || empsData;
+        setEmployees(Array.isArray(employeesList) ? employeesList : []);
       }
       if (permsRes.ok) setPermissionGroups(await permsRes.json());
 
@@ -817,19 +818,11 @@ export const CreateEmployeePage = () => {
         // Employment Details
         return (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Alert
-              message="Department Selection"
-              description="Select a department first to auto-generate the employee code based on department standards."
-              type="info"
-              showIcon
-            />
-
             <Form.Item name="departmentId" label="Department">
               <Select
                 placeholder="Select department"
                 size="large"
                 allowClear
-                onChange={handleDepartmentChange}
                 dropdownRender={(menu) => (
                   <>
                     {menu}
@@ -866,38 +859,19 @@ export const CreateEmployeePage = () => {
               />
             </Form.Item>
 
-            <Row gutter={16}>
-              <Col span={16}>
-                <Form.Item
-                  name="employeeCode"
-                  label={<span>Employee Code <span style={{ color: '#ff4d4f' }}>*</span></span>}
-                  rules={[
-                    { required: true, message: 'Employee code is required' },
-                  ]}
-                  extra={employeeCode ? `Auto-generated: ${employeeCode}` : 'Will be auto-generated when you select a department'}
-                >
-                  <Input
-                    placeholder="Auto-generated based on department"
-                    size="large"
-                    readOnly
-                    style={{ cursor: 'not-allowed', backgroundColor: '#f5f5f5' }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label=" ">
-                  <Button
-                    onClick={() => generateEmployeeCode(form.getFieldValue('departmentId'))}
-                    loading={codeGenerating}
-                    disabled={!form.getFieldValue('departmentId')}
-                    block
-                    size="large"
-                  >
-                    Regenerate Code
-                  </Button>
-                </Form.Item>
-              </Col>
-            </Row>
+            <Form.Item
+              name="employeeCode"
+              label={<span>Employee Code <span style={{ color: '#ff4d4f' }}>*</span></span>}
+              rules={[
+                { required: true, message: 'Employee code is required' },
+              ]}
+              extra="Enter a unique employee code"
+            >
+              <Input
+                placeholder="Enter employee code (e.g., EMP001, DEV-123)"
+                size="large"
+              />
+            </Form.Item>
 
             <Form.Item name="positionId" label="Position">
               <Select
