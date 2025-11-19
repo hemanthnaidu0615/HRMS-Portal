@@ -130,18 +130,8 @@ export const OrganizationModulesPage: React.FC = () => {
   };
 
   const handleToggleModule = (moduleName: string, enabled: boolean) => {
-    // Check if trying to disable and it's the last enabled module
+    // Show confirmation modal when disabling
     if (!enabled) {
-      const enabledCount = modules.filter(m => m.isEnabled).length;
-      if (enabledCount === 1) {
-        Modal.warning({
-          title: 'Cannot Disable Module',
-          content: 'At least one module must remain enabled for the organization.',
-          icon: <ExclamationCircleOutlined style={{ color: '#faad14' }} />,
-        });
-        return;
-      }
-
       // Show confirmation modal when disabling
       Modal.confirm({
         title: 'Disable Module',
@@ -208,13 +198,6 @@ export const OrganizationModulesPage: React.FC = () => {
 
   const handleSaveChanges = async () => {
     try {
-      // Validate at least one module is enabled
-      const enabledCount = modules.filter(m => m.isEnabled).length;
-      if (enabledCount === 0) {
-        message.error('At least one module must be enabled');
-        return;
-      }
-
       setSaving(true);
 
       // Prepare update request
@@ -500,9 +483,9 @@ export const OrganizationModulesPage: React.FC = () => {
               Module Management Tips
             </Title>
             <ul style={{ margin: 0, paddingLeft: 20, color: 'rgba(255,255,255,0.9)' }}>
-              <li>At least one module must remain enabled</li>
-              <li>Disabling a module will restrict user access but preserve data</li>
-              <li>User limits control how many users can access the module</li>
+              <li>Core features (Employee Management, Documents) work independently of modules</li>
+              <li>Modules control additional HR features (Leave, Attendance, Payroll, etc.)</li>
+              <li>User limits control how many users can access each module</li>
               <li>Set expiry dates for time-limited subscriptions</li>
             </ul>
           </Space>
