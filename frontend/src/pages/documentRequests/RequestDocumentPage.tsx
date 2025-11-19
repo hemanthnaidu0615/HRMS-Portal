@@ -20,9 +20,18 @@ import {
 } from '@ant-design/icons';
 import { createDocumentRequest } from '../../api/documentRequestsApi';
 import { EmployeeSelector } from '../../components/EmployeeSelector';
+import { orgadminApi } from '../../api/orgadminApi';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  department?: string;
+  position?: string;
+}
 
 /**
  * Request Document Page
@@ -32,7 +41,33 @@ export const RequestDocumentPage: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  const loadEmployees = async () => {
+    try {
+      setEmployeesLoading(true);
+      const data = await orgadminApi.getEmployees();
+      const formattedEmployees = (Array.isArray(data) ? data : data.content || []).map((emp: any) => ({
+        id: emp.employeeId || emp.id,
+        name: `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email || emp.user?.email,
+        email: emp.email || emp.user?.email || '',
+        department: emp.department?.name || '',
+        position: emp.position?.name || '',
+      }));
+      setEmployees(formattedEmployees);
+    } catch (err) {
+      console.error('Failed to load employees:', err);
+      message.error('Failed to load employees');
+    } finally {
+      setEmployeesLoading(false);
+    }
+  };
 
   const handleSubmit = async (values: { targetEmployeeId: string; message: string }) => {
     try {
@@ -115,6 +150,8 @@ export const RequestDocumentPage: React.FC = () => {
             extra="Choose the person from whom you want to request a document"
           >
             <EmployeeSelector
+              employees={employees}
+              loading={employeesLoading}
               placeholder="Search and select an employee..."
               onChange={(value) => setSelectedEmployee(value)}
               style={{ width: '100%' }}

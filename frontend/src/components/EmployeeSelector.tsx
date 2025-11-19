@@ -29,7 +29,10 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
 }) => {
   const [searchValue, setSearchValue] = useState('');
 
-  const options = employees.map((employee) => ({
+  // Safety check: ensure employees is always an array
+  const safeEmployees = employees || [];
+
+  const options = safeEmployees.map((employee) => ({
     value: employee.id,
     label: (
       <Space>
