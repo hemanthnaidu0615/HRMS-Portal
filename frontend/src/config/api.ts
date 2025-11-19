@@ -52,68 +52,62 @@ export const API_ENDPOINTS = {
   CLIENTS: '/api/clients',
 
   // Projects
-  PROJECTS: '/api/projects',
+  PROJECTS: {
+    PROJECTS: '/api/projects',
+    TASKS: '/api/projects/tasks',
+  },
 
   // Attendance
   ATTENDANCE: {
-    RECORDS: '/api/attendance/records',
-    REGULARIZATION: '/api/attendance/regularization',
-    SHIFTS: '/api/attendance/shifts',
-    POLICIES: '/api/attendance/policies',
-    REPORTS: '/api/attendance/reports',
+    RECORDS: '/api/attendance/attendance-record',
+    REGULARIZATION: '/api/attendance/attendance-regularization',
+    SHIFTS: '/api/attendance/shift',
   },
 
   // Leave
   LEAVE: {
-    REQUESTS: '/api/leave/requests',
-    BALANCES: '/api/leave/balances',
-    TYPES: '/api/leave/types',
-    POLICIES: '/api/leave/policies',
+    APPLICATIONS: '/api/leave/leave-application',
+    BALANCES: '/api/leave/leave-balance',
+    TYPES: '/api/leave/leave-type',
   },
 
   // Timesheet
   TIMESHEET: {
-    ENTRIES: '/api/timesheet/entries',
-    APPROVALS: '/api/timesheet/approvals',
-    PROJECTS: '/api/timesheet/projects',
+    ENTRIES: '/api/timesheet/timesheet-entry',
   },
 
   // Payroll
   PAYROLL: {
-    PAYROLLS: '/api/payroll/payrolls',
-    COMPONENTS: '/api/payroll/components',
-    DEDUCTIONS: '/api/payroll/deductions',
-    BONUSES: '/api/payroll/bonuses',
+    RUNS: '/api/payroll/payroll-run',
+    PAYSLIPS: '/api/payroll/payslip',
+    COMPONENTS: '/api/payroll/salary-component',
   },
 
   // Performance
   PERFORMANCE: {
-    REVIEWS: '/api/performance/reviews',
-    GOALS: '/api/performance/goals',
-    FEEDBACK: '/api/performance/feedback',
-    RATINGS: '/api/performance/ratings',
+    REVIEWS: '/api/performance/performance-review',
+    GOALS: '/api/performance/employee-goal',
+    CYCLES: '/api/performance/performance-cycle',
   },
 
   // Recruitment
   RECRUITMENT: {
-    JOBS: '/api/recruitment/jobs',
-    APPLICATIONS: '/api/recruitment/applications',
-    INTERVIEWS: '/api/recruitment/interviews',
-    OFFERS: '/api/recruitment/offers',
+    JOBS: '/api/recruitment/job-posting',
+    APPLICATIONS: '/api/recruitment/job-application',
+    INTERVIEWS: '/api/recruitment/interview-schedule',
   },
 
   // Assets
   ASSETS: {
-    ASSETS: '/api/assets/assets',
-    ASSIGNMENTS: '/api/assets/assignments',
-    CATEGORIES: '/api/assets/categories',
+    ASSETS: '/api/assets/asset',
+    ASSIGNMENTS: '/api/assets/asset-assignment',
+    CATEGORIES: '/api/assets/asset-category',
   },
 
   // Expenses
   EXPENSES: {
-    CLAIMS: '/api/expenses/claims',
-    CATEGORIES: '/api/expenses/categories',
-    APPROVALS: '/api/expenses/approvals',
+    CLAIMS: '/api/expenses/expense-claim',
+    CATEGORIES: '/api/expenses/expense-category',
   },
 
   // Notifications

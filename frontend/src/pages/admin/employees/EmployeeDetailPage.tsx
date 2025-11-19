@@ -374,6 +374,7 @@ export const EmployeeDetailPage = () => {
               </Title>
               {isDeleted && <Tag color="error">Deleted</Tag>}
             </div>
+            <Space wrap>
               {employee.employeeCode && (
                 <Tag style={{ background: 'rgba(255,255,255,0.9)', borderRadius: 6, fontSize: 13, fontWeight: 600, border: 'none' }}>
                   {employee.employeeCode}

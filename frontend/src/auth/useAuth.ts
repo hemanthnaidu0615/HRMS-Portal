@@ -14,7 +14,8 @@ export const useAuth = () => {
   const permissionsStr = localStorage.getItem('permissions');
 
   const roles: string[] = rolesStr ? JSON.parse(rolesStr) : [];
-  const user: { id: string; email: string } | null = userStr ? JSON.parse(userStr) : null;
+  const userObj: { id: string; email: string } | null = userStr ? JSON.parse(userStr) : null;
+  const user: User | null = userObj ? { ...userObj, roles } : null;
   const [permissions, setPermissions] = useState<string[]>(
     permissionsStr ? JSON.parse(permissionsStr) : []
   );

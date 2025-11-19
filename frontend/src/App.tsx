@@ -233,7 +233,7 @@ function App() {
           }
         />
 
-        {/* OrgAdmin Routes (Legacy - redirecting to new admin routes) */}}
+        {/* OrgAdmin Routes (Legacy - redirecting to new admin routes) */}
         <Route path="/orgadmin/employees" element={<Navigate to="/admin/employees" replace />} />
         <Route path="/orgadmin/create-employee" element={<Navigate to="/admin/employees/create" replace />} />
         <Route
