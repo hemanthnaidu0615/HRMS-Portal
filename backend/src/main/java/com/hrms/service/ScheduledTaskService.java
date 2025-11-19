@@ -1,6 +1,6 @@
 package com.hrms.service;
 
-import com.hrms.model.Employee;
+import com.hrms.entity.Employee;
 import com.hrms.repository.*;
 import com.hrms.repository.attendance.AttendanceRecordRepository;
 import com.hrms.repository.leave.LeaveApplicationRepository;
