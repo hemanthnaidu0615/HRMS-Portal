@@ -75,7 +75,7 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
       loading={loading}
       options={filteredOptions}
       placeholder="Select an employee"
-      optionHeight={56}
+      listHeight={400}
       style={{
         width: '100%',
       }}
