@@ -15,6 +15,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findByOrganizationId(UUID organizationId);
     long countByOrganizationAndEnabledTrue(Organization organization);
 
+    // Role-based queries
+    List<User> findByOrganizationAndRoles_Name(Organization organization, String roleName);
+    long countByOrganizationAndRoles_NameAndEnabledTrue(Organization organization, String roleName);
+
     // Demo data cleanup methods
     int deleteByOrganization(Organization organization);
     long countByOrganization(Organization organization);
