@@ -43,4 +43,11 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     // Check if client code exists
     boolean existsByClientCodeAndDeletedAtIsNull(String clientCode);
+
+    // Demo data cleanup methods
+    @Query("DELETE FROM Client c WHERE c.organization = :organization")
+    int deleteByOrganization(@Param("organization") com.hrms.entity.Organization organization);
+
+    @Query("SELECT COUNT(c) FROM Client c WHERE c.organization = :organization")
+    long countByOrganization(@Param("organization") com.hrms.entity.Organization organization);
 }

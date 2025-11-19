@@ -15,4 +15,8 @@ public interface DepartmentRepository extends JpaRepository<Department, UUID> {
     List<Department> findByOrganizationAndDeletedAtIsNull(Organization organization);
     Optional<Department> findByOrganizationAndNameAndDeletedAtIsNull(Organization organization, String name);
     long countByOrganizationAndDeletedAtIsNull(Organization organization);
+
+    // Demo data cleanup methods
+    int deleteByOrganization(Organization organization);
+    long countByOrganization(Organization organization);
 }

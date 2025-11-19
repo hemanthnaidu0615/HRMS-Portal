@@ -43,4 +43,11 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
 
     // Check if vendor code exists
     boolean existsByVendorCodeAndDeletedAtIsNull(String vendorCode);
+
+    // Demo data cleanup methods
+    @Query("DELETE FROM Vendor v WHERE v.organization = :organization")
+    int deleteByOrganization(@Param("organization") com.hrms.entity.Organization organization);
+
+    @Query("SELECT COUNT(v) FROM Vendor v WHERE v.organization = :organization")
+    long countByOrganization(@Param("organization") com.hrms.entity.Organization organization);
 }

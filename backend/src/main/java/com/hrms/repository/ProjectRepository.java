@@ -43,4 +43,11 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
     // Check if project code exists
     boolean existsByProjectCodeAndDeletedAtIsNull(String projectCode);
+
+    // Demo data cleanup methods
+    @Query("DELETE FROM Project p WHERE p.organization = :organization")
+    int deleteByOrganization(@Param("organization") com.hrms.entity.Organization organization);
+
+    @Query("SELECT COUNT(p) FROM Project p WHERE p.organization = :organization")
+    long countByOrganization(@Param("organization") com.hrms.entity.Organization organization);
 }
