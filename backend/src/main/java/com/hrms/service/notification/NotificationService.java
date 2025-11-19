@@ -1,5 +1,6 @@
 package com.hrms.service.notification;
 
+import com.hrms.entity.Employee;
 import com.hrms.entity.notification.Notification;
 import com.hrms.repository.notification.NotificationRepository;
 import com.hrms.exception.ResourceNotFoundException;
@@ -62,5 +63,53 @@ public class NotificationService {
         log.debug("Hard deleting Notification with id: {} for organization: {}", id, organizationId);
         Notification entity = getById(id, organizationId);
         repository.delete(entity);
+    }
+
+    /**
+     * Convenience method to create a notification for an employee
+     * @param employee The employee to notify
+     * @param type The notification type (REMINDER, INFO, WARNING, ERROR, etc.)
+     * @param title The notification title
+     * @param message The notification message
+     * @param link Optional link for the notification
+     * @return The created notification
+     */
+    public Notification createNotification(Employee employee, String type, String title, String message, String link) {
+        log.debug("Creating notification for employee: {} with type: {}", employee.getId(), type);
+
+        Notification notification = new Notification();
+        notification.setEmployee(employee);
+        notification.setOrganization(employee.getOrganization());
+        notification.setType(type);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setLink(link);
+        notification.setIsRead(false);
+        notification.setIsActive(true);
+
+        return repository.save(notification);
+    }
+
+    /**
+     * Deletes notifications older than specified number of days
+     * @param daysToKeep Number of days to keep notifications
+     * @return Number of deleted notifications
+     */
+    public int deleteOldNotifications(int daysToKeep) {
+        log.debug("Deleting notifications older than {} days", daysToKeep);
+
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(daysToKeep);
+        List<Notification> oldNotifications = repository.findByCreatedAtBeforeAndDeletedAtIsNull(cutoffDate);
+
+        int count = 0;
+        for (Notification notification : oldNotifications) {
+            notification.setDeletedAt(LocalDateTime.now());
+            notification.setIsActive(false);
+            repository.save(notification);
+            count++;
+        }
+
+        log.info("Deleted {} old notifications", count);
+        return count;
     }
 }

@@ -59,5 +59,26 @@ public class Notification {
         updatedAt = LocalDateTime.now();
     }
 
-    // TODO: Add specific fields for Notification based on schema
+    // Notification specific fields
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @Column(name = "type", length = 50)
+    private String type; // REMINDER, INFO, WARNING, ERROR, etc.
+
+    @Column(name = "title", length = 255, nullable = false)
+    private String title;
+
+    @Column(name = "message", columnDefinition = "TEXT")
+    private String message;
+
+    @Column(name = "link", length = 500)
+    private String link;
+
+    @Column(name = "is_read")
+    private Boolean isRead = false;
+
+    @Column(name = "read_at")
+    private LocalDateTime readAt;
 }
