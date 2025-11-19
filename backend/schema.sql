@@ -78,7 +78,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     organization_id UNIQUEIDENTIFIER NULL,
     must_change_password BIT NOT NULL DEFAULT 1,
-    is_active BIT DEFAULT 1,
+    is_active BIT NOT NULL DEFAULT 1,
     last_login_at DATETIME2,
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     updated_at DATETIME2,
