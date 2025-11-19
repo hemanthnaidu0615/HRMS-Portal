@@ -443,7 +443,10 @@ CREATE TABLE employees (
     -- Vendor/Client Assignment
     vendor_id UNIQUEIDENTIFIER NULL,
     client_id UNIQUEIDENTIFIER NULL,
+    client_name VARCHAR(255),
     project_id UNIQUEIDENTIFIER NULL,
+    project_id_string VARCHAR(255),
+    contract_start_date DATE,
     contract_end_date DATE,
 
     -- Probation Period
