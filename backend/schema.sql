@@ -506,6 +506,7 @@ CREATE TABLE employees (
     -- Additional Information
     profile_photo_url VARCHAR(500),
     linkedin_profile VARCHAR(255),
+    github_profile VARCHAR(255),
     skills VARCHAR(1000),
     certifications VARCHAR(1000),
     languages_known VARCHAR(500),
@@ -518,6 +519,7 @@ CREATE TABLE employees (
     updated_at DATETIME2,
     updated_by UNIQUEIDENTIFIER,
     deleted_at DATETIME2,
+    deleted_by UNIQUEIDENTIFIER,
 
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (organization_id) REFERENCES organizations(id),
