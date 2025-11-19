@@ -879,8 +879,8 @@ export const CreateEmployeePage = () => {
                   <Input
                     placeholder="Auto-generated based on department"
                     size="large"
-                    disabled={true}
-                    value={employeeCode}
+                    readOnly
+                    style={{ cursor: 'not-allowed', backgroundColor: '#f5f5f5' }}
                   />
                 </Form.Item>
               </Col>
