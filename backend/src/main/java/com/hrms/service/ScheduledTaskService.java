@@ -70,7 +70,7 @@ public class ScheduledTaskService {
             LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
 
             // Find all active employees
-            List<Employee> employees = employeeRepository.findByStatus("ACTIVE");
+            List<Employee> employees = employeeRepository.findByEmploymentStatusAndDeletedAtIsNull("active");
 
             for (Employee employee : employees) {
                 // Check if employee has submitted timesheet for this week
@@ -83,10 +83,10 @@ public class ScheduledTaskService {
                 // If no timesheet entries, send reminder
                 if (timesheetCount == 0) {
                     notificationService.createNotification(
-                        employee.getId(),
+                        employee,
+                        "REMINDER",
                         "Timesheet Reminder",
                         "Please submit your timesheet for this week.",
-                        "REMINDER",
                         null
                     );
                 }
@@ -115,16 +115,16 @@ public class ScheduledTaskService {
 
         try {
             // Find employees with low leave balance (< 5 days)
-            List<Employee> employees = employeeRepository.findByStatus("ACTIVE");
+            List<Employee> employees = employeeRepository.findByEmploymentStatusAndDeletedAtIsNull("active");
 
             for (Employee employee : employees) {
                 // This is a placeholder - you would implement leave balance logic
                 // based on your LeaveBalance entity
                 notificationService.createNotification(
-                    employee.getId(),
+                    employee,
+                    "INFO",
                     "Leave Balance Update",
                     "Your weekly leave balance summary is ready.",
-                    "INFO",
                     null
                 );
             }
@@ -149,14 +149,14 @@ public class ScheduledTaskService {
 
         try {
             // Find HR/Finance admins
-            List<Employee> hrAdmins = employeeRepository.findByRoles("ORGADMIN");
+            List<Employee> hrAdmins = employeeRepository.findByRoleName("ORGADMIN");
 
             for (Employee admin : hrAdmins) {
                 notificationService.createNotification(
-                    admin.getId(),
+                    admin,
+                    "REMINDER",
                     "Payroll Processing Reminder",
                     "Monthly payroll processing is due. Please review and process employee salaries.",
-                    "REMINDER",
                     null
                 );
             }
@@ -185,7 +185,7 @@ public class ScheduledTaskService {
             LocalDate nextWeek = today.plusDays(7);
 
             // Find employees whose probation ends in next 7 days
-            List<Employee> employees = employeeRepository.findByStatus("ACTIVE");
+            List<Employee> employees = employeeRepository.findByEmploymentStatusAndDeletedAtIsNull("active");
 
             for (Employee employee : employees) {
                 if (employee.getProbationEndDate() != null) {
@@ -194,20 +194,20 @@ public class ScheduledTaskService {
                     if (!probationEnd.isBefore(today) && !probationEnd.isAfter(nextWeek)) {
                         // Notify employee
                         notificationService.createNotification(
-                            employee.getId(),
+                            employee,
+                            "INFO",
                             "Probation Period Ending",
                             "Your probation period ends on " + probationEnd + ". Your manager will conduct a performance review.",
-                            "INFO",
                             null
                         );
 
                         // Notify manager if exists
-                        if (employee.getManagerId() != null) {
+                        if (employee.getReportsTo() != null) {
                             notificationService.createNotification(
-                                employee.getManagerId(),
+                                employee.getReportsTo(),
+                                "REMINDER",
                                 "Employee Probation Review Due",
                                 employee.getFirstName() + " " + employee.getLastName() + "'s probation ends on " + probationEnd + ". Please conduct performance review.",
-                                "REMINDER",
                                 null
                             );
                         }
@@ -318,14 +318,14 @@ public class ScheduledTaskService {
 
             if (monthsUntilExpiry <= 3) {
                 // Send reminders if less than 3 months until year end
-                List<Employee> employees = employeeRepository.findByStatus("ACTIVE");
+                List<Employee> employees = employeeRepository.findByEmploymentStatusAndDeletedAtIsNull("active");
 
                 for (Employee employee : employees) {
                     notificationService.createNotification(
-                        employee.getId(),
+                        employee,
+                        "REMINDER",
                         "Leave Expiry Reminder",
                         "Your unused leaves will expire on " + endOfYear + ". Please plan to use them before the year ends.",
-                        "REMINDER",
                         null
                     );
                 }
@@ -358,10 +358,10 @@ public class ScheduledTaskService {
             for (Employee manager : managers) {
                 // This is a placeholder - implement attendance summary logic
                 notificationService.createNotification(
-                    manager.getId(),
+                    manager,
+                    "INFO",
                     "Daily Attendance Summary",
                     "Your team's attendance summary for " + today + " is ready.",
-                    "INFO",
                     null
                 );
             }
@@ -392,10 +392,10 @@ public class ScheduledTaskService {
 
             for (Employee employee : employees) {
                 notificationService.createNotification(
-                    employee.getId(),
+                    employee,
+                    "INFO",
                     "Happy Birthday!",
                     "Wishing you a wonderful birthday! Have a great day!",
-                    "INFO",
                     null
                 );
             }
