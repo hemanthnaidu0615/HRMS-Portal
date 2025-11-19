@@ -61,6 +61,11 @@ public class JwtService {
                 .map(role -> role.getName())
                 .collect(Collectors.toList()));
 
+        // Add organization ID if user belongs to an organization
+        if (user.getOrganization() != null) {
+            claims.put("organizationId", user.getOrganization().getId().toString());
+        }
+
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getEmail())
@@ -85,6 +90,11 @@ public class JwtService {
     public List<String> extractRoles(String token) {
         Claims claims = extractClaims(token);
         return claims.get("roles", List.class);
+    }
+
+    public String extractOrganizationId(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("organizationId", String.class);
     }
 
     public boolean isTokenValid(String token) {
