@@ -28,7 +28,7 @@ public class User {
     @Column(name = "must_change_password", nullable = false)
     private boolean mustChangePassword = true;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean enabled = true;
 
     @CreationTimestamp

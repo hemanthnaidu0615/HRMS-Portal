@@ -999,19 +999,6 @@ WHERE g.name = 'Audit & Logs' AND p.resource IN ('audit-logs', 'email-logs');
 CREATE INDEX idx_users_org ON users(organization_id);
 CREATE INDEX idx_users_email ON users(email);
 
-CREATE INDEX idx_vendors_org ON vendors(organization_id);
-CREATE INDEX idx_vendors_status ON vendors(is_active);
-CREATE INDEX idx_vendors_code ON vendors(vendor_code);
-
-CREATE INDEX idx_clients_org ON clients(organization_id);
-CREATE INDEX idx_clients_status ON clients(is_active);
-CREATE INDEX idx_clients_code ON clients(client_code);
-
-CREATE INDEX idx_projects_org ON projects(organization_id);
-CREATE INDEX idx_projects_client ON projects(client_id);
-CREATE INDEX idx_projects_status ON projects(is_active);
-CREATE INDEX idx_projects_code ON projects(project_code);
-
 CREATE INDEX idx_employees_org ON employees(organization_id);
 CREATE INDEX idx_employees_dept ON employees(department_id);
 CREATE INDEX idx_employees_reports_to ON employees(reports_to);
