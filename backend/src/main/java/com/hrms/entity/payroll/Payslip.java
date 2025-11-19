@@ -46,6 +46,31 @@ public class Payslip {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // Payslip specific fields
+    @Column(name = "payroll_run_id")
+    private UUID payrollRunId;
+
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "pay_period_start")
+    private LocalDate payPeriodStart;
+
+    @Column(name = "pay_period_end")
+    private LocalDate payPeriodEnd;
+
+    @Column(name = "gross_pay")
+    private BigDecimal grossPay;
+
+    @Column(name = "total_deductions")
+    private BigDecimal totalDeductions;
+
+    @Column(name = "net_pay")
+    private BigDecimal netPay;
+
+    @Column(name = "status")
+    private String status;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +83,4 @@ public class Payslip {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for Payslip based on schema
 }

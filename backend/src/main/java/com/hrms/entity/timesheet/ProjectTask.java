@@ -46,6 +46,34 @@ public class ProjectTask {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // ProjectTask specific fields
+    @Column(name = "project_id")
+    private UUID projectId;
+
+    @Column(name = "task_name")
+    private String taskName;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "assigned_to")
+    private UUID assignedTo;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "priority")
+    private String priority;
+
+    @Column(name = "estimated_hours")
+    private Integer estimatedHours;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "due_date")
+    private LocalDate dueDate;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +86,4 @@ public class ProjectTask {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for ProjectTask based on schema
 }

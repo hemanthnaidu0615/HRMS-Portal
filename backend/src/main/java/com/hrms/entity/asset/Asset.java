@@ -26,6 +26,31 @@ public class Asset {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private AssetCategory category;
+
+    @Column(name = "asset_tag")
+    private String assetTag;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "serial_number")
+    private String serialNumber;
+
+    @Column(name = "purchase_price")
+    private BigDecimal purchasePrice;
+
+    @Column(name = "purchase_date")
+    private LocalDate purchaseDate;
+
+    @Column(name = "status")
+    private String status;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -58,6 +83,4 @@ public class Asset {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for Asset based on schema
 }

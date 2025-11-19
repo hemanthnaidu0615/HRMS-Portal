@@ -46,6 +46,31 @@ public class PerformanceReview {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // PerformanceReview specific fields
+    @Column(name = "cycle_id")
+    private UUID cycleId;
+
+    @Column(name = "employee_id")
+    private UUID employeeId;
+
+    @Column(name = "reviewer_id")
+    private UUID reviewerId;
+
+    @Column(name = "review_type")
+    private String reviewType;
+
+    @Column(name = "overall_rating")
+    private Integer overallRating;
+
+    @Column(name = "comments")
+    private String comments;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "submitted_at")
+    private LocalDateTime submittedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +83,4 @@ public class PerformanceReview {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for PerformanceReview based on schema
 }

@@ -46,6 +46,37 @@ public class PayrollRun {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // PayrollRun specific fields
+    @Column(name = "pay_period")
+    private String payPeriod;
+
+    @Column(name = "period_start")
+    private LocalDate periodStart;
+
+    @Column(name = "period_end")
+    private LocalDate periodEnd;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "total_employees")
+    private Integer totalEmployees;
+
+    @Column(name = "total_gross_pay")
+    private BigDecimal totalGrossPay;
+
+    @Column(name = "total_deductions")
+    private BigDecimal totalDeductions;
+
+    @Column(name = "total_net_pay")
+    private BigDecimal totalNetPay;
+
+    @Column(name = "processed_by")
+    private UUID processedBy;
+
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +89,4 @@ public class PayrollRun {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for PayrollRun based on schema
 }

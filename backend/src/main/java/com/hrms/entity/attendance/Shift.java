@@ -46,6 +46,19 @@ public class Shift {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // Shift specific fields
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "start_time")
+    private LocalTime startTime;
+
+    @Column(name = "end_time")
+    private LocalTime endTime;
+
+    @Column(name = "grace_period_minutes")
+    private Integer gracePeriodMinutes;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -58,6 +71,4 @@ public class Shift {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for Shift based on schema
 }

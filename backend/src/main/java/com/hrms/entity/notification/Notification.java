@@ -46,19 +46,6 @@ public class Notification {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        if (isActive == null) {
-            isActive = true;
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     // Notification specific fields
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
@@ -81,4 +68,47 @@ public class Notification {
 
     @Column(name = "read_at")
     private LocalDateTime readAt;
+
+    @Column(name = "action_url", length = 500)
+    private String actionUrl;
+
+    @Column(name = "is_email_sent", nullable = false)
+    private Boolean isEmailSent = false;
+
+    @Column(name = "metadata", columnDefinition = "TEXT")
+    private String metadata;
+
+    @Column(name = "priority", length = 20)
+    private String priority = "MEDIUM";
+
+    @Column(name = "category", length = 50)
+    private String category;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (isActive == null) {
+            isActive = true;
+        }
+        if (isRead == null) {
+            isRead = false;
+        }
+        if (isEmailSent == null) {
+            isEmailSent = false;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public void markAsRead() {
+        this.isRead = true;
+        this.readAt = LocalDateTime.now();
+    }
+
+    public void markAsEmailSent() {
+        this.isEmailSent = true;
+    }
 }
