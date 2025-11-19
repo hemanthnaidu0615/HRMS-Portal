@@ -26,6 +26,29 @@ public class TimesheetEntry {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
+
+    @Column(name = "entry_date")
+    private LocalDate entryDate;
+
+    @Column(name = "hours_worked", precision = 5, scale = 2)
+    private BigDecimal hoursWorked;
+
+    @Column(name = "description", length = 1000)
+    private String description;
+
+    @Column(name = "task_type", length = 100)
+    private String taskType;
+
+    @Column(name = "status", length = 50)
+    private String status;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -58,6 +81,4 @@ public class TimesheetEntry {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for TimesheetEntry based on schema
 }
