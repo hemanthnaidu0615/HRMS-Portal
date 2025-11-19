@@ -36,9 +36,11 @@ public class Notification {
     @Column(name = "action_url", length = 500)
     private String actionUrl;
 
+    @Builder.Default
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 
+    @Builder.Default
     @Column(name = "is_email_sent", nullable = false)
     private Boolean isEmailSent = false;
 
@@ -54,6 +56,7 @@ public class Notification {
     private String metadata;
 
     // Priority level: LOW, MEDIUM, HIGH, URGENT
+    @Builder.Default
     @Column(name = "priority", length = 20)
     private String priority = "MEDIUM";
 

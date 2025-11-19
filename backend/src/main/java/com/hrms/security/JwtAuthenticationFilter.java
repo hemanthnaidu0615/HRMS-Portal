@@ -19,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,6 +30,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
+    }
+
+    /**
+     * Extract organization ID from JWT token in the request
+     */
+    public UUID getOrganizationId(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("No valid authorization token found");
+        }
+
+        try {
+            String jwt = authHeader.substring(7);
+            String organizationId = jwtService.extractOrganizationId(jwt);
+
+            if (organizationId == null) {
+                throw new RuntimeException("No organization ID found in token");
+            }
+
+            return UUID.fromString(organizationId);
+        } catch (Exception e) {
+            logger.error("Failed to extract organization ID from token: {}", e.getMessage());
+            throw new RuntimeException("Failed to extract organization ID from token", e);
+        }
     }
 
     @Override

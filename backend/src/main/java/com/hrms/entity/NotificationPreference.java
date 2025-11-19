@@ -26,15 +26,19 @@ public class NotificationPreference {
     @Column(name = "notification_type", nullable = false, length = 50)
     private String notificationType; // LEAVE_REQUEST, TIMESHEET_APPROVAL, PAYROLL_UPDATE, PERFORMANCE_REVIEW, SYSTEM_ANNOUNCEMENT
 
+    @Builder.Default
     @Column(name = "email_enabled", nullable = false)
     private Boolean emailEnabled = true;
 
+    @Builder.Default
     @Column(name = "in_app_enabled", nullable = false)
     private Boolean inAppEnabled = true;
 
+    @Builder.Default
     @Column(name = "sms_enabled", nullable = false)
     private Boolean smsEnabled = false; // Future feature
 
+    @Builder.Default
     @Column(name = "frequency", length = 20)
     private String frequency = "REALTIME"; // REALTIME, DAILY, WEEKLY
 
