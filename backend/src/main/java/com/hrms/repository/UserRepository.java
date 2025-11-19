@@ -14,4 +14,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     List<User> findByOrganizationId(UUID organizationId);
     long countByOrganizationAndEnabledTrue(Organization organization);
+
+    // Demo data cleanup methods
+    int deleteByOrganization(Organization organization);
+    long countByOrganization(Organization organization);
 }

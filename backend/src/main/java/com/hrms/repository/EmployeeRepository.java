@@ -39,4 +39,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND " +
            "MONTH(e.dateOfBirth) = :month AND DAY(e.dateOfBirth) = :day")
     List<Employee> findByBirthday(@Param("month") int month, @Param("day") int day);
+
+    // Demo data cleanup methods
+    int deleteByOrganization(Organization organization);
+    long countByOrganization(Organization organization);
 }

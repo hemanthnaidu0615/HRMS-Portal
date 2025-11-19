@@ -13,4 +13,8 @@ import java.util.UUID;
 public interface PositionRepository extends JpaRepository<Position, UUID> {
     List<Position> findByOrganization(Organization organization);
     Optional<Position> findByOrganizationAndName(Organization organization, String name);
+
+    // Demo data cleanup methods
+    int deleteByOrganization(Organization organization);
+    long countByOrganization(Organization organization);
 }

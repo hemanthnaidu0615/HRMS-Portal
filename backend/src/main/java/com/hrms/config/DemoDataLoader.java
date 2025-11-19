@@ -54,9 +54,9 @@ public class DemoDataLoader {
             String demoPassword = passwordEncoder.encode("Demo@123456");
 
             // Get system roles
-            Role orgAdminRole = roleRepository.findByNameAndOrganizationIsNull("ORGADMIN")
+            Role orgAdminRole = roleRepository.findByNameAndSystemRoleTrue("ORGADMIN")
                     .orElseThrow(() -> new RuntimeException("ORGADMIN role not found"));
-            Role employeeRole = roleRepository.findByNameAndOrganizationIsNull("EMPLOYEE")
+            Role employeeRole = roleRepository.findByNameAndSystemRoleTrue("EMPLOYEE")
                     .orElseThrow(() -> new RuntimeException("EMPLOYEE role not found"));
 
             // ===== CREATE 10 ORGANIZATIONS =====
@@ -286,28 +286,43 @@ public class DemoDataLoader {
     private Department createDepartment(String name, String description, Organization org, DepartmentRepository repo) {
         Department dept = new Department();
         dept.setName(name);
-        dept.setDescription(description);
+        // Note: description parameter ignored as Department entity doesn't have a description field
         dept.setOrganization(org);
         return repo.save(dept);
     }
 
     private Position createPosition(String title, String description, String level, Department dept, Organization org, PositionRepository repo) {
         Position pos = new Position();
-        pos.setTitle(title);
-        pos.setDescription(description);
-        pos.setLevel(level);
-        pos.setDepartment(dept);
+        pos.setName(title);
+        // Note: description and dept parameters ignored as Position entity doesn't have these fields
+        // Convert level string to numeric seniority level
+        Integer seniorityLevel = convertLevelToSeniority(level);
+        pos.setSeniorityLevel(seniorityLevel);
         pos.setOrganization(org);
         return repo.save(pos);
+    }
+
+    private Integer convertLevelToSeniority(String level) {
+        // Convert level strings to numeric seniority (higher = more senior)
+        return switch (level.toLowerCase()) {
+            case "junior" -> 1;
+            case "mid" -> 2;
+            case "senior" -> 3;
+            case "manager" -> 4;
+            case "director" -> 5;
+            case "executive" -> 6;
+            default -> 2; // default to mid-level
+        };
     }
 
     private Client createClient(String name, String code, String contactPerson, String email, String phone, Organization org, ClientRepository repo) {
         Client client = new Client();
         client.setName(name);
-        client.setCode(code);
-        client.setContactPerson(contactPerson);
-        client.setEmail(email);
-        client.setPhone(phone);
+        client.setClientCode(code);
+        client.setPrimaryContactName(contactPerson);
+        client.setPrimaryContactEmail(email);
+        client.setPrimaryContactPhone(phone);
+        client.setClientType("corporate"); // Set required field
         client.setOrganization(org);
         return repo.save(client);
     }
@@ -315,21 +330,23 @@ public class DemoDataLoader {
     private Vendor createVendor(String name, String code, String contactPerson, String email, String phone, Organization org, VendorRepository repo) {
         Vendor vendor = new Vendor();
         vendor.setName(name);
-        vendor.setCode(code);
-        vendor.setContactPerson(contactPerson);
-        vendor.setEmail(email);
-        vendor.setPhone(phone);
+        vendor.setVendorCode(code);
+        vendor.setPrimaryContactName(contactPerson);
+        vendor.setPrimaryContactEmail(email);
+        vendor.setPrimaryContactPhone(phone);
+        vendor.setVendorType("staffing"); // Set required field
+        vendor.setBillingType("hourly"); // Set required field
         vendor.setOrganization(org);
         return repo.save(vendor);
     }
 
     private Project createProject(String name, String code, String description, LocalDate startDate, String status, Client client, Organization org, ProjectRepository repo) {
         Project project = new Project();
-        project.setName(name);
-        project.setCode(code);
+        project.setProjectName(name);
+        project.setProjectCode(code);
         project.setDescription(description);
         project.setStartDate(startDate);
-        project.setStatus(status);
+        project.setProjectStatus(status);
         project.setClient(client);
         project.setOrganization(org);
         return repo.save(project);
