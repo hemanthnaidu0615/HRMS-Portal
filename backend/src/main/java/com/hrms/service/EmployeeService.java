@@ -46,6 +46,15 @@ public class EmployeeService {
     public Employee createEmployee(User user, Organization org) {
         Employee employee = new Employee(user, org);
 
+        // Auto-generate employee code
+        String employeeCode = generateEmployeeCode(org, null);
+        employee.setEmployeeCode(employeeCode);
+
+        // Set default joining date to today if not set
+        if (employee.getJoiningDate() == null) {
+            employee.setJoiningDate(LocalDate.now());
+        }
+
         boolean isAdmin = user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals("orgadmin") || role.getName().equals("superadmin"));
 
@@ -75,10 +84,20 @@ public class EmployeeService {
         }
 
         // Set department if provided
+        Department department = null;
         if (request.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(request.getDepartmentId())
+            department = departmentRepository.findById(request.getDepartmentId())
                     .orElseThrow(() -> new RuntimeException("Department not found"));
             employee.setDepartment(department);
+        }
+
+        // Auto-generate employee code based on department
+        String employeeCode = generateEmployeeCode(org, department);
+        employee.setEmployeeCode(employeeCode);
+
+        // Set default joining date to today if not set
+        if (employee.getJoiningDate() == null) {
+            employee.setJoiningDate(LocalDate.now());
         }
 
         // Set position if provided
