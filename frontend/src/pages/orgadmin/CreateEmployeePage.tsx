@@ -209,8 +209,24 @@ export const CreateEmployeePage = () => {
       const fieldsToValidate = getStepFields(currentStep);
       await form.validateFields(fieldsToValidate);
       setCurrentStep(currentStep + 1);
-    } catch (err) {
+      // Scroll to top when moving to next step
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
       console.log('Validation failed:', err);
+      // Get the first error field
+      const errorFields = err.errorFields;
+      if (errorFields && errorFields.length > 0) {
+        const firstErrorField = errorFields[0].name[0];
+        // Scroll to the first error field
+        form.scrollToField(firstErrorField, {
+          behavior: 'smooth',
+          block: 'center',
+        });
+        // Show error message
+        message.error(`Please fill in all required fields: ${errorFields.map((f: any) => f.errors[0]).join(', ')}`);
+      } else {
+        message.error('Please fill in all required fields before proceeding');
+      }
     }
   };
 
@@ -239,7 +255,7 @@ export const CreateEmployeePage = () => {
       setLoading(true);
       setError('');
 
-      const values = form.getFieldsValue();
+      const values = form.getFieldsValue(true);
 
       // Build comprehensive payload with all 60+ fields
       const payload = {
@@ -801,51 +817,12 @@ export const CreateEmployeePage = () => {
         // Employment Details
         return (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Row gutter={16}>
-              <Col span={16}>
-                <Form.Item
-                  name="employeeCode"
-                  label={<span>Employee Code <span style={{ color: '#ff4d4f' }}>*</span></span>}
-                  rules={[
-                    { required: true, message: 'Employee code is required' },
-                    employeeCodeRule,
-                  ]}
-                  extra={employeeCode ? `Auto-generated based on department` : 'Select department to auto-generate code or enter manually (Format: EMP-1234)'}
-                >
-                  <Input
-                    placeholder="EMP-1234"
-                    size="large"
-                    disabled={codeGenerating}
-                    value={employeeCode}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item label=" ">
-                  <Button
-                    onClick={() => generateEmployeeCode(form.getFieldValue('departmentId'))}
-                    loading={codeGenerating}
-                    block
-                    size="large"
-                  >
-                    Regenerate Code
-                  </Button>
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item
-              name="joiningDate"
-              label={<span>Joining Date <span style={{ color: '#ff4d4f' }}>*</span></span>}
-              rules={[{ required: true, message: 'Joining date is required' }]}
-            >
-              <DatePicker
-                style={{ width: '100%' }}
-                size="large"
-                placeholder="Select joining date"
-                disabledDate={(current) => current && current < dayjs().subtract(5, 'year')}
-              />
-            </Form.Item>
+            <Alert
+              message="Department Selection"
+              description="Select a department first to auto-generate the employee code based on department standards."
+              type="info"
+              showIcon
+            />
 
             <Form.Item name="departmentId" label="Department">
               <Select
@@ -875,6 +852,52 @@ export const CreateEmployeePage = () => {
                 ))}
               </Select>
             </Form.Item>
+
+            <Form.Item
+              name="joiningDate"
+              label={<span>Joining Date <span style={{ color: '#ff4d4f' }}>*</span></span>}
+              rules={[{ required: true, message: 'Joining date is required' }]}
+            >
+              <DatePicker
+                style={{ width: '100%' }}
+                size="large"
+                placeholder="Select joining date"
+                disabledDate={(current) => current && current < dayjs().subtract(5, 'year')}
+              />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={16}>
+                <Form.Item
+                  name="employeeCode"
+                  label={<span>Employee Code <span style={{ color: '#ff4d4f' }}>*</span></span>}
+                  rules={[
+                    { required: true, message: 'Employee code is required' },
+                  ]}
+                  extra={employeeCode ? `Auto-generated: ${employeeCode}` : 'Will be auto-generated when you select a department'}
+                >
+                  <Input
+                    placeholder="Auto-generated based on department"
+                    size="large"
+                    disabled={true}
+                    value={employeeCode}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item label=" ">
+                  <Button
+                    onClick={() => generateEmployeeCode(form.getFieldValue('departmentId'))}
+                    loading={codeGenerating}
+                    disabled={!form.getFieldValue('departmentId')}
+                    block
+                    size="large"
+                  >
+                    Regenerate Code
+                  </Button>
+                </Form.Item>
+              </Col>
+            </Row>
 
             <Form.Item name="positionId" label="Position">
               <Select
@@ -927,25 +950,70 @@ export const CreateEmployeePage = () => {
               </Select>
             </Form.Item>
 
+            <Divider>Employment Type & Status</Divider>
+
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="employmentType" label="Employment Type" initialValue="internal">
+                <Form.Item
+                  name="employmentType"
+                  label="Employment Type"
+                  initialValue="internal"
+                  tooltip="Select the type of employment relationship"
+                >
                   <Select size="large">
-                    <Option value="internal">Internal</Option>
-                    <Option value="contract">Contract</Option>
-                    <Option value="client">Client</Option>
-                    <Option value="consultant">Consultant</Option>
-                    <Option value="intern">Intern</Option>
+                    <Option value="internal">
+                      <div>
+                        <div style={{ fontWeight: 500 }}>Internal</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>Regular employee on payroll</div>
+                      </div>
+                    </Option>
+                    <Option value="contract">
+                      <div>
+                        <div style={{ fontWeight: 500 }}>Contract</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>Contractor with fixed-term contract</div>
+                      </div>
+                    </Option>
+                    <Option value="client">
+                      <div>
+                        <div style={{ fontWeight: 500 }}>Client</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>Client-side employee working with us</div>
+                      </div>
+                    </Option>
+                    <Option value="consultant">
+                      <div>
+                        <div style={{ fontWeight: 500 }}>Consultant</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>External consultant</div>
+                      </div>
+                    </Option>
+                    <Option value="intern">
+                      <div>
+                        <div style={{ fontWeight: 500 }}>Intern</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>Internship/Training program</div>
+                      </div>
+                    </Option>
                   </Select>
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="employmentStatus" label="Employment Status" initialValue="active">
+                <Form.Item
+                  name="employmentStatus"
+                  label="Employment Status"
+                  initialValue="active"
+                  tooltip="Current status of the employee"
+                >
                   <Select size="large">
-                    <Option value="active">Active</Option>
-                    <Option value="on_notice">On Notice</Option>
-                    <Option value="on_leave">On Leave</Option>
-                    <Option value="suspended">Suspended</Option>
+                    <Option value="active">
+                      <Tag color="green">Active</Tag> - Currently working
+                    </Option>
+                    <Option value="on_notice">
+                      <Tag color="orange">On Notice</Tag> - Serving notice period
+                    </Option>
+                    <Option value="on_leave">
+                      <Tag color="blue">On Leave</Tag> - Temporarily away
+                    </Option>
+                    <Option value="suspended">
+                      <Tag color="red">Suspended</Tag> - Temporarily suspended
+                    </Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -953,34 +1021,66 @@ export const CreateEmployeePage = () => {
 
             <Divider>Vendor/Client/Project Assignment (Optional)</Divider>
 
-            <Form.Item name="vendorId" label="Vendor">
-              <Select placeholder="Select vendor" size="large" allowClear showSearch optionFilterProp="children">
-                {vendors.map((vendor) => (
-                  <Option key={vendor.id} value={vendor.id}>
-                    {vendor.name} ({vendor.vendorCode})
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+            <Alert
+              message="Assignment Options"
+              description="Assign employees to vendors, clients, or projects if they are working on specific contracts or client projects. Leave blank for internal employees with no specific assignment."
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
 
-            <Form.Item name="clientId" label="Client">
-              <Select placeholder="Select client" size="large" allowClear showSearch optionFilterProp="children">
-                {clients.map((client) => (
-                  <Option key={client.id} value={client.id}>
-                    {client.name} ({client.clientCode})
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+            <Form.Item noStyle shouldUpdate={(prev, curr) => prev.employmentType !== curr.employmentType}>
+              {({ getFieldValue }) => {
+                const empType = getFieldValue('employmentType');
+                return (
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    {(empType === 'contract' || empType === 'consultant') && (
+                      <Form.Item name="vendorId" label="Vendor">
+                        <Select placeholder="Select vendor (if working through a vendor)" size="large" allowClear showSearch optionFilterProp="children">
+                          {vendors.map((vendor) => (
+                            <Option key={vendor.id} value={vendor.id}>
+                              {vendor.name} ({vendor.vendorCode})
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    )}
 
-            <Form.Item name="projectId" label="Project">
-              <Select placeholder="Select project" size="large" allowClear showSearch optionFilterProp="children">
-                {projects.map((project) => (
-                  <Option key={project.id} value={project.id}>
-                    {project.projectName} ({project.projectCode}) - {project.clientName}
-                  </Option>
-                ))}
-              </Select>
+                    {(empType === 'client' || empType === 'contract' || empType === 'consultant') && (
+                      <>
+                        <Form.Item name="clientId" label="Client">
+                          <Select placeholder="Select client (if working for specific client)" size="large" allowClear showSearch optionFilterProp="children">
+                            {clients.map((client) => (
+                              <Option key={client.id} value={client.id}>
+                                {client.name} ({client.clientCode})
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+
+                        <Form.Item name="projectId" label="Project">
+                          <Select placeholder="Select project (if assigned to specific project)" size="large" allowClear showSearch optionFilterProp="children">
+                            {projects.map((project) => (
+                              <Option key={project.id} value={project.id}>
+                                {project.projectName} ({project.projectCode}) - {project.clientName}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </>
+                    )}
+
+                    {empType === 'internal' && (
+                      <Alert
+                        message="Internal Employee"
+                        description="Internal employees typically don't require vendor/client/project assignments unless they are working on client projects."
+                        type="info"
+                        showIcon
+                      />
+                    )}
+                  </Space>
+                );
+              }}
             </Form.Item>
 
             <Divider>Probation & Contract Details (Optional)</Divider>
@@ -1189,71 +1289,270 @@ export const CreateEmployeePage = () => {
 
       case 7:
         // Review
-        const reviewData = form.getFieldsValue();
+        const reviewData = form.getFieldsValue(true);
+        const hasPersonalData = reviewData.dateOfBirth || reviewData.gender || reviewData.nationality || reviewData.maritalStatus || reviewData.bloodGroup;
+        const hasContactData = reviewData.personalEmail || reviewData.phoneNumber || reviewData.workPhone || reviewData.alternatePhone;
+        const hasAddressData = reviewData.currentAddressLine1 || reviewData.currentCity || reviewData.currentState || reviewData.currentCountry;
+        const hasEmergencyContact = reviewData.emergencyContactName || reviewData.emergencyContactPhone;
+        const hasBankData = reviewData.bankAccountNumber || reviewData.bankName || reviewData.ifscCode;
+        const hasCompensation = reviewData.basicSalary;
+
         return (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Card title="Account & Personal" size="small">
-              <p><strong>Name:</strong> {reviewData.firstName} {reviewData.middleName} {reviewData.lastName}</p>
-              <p><strong>Work Email:</strong> {reviewData.email}</p>
-              {reviewData.dateOfBirth && (
-                <p><strong>Date of Birth:</strong> {dayjs(reviewData.dateOfBirth).format('YYYY-MM-DD')}</p>
-              )}
-              {reviewData.gender && <p><strong>Gender:</strong> {reviewData.gender}</p>}
-              {reviewData.nationality && <p><strong>Nationality:</strong> {reviewData.nationality}</p>}
+            <Alert
+              message="Review Your Information"
+              description="Please review all the information below. You can go back to previous steps to make changes."
+              type="info"
+              showIcon
+            />
+
+            <Card title="Account Information" size="small" style={{ background: '#fafafa' }}>
+              <Row gutter={[16, 8]}>
+                <Col span={12}><strong>Name:</strong></Col>
+                <Col span={12}>{reviewData.firstName} {reviewData.middleName || ''} {reviewData.lastName}</Col>
+                <Col span={12}><strong>Work Email:</strong></Col>
+                <Col span={12}>{reviewData.email}</Col>
+              </Row>
             </Card>
 
-            <Card title="Employment Details" size="small">
-              <p><strong>Employee Code:</strong> <Tag color="blue">{reviewData.employeeCode || 'To be generated'}</Tag></p>
-              <p><strong>Joining Date:</strong> {reviewData.joiningDate ? dayjs(reviewData.joiningDate).format('YYYY-MM-DD') : 'Not set'}</p>
-              <p>
-                <strong>Department:</strong>{' '}
-                {departments.find((d) => d.id === reviewData.departmentId)?.name || 'Not assigned'}
-              </p>
-              <p>
-                <strong>Position:</strong>{' '}
-                {positions.find((p) => p.id === reviewData.positionId)?.name || 'Not assigned'}
-              </p>
-              <p><strong>Employment Type:</strong> <Tag>{reviewData.employmentType || 'internal'}</Tag></p>
-              <p><strong>Status:</strong> <Tag color="green">{reviewData.employmentStatus || 'active'}</Tag></p>
-            </Card>
-
-            {(reviewData.currentAddressLine1 || reviewData.phoneNumber || reviewData.personalEmail) && (
-              <Card title="Contact & Address" size="small">
-                {reviewData.personalEmail && <p><strong>Personal Email:</strong> {reviewData.personalEmail}</p>}
-                {reviewData.phoneNumber && <p><strong>Phone:</strong> {reviewData.phoneNumber}</p>}
-                {reviewData.currentAddressLine1 && (
-                  <p>
-                    <strong>Address:</strong> {reviewData.currentAddressLine1}, {reviewData.currentCity},{' '}
-                    {reviewData.currentState} {reviewData.currentPostalCode}
-                  </p>
+            <Card title="Employment Details" size="small" style={{ background: '#fafafa' }}>
+              <Row gutter={[16, 8]}>
+                <Col span={12}><strong>Employee Code:</strong></Col>
+                <Col span={12}><Tag color="blue">{reviewData.employeeCode || employeeCode || 'To be generated'}</Tag></Col>
+                <Col span={12}><strong>Joining Date:</strong></Col>
+                <Col span={12}>{reviewData.joiningDate ? dayjs(reviewData.joiningDate).format('MMMM DD, YYYY') : 'Not set'}</Col>
+                <Col span={12}><strong>Department:</strong></Col>
+                <Col span={12}>{departments.find((d) => d.id === reviewData.departmentId)?.name || 'Not assigned'}</Col>
+                <Col span={12}><strong>Position:</strong></Col>
+                <Col span={12}>{positions.find((p) => p.id === reviewData.positionId)?.name || 'Not assigned'}</Col>
+                {reviewData.reportsToId && (
+                  <>
+                    <Col span={12}><strong>Reports To:</strong></Col>
+                    <Col span={12}>
+                      {(() => {
+                        const manager = employees.find((e) => e.id === reviewData.reportsToId);
+                        return manager ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || manager.user.email : 'Not assigned';
+                      })()}
+                    </Col>
+                  </>
                 )}
+                <Col span={12}><strong>Employment Type:</strong></Col>
+                <Col span={12}><Tag>{reviewData.employmentType || 'internal'}</Tag></Col>
+                <Col span={12}><strong>Status:</strong></Col>
+                <Col span={12}><Tag color="green">{reviewData.employmentStatus || 'active'}</Tag></Col>
+              </Row>
+            </Card>
+
+            {hasPersonalData && (
+              <Card title="Personal Details" size="small" style={{ background: '#fafafa' }}>
+                <Row gutter={[16, 8]}>
+                  {reviewData.dateOfBirth && (
+                    <>
+                      <Col span={12}><strong>Date of Birth:</strong></Col>
+                      <Col span={12}>{dayjs(reviewData.dateOfBirth).format('MMMM DD, YYYY')}</Col>
+                    </>
+                  )}
+                  {reviewData.gender && (
+                    <>
+                      <Col span={12}><strong>Gender:</strong></Col>
+                      <Col span={12}>{reviewData.gender}</Col>
+                    </>
+                  )}
+                  {reviewData.nationality && (
+                    <>
+                      <Col span={12}><strong>Nationality:</strong></Col>
+                      <Col span={12}>{reviewData.nationality}</Col>
+                    </>
+                  )}
+                  {reviewData.maritalStatus && (
+                    <>
+                      <Col span={12}><strong>Marital Status:</strong></Col>
+                      <Col span={12}>{reviewData.maritalStatus}</Col>
+                    </>
+                  )}
+                  {reviewData.bloodGroup && (
+                    <>
+                      <Col span={12}><strong>Blood Group:</strong></Col>
+                      <Col span={12}><Tag color="red">{reviewData.bloodGroup}</Tag></Col>
+                    </>
+                  )}
+                </Row>
+              </Card>
+            )}
+
+            {hasContactData && (
+              <Card title="Contact Information" size="small" style={{ background: '#fafafa' }}>
+                <Row gutter={[16, 8]}>
+                  {reviewData.personalEmail && (
+                    <>
+                      <Col span={12}><strong>Personal Email:</strong></Col>
+                      <Col span={12}>{reviewData.personalEmail}</Col>
+                    </>
+                  )}
+                  {reviewData.phoneNumber && (
+                    <>
+                      <Col span={12}><strong>Phone:</strong></Col>
+                      <Col span={12}>{reviewData.phoneNumber}</Col>
+                    </>
+                  )}
+                  {reviewData.workPhone && (
+                    <>
+                      <Col span={12}><strong>Work Phone:</strong></Col>
+                      <Col span={12}>{reviewData.workPhone}</Col>
+                    </>
+                  )}
+                  {reviewData.alternatePhone && (
+                    <>
+                      <Col span={12}><strong>Alternate Phone:</strong></Col>
+                      <Col span={12}>{reviewData.alternatePhone}</Col>
+                    </>
+                  )}
+                </Row>
+              </Card>
+            )}
+
+            {hasAddressData && (
+              <Card title="Address" size="small" style={{ background: '#fafafa' }}>
+                <Row gutter={[16, 8]}>
+                  {reviewData.currentAddressLine1 && (
+                    <>
+                      <Col span={24}><strong>Current Address:</strong></Col>
+                      <Col span={24}>
+                        {reviewData.currentAddressLine1}
+                        {reviewData.currentAddressLine2 && `, ${reviewData.currentAddressLine2}`}
+                        {reviewData.currentCity && `, ${reviewData.currentCity}`}
+                        {reviewData.currentState && `, ${reviewData.currentState}`}
+                        {reviewData.currentCountry && `, ${reviewData.currentCountry}`}
+                        {reviewData.currentPostalCode && ` - ${reviewData.currentPostalCode}`}
+                      </Col>
+                    </>
+                  )}
+                  {!reviewData.sameAsCurrentAddress && reviewData.permanentAddressLine1 && (
+                    <>
+                      <Col span={24} style={{ marginTop: 8 }}><strong>Permanent Address:</strong></Col>
+                      <Col span={24}>
+                        {reviewData.permanentAddressLine1}
+                        {reviewData.permanentAddressLine2 && `, ${reviewData.permanentAddressLine2}`}
+                        {reviewData.permanentCity && `, ${reviewData.permanentCity}`}
+                        {reviewData.permanentState && `, ${reviewData.permanentState}`}
+                        {reviewData.permanentCountry && `, ${reviewData.permanentCountry}`}
+                        {reviewData.permanentPostalCode && ` - ${reviewData.permanentPostalCode}`}
+                      </Col>
+                    </>
+                  )}
+                  {reviewData.sameAsCurrentAddress && (
+                    <>
+                      <Col span={24} style={{ marginTop: 8 }}><strong>Permanent Address:</strong></Col>
+                      <Col span={24}><Text type="secondary">Same as current address</Text></Col>
+                    </>
+                  )}
+                </Row>
+              </Card>
+            )}
+
+            {hasEmergencyContact && (
+              <Card title="Emergency Contacts" size="small" style={{ background: '#fafafa' }}>
+                <Row gutter={[16, 8]}>
+                  {reviewData.emergencyContactName && (
+                    <>
+                      <Col span={12}><strong>Primary Contact:</strong></Col>
+                      <Col span={12}>
+                        {reviewData.emergencyContactName}
+                        {reviewData.emergencyContactRelationship && ` (${reviewData.emergencyContactRelationship})`}
+                        {reviewData.emergencyContactPhone && ` - ${reviewData.emergencyContactPhone}`}
+                      </Col>
+                    </>
+                  )}
+                  {reviewData.alternateEmergencyContactName && (
+                    <>
+                      <Col span={12}><strong>Alternate Contact:</strong></Col>
+                      <Col span={12}>
+                        {reviewData.alternateEmergencyContactName}
+                        {reviewData.alternateEmergencyContactRelationship && ` (${reviewData.alternateEmergencyContactRelationship})`}
+                        {reviewData.alternateEmergencyContactPhone && ` - ${reviewData.alternateEmergencyContactPhone}`}
+                      </Col>
+                    </>
+                  )}
+                </Row>
               </Card>
             )}
 
             {(reviewData.vendorId || reviewData.clientId || reviewData.projectId) && (
-              <Card title="Vendor/Client/Project Assignment" size="small">
-                {reviewData.vendorId && (
-                  <p>
-                    <strong>Vendor:</strong>{' '}
-                    {vendors.find((v) => v.id === reviewData.vendorId)?.name || 'N/A'}
-                  </p>
-                )}
-                {reviewData.clientId && (
-                  <p>
-                    <strong>Client:</strong>{' '}
-                    {clients.find((c) => c.id === reviewData.clientId)?.name || 'N/A'}
-                  </p>
-                )}
-                {reviewData.projectId && (
-                  <p>
-                    <strong>Project:</strong>{' '}
-                    {projects.find((p) => p.id === reviewData.projectId)?.projectName || 'N/A'}
-                  </p>
-                )}
+              <Card title="Vendor/Client/Project Assignment" size="small" style={{ background: '#fafafa' }}>
+                <Row gutter={[16, 8]}>
+                  {reviewData.vendorId && (
+                    <>
+                      <Col span={12}><strong>Vendor:</strong></Col>
+                      <Col span={12}>{vendors.find((v) => v.id === reviewData.vendorId)?.name || 'N/A'}</Col>
+                    </>
+                  )}
+                  {reviewData.clientId && (
+                    <>
+                      <Col span={12}><strong>Client:</strong></Col>
+                      <Col span={12}>{clients.find((c) => c.id === reviewData.clientId)?.name || 'N/A'}</Col>
+                    </>
+                  )}
+                  {reviewData.projectId && (
+                    <>
+                      <Col span={12}><strong>Project:</strong></Col>
+                      <Col span={12}>{projects.find((p) => p.id === reviewData.projectId)?.projectName || 'N/A'}</Col>
+                    </>
+                  )}
+                </Row>
               </Card>
             )}
 
-            <Card title="Permissions" size="small">
+            {hasCompensation && (
+              <Card title="Compensation" size="small" style={{ background: '#fafafa' }}>
+                <Row gutter={[16, 8]}>
+                  <Col span={12}><strong>Basic Salary:</strong></Col>
+                  <Col span={12}>
+                    {reviewData.currency || 'USD'} {reviewData.basicSalary?.toLocaleString() || '0'}
+                    {reviewData.payFrequency && ` (${reviewData.payFrequency})`}
+                  </Col>
+                </Row>
+              </Card>
+            )}
+
+            {hasBankData && (
+              <Card title="Bank Details" size="small" style={{ background: '#fafafa' }}>
+                <Row gutter={[16, 8]}>
+                  {reviewData.bankName && (
+                    <>
+                      <Col span={12}><strong>Bank Name:</strong></Col>
+                      <Col span={12}>{reviewData.bankName}</Col>
+                    </>
+                  )}
+                  {reviewData.bankAccountNumber && (
+                    <>
+                      <Col span={12}><strong>Account Number:</strong></Col>
+                      <Col span={12}>****{reviewData.bankAccountNumber.slice(-4)}</Col>
+                    </>
+                  )}
+                  {reviewData.ifscCode && (
+                    <>
+                      <Col span={12}><strong>IFSC/Routing Code:</strong></Col>
+                      <Col span={12}>{reviewData.ifscCode}</Col>
+                    </>
+                  )}
+                </Row>
+              </Card>
+            )}
+
+            {reviewData.isProbation && (
+              <Card title="Probation Details" size="small" style={{ background: '#fff3cd' }}>
+                <Row gutter={[16, 8]}>
+                  <Col span={12}><strong>Probation Period:</strong></Col>
+                  <Col span={12}>
+                    {reviewData.probationStartDate ? dayjs(reviewData.probationStartDate).format('MMM DD, YYYY') : 'N/A'}
+                    {' to '}
+                    {reviewData.probationEndDate ? dayjs(reviewData.probationEndDate).format('MMM DD, YYYY') : 'N/A'}
+                  </Col>
+                </Row>
+              </Card>
+            )}
+
+            <Card title="Permissions" size="small" style={{ background: '#fafafa' }}>
               {reviewData.permissionGroupIds && reviewData.permissionGroupIds.length > 0 ? (
                 <Space wrap>
                   {reviewData.permissionGroupIds.map((id: string) => {
