@@ -57,6 +57,20 @@ public class Department {
         this.departmentCode = departmentCode;
     }
 
+    /**
+     * Alias for getDepartmentCode() - used by bulk import
+     */
+    public String getCode() {
+        return departmentCode;
+    }
+
+    /**
+     * Alias for setDepartmentCode() - used by bulk import
+     */
+    public void setCode(String code) {
+        this.departmentCode = code;
+    }
+
     public String getName() {
         return name;
     }

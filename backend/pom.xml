@@ -135,6 +135,13 @@
             <artifactId>passay</artifactId>
             <version>1.6.4</version>
         </dependency>
+
+        <!-- OpenCSV for CSV parsing (bulk employee import) -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.9</version>
+        </dependency>
     </dependencies>
 
     <build>

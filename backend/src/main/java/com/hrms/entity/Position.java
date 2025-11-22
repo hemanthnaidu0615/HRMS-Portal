@@ -15,6 +15,9 @@ public class Position {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Column(length = 50, unique = true)
+    private String code;
+
     @Column(nullable = false)
     private String name;
 
@@ -44,6 +47,14 @@ public class Position {
 
     public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {
