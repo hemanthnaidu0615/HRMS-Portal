@@ -65,4 +65,60 @@ public class BusinessException extends ApiException {
             "INVALID_ROUTING_CODE"
         );
     }
+
+    public static BusinessException addressTypeExists(String addressType) {
+        return new BusinessException(
+            "An address of type '" + addressType + "' already exists for this employee",
+            "ADDRESS_TYPE_EXISTS"
+        );
+    }
+
+    public static BusinessException minimumEmergencyContacts() {
+        return new BusinessException(
+            "At least one emergency contact is required",
+            "MINIMUM_EMERGENCY_CONTACTS"
+        );
+    }
+
+    public static BusinessException documentTypeAlreadyExists(String documentType) {
+        return new BusinessException(
+            "A '" + documentType + "' document already exists for this employee",
+            "DOCUMENT_TYPE_EXISTS"
+        );
+    }
+
+    public static BusinessException invalidDocumentFormat(String documentType) {
+        return new BusinessException(
+            "Invalid format for " + documentType,
+            "INVALID_DOCUMENT_FORMAT"
+        );
+    }
+
+    public static BusinessException duplicateBankAccount() {
+        return new BusinessException(
+            "A bank account with this account number already exists",
+            "DUPLICATE_BANK_ACCOUNT"
+        );
+    }
+
+    public static BusinessException minimumBankAccount() {
+        return new BusinessException(
+            "At least one active bank account is required for payroll",
+            "MINIMUM_BANK_ACCOUNT"
+        );
+    }
+
+    public static BusinessException workEmailRequired() {
+        return new BusinessException(
+            "Work email is required for employees",
+            "WORK_EMAIL_REQUIRED"
+        );
+    }
+
+    public static BusinessException invalidEmploymentType(String type) {
+        return new BusinessException(
+            "Invalid employment type: " + type,
+            "INVALID_EMPLOYMENT_TYPE"
+        );
+    }
 }

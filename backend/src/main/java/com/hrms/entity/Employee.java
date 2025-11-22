@@ -67,6 +67,12 @@ public class Employee {
     @Column(name = "last_name", length = 100)
     private String lastName;
 
+    @Column(name = "preferred_name", length = 100)
+    private String preferredName;
+
+    @Column(name = "pronouns", length = 50)
+    private String pronouns;
+
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
@@ -86,8 +92,14 @@ public class Employee {
     @Column(name = "personal_email", length = 255)
     private String personalEmail;
 
+    @Column(name = "work_email", length = 255)
+    private String workEmail;
+
     @Column(name = "phone_number", length = 50)
     private String phoneNumber;
+
+    @Column(name = "personal_phone", length = 50)
+    private String personalPhone;
 
     @Column(name = "work_phone", length = 50)
     private String workPhone;
@@ -176,6 +188,12 @@ public class Employee {
 
     @Column(name = "work_location", length = 255)
     private String workLocation;
+
+    @Column(name = "work_location_country", length = 100)
+    private String workLocationCountry;
+
+    @Column(name = "onboarding_complete")
+    private Boolean onboardingComplete = false;
 
     @Column(name = "designation", length = 255)
     private String designation;
@@ -434,6 +452,12 @@ public class Employee {
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
+    public String getPreferredName() { return preferredName; }
+    public void setPreferredName(String preferredName) { this.preferredName = preferredName; }
+
+    public String getPronouns() { return pronouns; }
+    public void setPronouns(String pronouns) { this.pronouns = pronouns; }
+
     public LocalDate getDateOfBirth() { return dateOfBirth; }
     public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
 
@@ -452,7 +476,13 @@ public class Employee {
     public String getPersonalEmail() { return personalEmail; }
     public void setPersonalEmail(String personalEmail) { this.personalEmail = personalEmail; }
 
+    public String getWorkEmail() { return workEmail; }
+    public void setWorkEmail(String workEmail) { this.workEmail = workEmail; }
+
     public String getPhoneNumber() { return phoneNumber; }
+
+    public String getPersonalPhone() { return personalPhone; }
+    public void setPersonalPhone(String personalPhone) { this.personalPhone = personalPhone; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
     public String getWorkPhone() { return workPhone; }
@@ -538,6 +568,12 @@ public class Employee {
 
     public String getWorkLocation() { return workLocation; }
     public void setWorkLocation(String workLocation) { this.workLocation = workLocation; }
+
+    public String getWorkLocationCountry() { return workLocationCountry; }
+    public void setWorkLocationCountry(String workLocationCountry) { this.workLocationCountry = workLocationCountry; }
+
+    public Boolean getOnboardingComplete() { return onboardingComplete; }
+    public void setOnboardingComplete(Boolean onboardingComplete) { this.onboardingComplete = onboardingComplete; }
 
     public String getDesignation() { return designation; }
     public void setDesignation(String designation) { this.designation = designation; }
