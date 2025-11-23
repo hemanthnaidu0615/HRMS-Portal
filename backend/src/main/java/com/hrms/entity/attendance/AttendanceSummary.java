@@ -26,6 +26,49 @@ public class AttendanceSummary {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @Column(name = "year", nullable = false)
+    private Integer year;
+
+    @Column(name = "month", nullable = false)
+    private Integer month;
+
+    @Column(name = "working_days")
+    private Integer workingDays;
+
+    @Column(name = "present_days")
+    private Integer presentDays;
+
+    @Column(name = "absent_days")
+    private Integer absentDays;
+
+    @Column(name = "late_days")
+    private Integer lateDays;
+
+    @Column(name = "half_days")
+    private Integer halfDays;
+
+    @Column(name = "leave_days")
+    private Integer leaveDays;
+
+    @Column(name = "holidays")
+    private Integer holidays;
+
+    @Column(name = "overtime_hours", precision = 10, scale = 2)
+    private BigDecimal overtimeHours;
+
+    @Column(name = "total_hours_worked", precision = 10, scale = 2)
+    private BigDecimal totalHoursWorked;
+
+    @Column(name = "average_check_in_time")
+    private LocalTime averageCheckInTime;
+
+    @Column(name = "average_check_out_time")
+    private LocalTime averageCheckOutTime;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -58,6 +101,4 @@ public class AttendanceSummary {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for AttendanceSummary based on schema
 }

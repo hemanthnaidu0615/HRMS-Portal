@@ -26,6 +26,47 @@ public class CompensatoryOffCredit {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @Column(name = "work_date", nullable = false)
+    private LocalDate workDate;
+
+    @Column(name = "hours_worked", precision = 5, scale = 2)
+    private BigDecimal hoursWorked;
+
+    @Column(name = "comp_off_days", nullable = false, precision = 3, scale = 1)
+    private BigDecimal compOffDays;
+
+    @Column(name = "reason", nullable = false, length = 500)
+    private String reason;
+
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
+
+    @Column(name = "status", length = 20)
+    private String status = "PENDING";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by")
+    private User approvedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "approver_remarks", length = 500)
+    private String approverRemarks;
+
+    @Column(name = "days_used", precision = 3, scale = 1)
+    private BigDecimal daysUsed = BigDecimal.ZERO;
+
+    @Column(name = "days_remaining", precision = 3, scale = 1)
+    private BigDecimal daysRemaining;
+
+    @Column(name = "is_expired")
+    private Boolean isExpired = false;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +93,13 @@ public class CompensatoryOffCredit {
         if (isActive == null) {
             isActive = true;
         }
+        if (status == null) {
+            status = "PENDING";
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for CompensatoryOffCredit based on schema
 }

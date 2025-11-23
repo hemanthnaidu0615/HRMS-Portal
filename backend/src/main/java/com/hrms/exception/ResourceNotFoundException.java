@@ -51,4 +51,41 @@ public class ResourceNotFoundException extends RuntimeException {
     public Object getFieldValue() {
         return fieldValue;
     }
+
+    // Factory methods for common resources
+    public static ResourceNotFoundException employee(Object id) {
+        return new ResourceNotFoundException("Employee", "id", id);
+    }
+
+    public static ResourceNotFoundException address(Object id) {
+        return new ResourceNotFoundException("Address", "id", id);
+    }
+
+    public static ResourceNotFoundException emergencyContact(Object id) {
+        return new ResourceNotFoundException("Emergency Contact", "id", id);
+    }
+
+    public static ResourceNotFoundException identityDocument(Object id) {
+        return new ResourceNotFoundException("Identity Document", "id", id);
+    }
+
+    public static ResourceNotFoundException bankAccount(Object id) {
+        return new ResourceNotFoundException("Bank Account", "id", id);
+    }
+
+    public static ResourceNotFoundException documentType(String code) {
+        return new ResourceNotFoundException("Document Type", "code", code);
+    }
+
+    public static ResourceNotFoundException organization(Object id) {
+        return new ResourceNotFoundException("Organization", "id", id);
+    }
+
+    public static ResourceNotFoundException department(Object id) {
+        return new ResourceNotFoundException("Department", "id", id);
+    }
+
+    public static ResourceNotFoundException user(Object id) {
+        return new ResourceNotFoundException("User", "id", id);
+    }
 }

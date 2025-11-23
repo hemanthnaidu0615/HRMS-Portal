@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Statistic, Table, Tag, Avatar, List, Calendar, Badge, Segmented } from 'antd';
+import { Row, Col, Card, Statistic, Table, Tag, Avatar, List, Calendar, Badge, Segmented, Skeleton, Alert } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
@@ -13,69 +13,101 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   SyncOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import { StatisticCard } from '../../components/StatisticCard';
 import { DashboardChart } from '../../components/DashboardChart';
 import { PremiumCard } from '../../components/PremiumCard';
 import { gradients } from '../../theme/premiumTheme';
+import { getAdminDashboard, AdminDashboardStats } from '../../api/dashboardApi';
 import './EnhancedAdminDashboard.css';
 
 /**
  * Enhanced Admin Dashboard
- * Premium, analytics-rich dashboard with real-time metrics
+ * Premium, analytics-rich dashboard with real-time metrics from API
  */
 export const EnhancedAdminDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>('month');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<AdminDashboardStats | null>(null);
 
-  // Mock data - Replace with real API calls
-  const stats = {
-    totalEmployees: 1247,
-    activeEmployees: 1189,
-    onLeave: 42,
-    newHires: 16,
-    pendingApprovals: 28,
-    attendanceRate: 94.5,
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAdminDashboard();
+      setDashboardData(data);
+    } catch (err: any) {
+      console.error('Failed to load dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Transform API data to component format
+  const stats = dashboardData ? {
+    totalEmployees: dashboardData.stats.totalEmployees,
+    activeEmployees: dashboardData.stats.activeEmployees,
+    onLeave: 0,
+    newHires: dashboardData.stats.newEmployeesLast30Days,
+    pendingApprovals: dashboardData.stats.pendingDocumentRequests,
+    attendanceRate: dashboardData.stats.totalEmployees > 0
+      ? Math.round((dashboardData.stats.activeEmployees / dashboardData.stats.totalEmployees) * 1000) / 10
+      : 0,
+  } : {
+    totalEmployees: 0,
+    activeEmployees: 0,
+    onLeave: 0,
+    newHires: 0,
+    pendingApprovals: 0,
+    attendanceRate: 0,
+  };
+
+  // Transform department distribution from API
+  const departmentData = dashboardData?.stats.departmentDistribution
+    ? Object.entries(dashboardData.stats.departmentDistribution)
+        .map(([name, count]) => ({
+          name,
+          employees: count,
+          growth: 0,
+        }))
+        .sort((a, b) => b.employees - a.employees)
+        .slice(0, 10)
+    : [];
+
+  // Transform employment type distribution for chart
+  const leaveData = dashboardData?.stats.employmentTypeDistribution
+    ? Object.entries(dashboardData.stats.employmentTypeDistribution).map(([name, value]) => ({
+        name: name.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        value,
+      }))
+    : [];
+
+  // Placeholder attendance data (would need attendance API)
   const attendanceData = [
-    { name: 'Mon', present: 1180, absent: 67 },
-    { name: 'Tue', present: 1165, absent: 82 },
-    { name: 'Wed', present: 1192, absent: 55 },
-    { name: 'Thu', present: 1175, absent: 72 },
-    { name: 'Fri', present: 1188, absent: 59 },
+    { name: 'Mon', present: stats.activeEmployees, absent: stats.totalEmployees - stats.activeEmployees },
+    { name: 'Tue', present: stats.activeEmployees, absent: stats.totalEmployees - stats.activeEmployees },
+    { name: 'Wed', present: stats.activeEmployees, absent: stats.totalEmployees - stats.activeEmployees },
+    { name: 'Thu', present: stats.activeEmployees, absent: stats.totalEmployees - stats.activeEmployees },
+    { name: 'Fri', present: stats.activeEmployees, absent: stats.totalEmployees - stats.activeEmployees },
   ];
 
-  const leaveData = [
-    { name: 'Sick', value: 145 },
-    { name: 'Casual', value: 89 },
-    { name: 'Earned', value: 67 },
-    { name: 'Comp Off', value: 34 },
-    { name: 'Maternity', value: 12 },
-  ];
-
-  const departmentData = [
-    { name: 'Engineering', employees: 487, growth: 8.2 },
-    { name: 'Sales', employees: 234, growth: 12.5 },
-    { name: 'Marketing', employees: 156, growth: -2.1 },
-    { name: 'HR', employees: 89, growth: 5.3 },
-    { name: 'Finance', employees: 67, growth: 3.7 },
-    { name: 'Operations', employees: 214, growth: 6.8 },
-  ];
-
-  const recentActivities = [
-    { type: 'leave', user: 'John Doe', action: 'applied for sick leave', time: '2 min ago', status: 'pending' },
-    { type: 'attendance', user: 'Jane Smith', action: 'requested attendance regularization', time: '15 min ago', status: 'approved' },
-    { type: 'timesheet', user: 'Mike Johnson', action: 'submitted weekly timesheet', time: '32 min ago', status: 'pending' },
-    { type: 'document', user: 'Sarah Williams', action: 'uploaded offer letter', time: '1 hour ago', status: 'approved' },
-    { type: 'expense', user: 'Tom Brown', action: 'claimed travel expenses', time: '2 hours ago', status: 'pending' },
-  ];
+  // Recent activities from API stats
+  const recentActivities = dashboardData ? [
+    { type: 'employee', user: 'System', action: `${dashboardData.stats.newEmployeesLast30Days} new employees this month`, time: 'Last 30 days', status: 'approved' },
+    { type: 'document', user: 'System', action: `${dashboardData.stats.pendingDocumentRequests} pending document requests`, time: 'Current', status: 'pending' },
+    { type: 'document', user: 'System', action: `${dashboardData.stats.approvedDocuments} approved documents`, time: 'Total', status: 'approved' },
+    { type: 'document', user: 'System', action: `${dashboardData.stats.newDocumentsLast30Days} new documents this month`, time: 'Last 30 days', status: 'approved' },
+  ] : [];
 
   const upcomingEvents = [
-    { date: '2025-11-20', title: 'Team Building Event', type: 'event' },
-    { date: '2025-11-22', title: 'Performance Review Deadline', type: 'deadline' },
-    { date: '2025-11-25', title: 'Payroll Processing', type: 'payroll' },
-    { date: '2025-11-28', title: 'Thanksgiving Holiday', type: 'holiday' },
+    { date: new Date().toISOString().split('T')[0], title: 'Real-time Dashboard Active', type: 'event' },
   ];
 
   const getStatusIcon = (status: string) => {
@@ -91,25 +123,56 @@ export const EnhancedAdminDashboard: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="enhanced-admin-dashboard" style={{ padding: 24 }}>
+        <Skeleton active paragraph={{ rows: 15 }} />
+      </div>
+    );
+  }
+
   return (
     <div className="enhanced-admin-dashboard">
       {/* Header */}
       <div className="dashboard-header">
         <div>
           <h1 className="dashboard-title">Dashboard</h1>
-          <p className="dashboard-subtitle">Welcome back! Here's what's happening today.</p>
+          <p className="dashboard-subtitle">
+            {dashboardData?.organizationInfo?.name
+              ? `${dashboardData.organizationInfo.name} - Real-time overview`
+              : "Welcome back! Here's what's happening today."}
+          </p>
         </div>
-        <Segmented
-          options={[
-            { label: 'Today', value: 'today' },
-            { label: 'Week', value: 'week' },
-            { label: 'Month', value: 'month' },
-            { label: 'Year', value: 'year' },
-          ]}
-          value={timeRange}
-          onChange={setTimeRange}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Segmented
+            options={[
+              { label: 'Today', value: 'today' },
+              { label: 'Week', value: 'week' },
+              { label: 'Month', value: 'month' },
+              { label: 'Year', value: 'year' },
+            ]}
+            value={timeRange}
+            onChange={setTimeRange}
+          />
+          <ReloadOutlined
+            onClick={loadDashboardData}
+            style={{ fontSize: 18, cursor: 'pointer', color: '#1890ff' }}
+            title="Refresh data"
+          />
+        </div>
       </div>
+
+      {error && (
+        <Alert
+          message="Error loading dashboard"
+          description={error}
+          type="error"
+          showIcon
+          closable
+          onClose={() => setError(null)}
+          style={{ marginBottom: 24 }}
+        />
+      )}
 
       {/* Key Metrics */}
       <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>

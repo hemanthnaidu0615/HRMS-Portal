@@ -26,6 +26,51 @@ public class CalibrationSession {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "review_cycle_id", nullable = false)
+    private ReviewCycle reviewCycle;
+
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "scheduled_date")
+    private LocalDate scheduledDate;
+
+    @Column(name = "scheduled_time")
+    private LocalTime scheduledTime;
+
+    @Column(name = "duration_minutes")
+    private Integer durationMinutes;
+
+    @Column(name = "location", length = 200)
+    private String location;
+
+    @Column(name = "meeting_link", length = 500)
+    private String meetingLink;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "facilitator_id")
+    private Employee facilitator;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @Column(name = "status", length = 20)
+    private String status = "SCHEDULED";
+
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +97,13 @@ public class CalibrationSession {
         if (isActive == null) {
             isActive = true;
         }
+        if (status == null) {
+            status = "SCHEDULED";
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for CalibrationSession based on schema
 }

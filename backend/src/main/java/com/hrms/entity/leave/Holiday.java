@@ -12,7 +12,7 @@ import java.util.UUID;
 import com.hrms.entity.*;
 
 @Entity
-@Table(name = "holidaies")
+@Table(name = "holidays")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,6 +25,38 @@ public class Holiday {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
+
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Column(name = "description", length = 500)
+    private String description;
+
+    @Column(name = "holiday_date", nullable = false)
+    private LocalDate holidayDate;
+
+    @Column(name = "holiday_type", length = 30)
+    private String holidayType = "MANDATORY";
+
+    @Column(name = "is_mandatory")
+    private Boolean isMandatory = true;
+
+    @Column(name = "is_optional")
+    private Boolean isOptional = false;
+
+    @Column(name = "year", nullable = false)
+    private Integer year;
+
+    @Column(name = "applies_to", length = 50)
+    private String appliesTo = "ALL";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private WorkLocation location;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
@@ -52,12 +84,13 @@ public class Holiday {
         if (isActive == null) {
             isActive = true;
         }
+        if (holidayType == null) {
+            holidayType = "MANDATORY";
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for Holiday based on schema
 }
