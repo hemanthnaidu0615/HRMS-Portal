@@ -26,6 +26,36 @@ public class BiometricLog {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "device_id")
+    private BiometricDevice device;
+
+    @Column(name = "punch_time", nullable = false)
+    private LocalDateTime punchTime;
+
+    @Column(name = "punch_type", length = 10)
+    private String punchType;
+
+    @Column(name = "verification_method", length = 30)
+    private String verificationMethod;
+
+    @Column(name = "raw_data", columnDefinition = "TEXT")
+    private String rawData;
+
+    @Column(name = "is_processed")
+    private Boolean isProcessed = false;
+
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attendance_record_id")
+    private AttendanceRecord attendanceRecord;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +82,13 @@ public class BiometricLog {
         if (isActive == null) {
             isActive = true;
         }
+        if (isProcessed == null) {
+            isProcessed = false;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for BiometricLog based on schema
 }

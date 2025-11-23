@@ -26,6 +26,23 @@ public class EmployeeHolidaySelection {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "holiday_id", nullable = false)
+    private Holiday holiday;
+
+    @Column(name = "year", nullable = false)
+    private Integer year;
+
+    @Column(name = "is_selected")
+    private Boolean isSelected = true;
+
+    @Column(name = "selection_date")
+    private LocalDate selectionDate;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -58,6 +75,4 @@ public class EmployeeHolidaySelection {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for EmployeeHolidaySelection based on schema
 }

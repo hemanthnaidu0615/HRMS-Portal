@@ -26,6 +26,36 @@ public class NotificationTemplate {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Column(name = "code", nullable = false, length = 50)
+    private String code;
+
+    @Column(name = "notification_type", nullable = false, length = 30)
+    private String notificationType;
+
+    @Column(name = "channel", length = 20)
+    private String channel = "EMAIL";
+
+    @Column(name = "subject", length = 500)
+    private String subject;
+
+    @Column(name = "body", columnDefinition = "TEXT")
+    private String body;
+
+    @Column(name = "variables", columnDefinition = "TEXT")
+    private String variables;
+
+    @Column(name = "is_system_template")
+    private Boolean isSystemTemplate = false;
+
+    @Column(name = "module", length = 50)
+    private String module;
+
+    @Column(name = "event_trigger", length = 100)
+    private String eventTrigger;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +82,13 @@ public class NotificationTemplate {
         if (isActive == null) {
             isActive = true;
         }
+        if (channel == null) {
+            channel = "EMAIL";
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for NotificationTemplate based on schema
 }

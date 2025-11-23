@@ -26,6 +26,54 @@ public class AssetMaintenance {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "asset_id", nullable = false)
+    private Asset asset;
+
+    @Column(name = "maintenance_type", nullable = false, length = 50)
+    private String maintenanceType;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "scheduled_date")
+    private LocalDate scheduledDate;
+
+    @Column(name = "completed_date")
+    private LocalDate completedDate;
+
+    @Column(name = "cost", precision = 15, scale = 2)
+    private BigDecimal cost;
+
+    @Column(name = "currency", length = 3)
+    private String currency = "USD";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_id")
+    private Vendor vendor;
+
+    @Column(name = "vendor_name", length = 200)
+    private String vendorName;
+
+    @Column(name = "invoice_number", length = 100)
+    private String invoiceNumber;
+
+    @Column(name = "invoice_url", length = 500)
+    private String invoiceUrl;
+
+    @Column(name = "status", length = 20)
+    private String status = "SCHEDULED";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "performed_by")
+    private User performedBy;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "next_maintenance_date")
+    private LocalDate nextMaintenanceDate;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +100,13 @@ public class AssetMaintenance {
         if (isActive == null) {
             isActive = true;
         }
+        if (status == null) {
+            status = "SCHEDULED";
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for AssetMaintenance based on schema
 }

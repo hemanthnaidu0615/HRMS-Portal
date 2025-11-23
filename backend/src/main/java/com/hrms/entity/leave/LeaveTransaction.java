@@ -26,6 +26,49 @@ public class LeaveTransaction {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "leave_type_id", nullable = false)
+    private LeaveType leaveType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "leave_balance_id")
+    private LeaveBalance leaveBalance;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "leave_application_id")
+    private LeaveApplication leaveApplication;
+
+    @Column(name = "transaction_type", nullable = false, length = 30)
+    private String transactionType;
+
+    @Column(name = "transaction_date", nullable = false)
+    private LocalDate transactionDate;
+
+    @Column(name = "days", nullable = false, precision = 5, scale = 2)
+    private BigDecimal days;
+
+    @Column(name = "balance_before", precision = 5, scale = 2)
+    private BigDecimal balanceBefore;
+
+    @Column(name = "balance_after", precision = 5, scale = 2)
+    private BigDecimal balanceAfter;
+
+    @Column(name = "year", nullable = false)
+    private Integer year;
+
+    @Column(name = "remarks", length = 500)
+    private String remarks;
+
+    @Column(name = "reference_id")
+    private UUID referenceId;
+
+    @Column(name = "reference_type", length = 50)
+    private String referenceType;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -58,6 +101,4 @@ public class LeaveTransaction {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for LeaveTransaction based on schema
 }

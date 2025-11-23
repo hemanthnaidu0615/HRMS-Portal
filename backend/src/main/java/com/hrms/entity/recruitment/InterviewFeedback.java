@@ -26,6 +26,47 @@ public class InterviewFeedback {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "interview_id", nullable = false)
+    private Interview interview;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "interviewer_id", nullable = false)
+    private Employee interviewer;
+
+    @Column(name = "overall_rating")
+    private Integer overallRating;
+
+    @Column(name = "technical_skills_rating")
+    private Integer technicalSkillsRating;
+
+    @Column(name = "communication_rating")
+    private Integer communicationRating;
+
+    @Column(name = "problem_solving_rating")
+    private Integer problemSolvingRating;
+
+    @Column(name = "cultural_fit_rating")
+    private Integer culturalFitRating;
+
+    @Column(name = "strengths", columnDefinition = "TEXT")
+    private String strengths;
+
+    @Column(name = "weaknesses", columnDefinition = "TEXT")
+    private String weaknesses;
+
+    @Column(name = "detailed_feedback", columnDefinition = "TEXT")
+    private String detailedFeedback;
+
+    @Column(name = "recommendation", length = 30)
+    private String recommendation;
+
+    @Column(name = "is_submitted")
+    private Boolean isSubmitted = false;
+
+    @Column(name = "submitted_at")
+    private LocalDateTime submittedAt;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -58,6 +99,4 @@ public class InterviewFeedback {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for InterviewFeedback based on schema
 }

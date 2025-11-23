@@ -26,6 +26,29 @@ public class EmployeeShift {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shift_id", nullable = false)
+    private Shift shift;
+
+    @Column(name = "effective_from", nullable = false)
+    private LocalDate effectiveFrom;
+
+    @Column(name = "effective_to")
+    private LocalDate effectiveTo;
+
+    @Column(name = "is_current")
+    private Boolean isCurrent = true;
+
+    @Column(name = "rotation_pattern", length = 50)
+    private String rotationPattern;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +75,13 @@ public class EmployeeShift {
         if (isActive == null) {
             isActive = true;
         }
+        if (isCurrent == null) {
+            isCurrent = true;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for EmployeeShift based on schema
 }

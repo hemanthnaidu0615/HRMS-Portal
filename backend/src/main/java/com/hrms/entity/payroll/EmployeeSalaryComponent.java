@@ -26,6 +26,39 @@ public class EmployeeSalaryComponent {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "salary_structure_id")
+    private EmployeeSalaryStructure salaryStructure;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "salary_component_id", nullable = false)
+    private SalaryComponent salaryComponent;
+
+    @Column(name = "amount", precision = 15, scale = 2)
+    private BigDecimal amount;
+
+    @Column(name = "percentage", precision = 8, scale = 4)
+    private BigDecimal percentage;
+
+    @Column(name = "calculation_type", length = 30)
+    private String calculationType = "FIXED";
+
+    @Column(name = "base_component_id")
+    private UUID baseComponentId;
+
+    @Column(name = "effective_from", nullable = false)
+    private LocalDate effectiveFrom;
+
+    @Column(name = "effective_to")
+    private LocalDate effectiveTo;
+
+    @Column(name = "is_current")
+    private Boolean isCurrent = true;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +85,13 @@ public class EmployeeSalaryComponent {
         if (isActive == null) {
             isActive = true;
         }
+        if (calculationType == null) {
+            calculationType = "FIXED";
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for EmployeeSalaryComponent based on schema
 }

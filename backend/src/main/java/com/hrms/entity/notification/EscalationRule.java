@@ -26,6 +26,38 @@ public class EscalationRule {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Column(name = "module", nullable = false, length = 50)
+    private String module;
+
+    @Column(name = "entity_type", length = 50)
+    private String entityType;
+
+    @Column(name = "condition_type", length = 50)
+    private String conditionType;
+
+    @Column(name = "threshold_hours")
+    private Integer thresholdHours;
+
+    @Column(name = "escalation_level")
+    private Integer escalationLevel = 1;
+
+    @Column(name = "escalate_to_role", length = 50)
+    private String escalateToRole;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "escalate_to_user_id")
+    private User escalateToUser;
+
+    @Column(name = "notification_channel", length = 20)
+    private String notificationChannel = "EMAIL";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "notification_template_id")
+    private NotificationTemplate notificationTemplate;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -52,12 +84,13 @@ public class EscalationRule {
         if (isActive == null) {
             isActive = true;
         }
+        if (escalationLevel == null) {
+            escalationLevel = 1;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for EscalationRule based on schema
 }

@@ -26,6 +26,45 @@ public class TaxSlab {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Column(name = "financial_year", nullable = false, length = 20)
+    private String financialYear;
+
+    @Column(name = "country_code", length = 3)
+    private String countryCode;
+
+    @Column(name = "tax_regime", length = 30)
+    private String taxRegime;
+
+    @Column(name = "min_income", precision = 15, scale = 2)
+    private BigDecimal minIncome;
+
+    @Column(name = "max_income", precision = 15, scale = 2)
+    private BigDecimal maxIncome;
+
+    @Column(name = "tax_rate", nullable = false, precision = 8, scale = 4)
+    private BigDecimal taxRate;
+
+    @Column(name = "fixed_amount", precision = 15, scale = 2)
+    private BigDecimal fixedAmount;
+
+    @Column(name = "surcharge_rate", precision = 8, scale = 4)
+    private BigDecimal surchargeRate;
+
+    @Column(name = "cess_rate", precision = 8, scale = 4)
+    private BigDecimal cessRate;
+
+    @Column(name = "effective_from")
+    private LocalDate effectiveFrom;
+
+    @Column(name = "effective_to")
+    private LocalDate effectiveTo;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -58,6 +97,4 @@ public class TaxSlab {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // TODO: Add specific fields for TaxSlab based on schema
 }
