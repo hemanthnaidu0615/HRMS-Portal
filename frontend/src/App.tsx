@@ -40,6 +40,11 @@ import { UploadMyDocumentPage } from './pages/documents/UploadMyDocumentPage';
 import { UploadEmployeeDocumentPage } from './pages/documents/UploadEmployeeDocumentPage';
 import { OrgDocumentsPage } from './pages/documents/OrgDocumentsPage';
 
+// Document Signing Pages
+import { MyDocumentsPage as MyDocumentsSigningPage } from './pages/employee/MyDocumentsPage';
+import { OnboardingChecklistPage } from './pages/employee/OnboardingChecklistPage';
+import { DocumentManagementPage } from './pages/orgadmin/DocumentManagementPage';
+
 // Document Request Pages
 import { MyIncomingRequestsPage } from './pages/documentRequests/MyIncomingRequestsPage';
 import { MyOutgoingRequestsPage } from './pages/documentRequests/MyOutgoingRequestsPage';
@@ -258,6 +263,26 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/employee/documents"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <LayoutWrapper>
+                <MyDocumentsSigningPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/onboarding"
+          element={
+            <ProtectedRoute requiredRole="employee">
+              <LayoutWrapper>
+                <OnboardingChecklistPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin Dashboard */}
         <Route
@@ -352,6 +377,16 @@ function App() {
             <ProtectedRoute>
               <LayoutWrapper>
                 <OrgDocumentsPage />
+              </LayoutWrapper>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/documents/manage"
+          element={
+            <ProtectedRoute requiredRole="orgadmin">
+              <LayoutWrapper>
+                <DocumentManagementPage />
               </LayoutWrapper>
             </ProtectedRoute>
           }

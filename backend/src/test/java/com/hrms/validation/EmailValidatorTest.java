@@ -1,5 +1,6 @@
 package com.hrms.validation;
 
+import com.hrms.validation.constraints.ValidEmail;
 import com.hrms.validation.validators.EmailValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -73,7 +74,13 @@ class EmailValidatorTest {
     @Test
     @DisplayName("Null email with allowEmpty=true should pass")
     void nullEmailWithAllowEmpty() {
-        // By default allowEmpty is false, need to test with custom initialization
+        // Create a mock annotation with allowEmpty=true
+        ValidEmail annotation = mock(ValidEmail.class);
+        when(annotation.allowEmpty()).thenReturn(true);
+
+        // Initialize validator with the annotation
+        validator.initialize(annotation);
+
         assertTrue(validator.isValid(null, context));
     }
 

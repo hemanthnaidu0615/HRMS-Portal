@@ -78,12 +78,10 @@ public class EmployeeEmergencyContactService {
                 .secondaryPhone(request.getSecondaryPhone())
                 .email(request.getEmail())
                 .addressLine1(request.getAddressLine1())
-                .addressLine2(request.getAddressLine2())
                 .city(request.getCity())
                 .stateProvince(request.getStateProvince())
                 .postalCode(request.getPostalCode())
                 .country(request.getCountry())
-                .countryCode(request.getCountryCode())
                 .notes(request.getNotes())
                 .createdBy(currentUser)
                 .isActive(true)
@@ -127,9 +125,6 @@ public class EmployeeEmergencyContactService {
         }
         if (request.getAddressLine1() != null) {
             contact.setAddressLine1(request.getAddressLine1());
-        }
-        if (request.getAddressLine2() != null) {
-            contact.setAddressLine2(request.getAddressLine2());
         }
         if (request.getCity() != null) {
             contact.setCity(request.getCity());

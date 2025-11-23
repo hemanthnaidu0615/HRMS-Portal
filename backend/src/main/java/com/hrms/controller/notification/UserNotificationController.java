@@ -43,9 +43,14 @@ public class UserNotificationController {
         UUID userId = jwtAuthenticationFilter.getUserId(request);
         log.debug("GET /api/notifications/recent - userId: {}", userId);
 
-        // Find employee by user ID
+        // Find employee by user ID - return empty list if no employee record yet
         Employee employee = employeeRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Employee not found for user"));
+                .orElse(null);
+
+        if (employee == null) {
+            log.debug("No employee record found for user {}, returning empty notifications", userId);
+            return ResponseEntity.ok(List.of());
+        }
 
         List<Notification> notifications = notificationService.getRecentNotificationsByEmployee(employee.getId());
         return ResponseEntity.ok(notifications);
@@ -60,11 +65,16 @@ public class UserNotificationController {
         UUID userId = jwtAuthenticationFilter.getUserId(request);
         log.debug("GET /api/notifications/unread-count - userId: {}", userId);
 
-        // Find employee by user ID
+        // Find employee by user ID - return 0 count if no employee record yet
         Employee employee = employeeRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Employee not found for user"));
+                .orElse(null);
 
-        long count = notificationService.getUnreadCountByEmployee(employee.getId());
+        long count = 0;
+        if (employee != null) {
+            count = notificationService.getUnreadCountByEmployee(employee.getId());
+        } else {
+            log.debug("No employee record found for user {}, returning 0 unread count", userId);
+        }
 
         Map<String, Long> response = new HashMap<>();
         response.put("count", count);
@@ -80,9 +90,14 @@ public class UserNotificationController {
         UUID userId = jwtAuthenticationFilter.getUserId(request);
         log.debug("GET /api/notifications/unread - userId: {}", userId);
 
-        // Find employee by user ID
+        // Find employee by user ID - return empty list if no employee record yet
         Employee employee = employeeRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Employee not found for user"));
+                .orElse(null);
+
+        if (employee == null) {
+            log.debug("No employee record found for user {}, returning empty notifications", userId);
+            return ResponseEntity.ok(List.of());
+        }
 
         List<Notification> notifications = notificationService.getUnreadNotificationsByEmployee(employee.getId());
         return ResponseEntity.ok(notifications);
@@ -100,7 +115,12 @@ public class UserNotificationController {
 
         // Find employee by user ID
         Employee employee = employeeRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Employee not found for user"));
+                .orElse(null);
+
+        if (employee == null) {
+            log.warn("Cannot mark notification as read - no employee record for user {}", userId);
+            return ResponseEntity.status(404).build();
+        }
 
         notificationService.markAsRead(id, employee.getId());
         return ResponseEntity.ok().build();

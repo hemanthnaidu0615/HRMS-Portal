@@ -21,9 +21,11 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     Optional<Employee> findByUser_Id(UUID userId);
     List<Employee> findByReportsToId(UUID managerId);
     List<Employee> findByOrganization(Organization organization);
+    List<Employee> findByOrganizationAndDeletedAtIsNull(Organization organization);
     Page<Employee> findByOrganization(Organization organization, Pageable pageable);
     List<Employee> findByDepartment(Department department);
     long countByOrganizationAndDeletedAtIsNull(Organization organization);
+    Optional<Employee> findByEmployeeCode(String employeeCode);
 
     // Additional methods for ScheduledTaskService
     List<Employee> findByEmploymentStatusAndDeletedAtIsNull(String employmentStatus);

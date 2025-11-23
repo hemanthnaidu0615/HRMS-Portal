@@ -72,4 +72,11 @@ public class Position {
     public void setSeniorityLevel(Integer seniorityLevel) {
         this.seniorityLevel = seniorityLevel;
     }
+
+    /**
+     * @return The title (alias for name)
+     */
+    public String getTitle() {
+        return name;
+    }
 }

@@ -41,6 +41,9 @@ public class Permission {
     @Column(length = 500)
     private String description;
 
+    @Column(name = "friendly_name", length = 200)
+    private String friendlyName;  // User-friendly name for UI (e.g., "View My Payroll")
+
     public Permission() {
     }
 
@@ -124,6 +127,14 @@ public class Permission {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getFriendlyName() {
+        return friendlyName;
+    }
+
+    public void setFriendlyName(String friendlyName) {
+        this.friendlyName = friendlyName;
     }
 
     @Override

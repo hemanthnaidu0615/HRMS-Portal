@@ -1014,6 +1014,68 @@ public class Employee {
     @Deprecated public String getNotes() { return notes; }
     @Deprecated public void setNotes(String notes) { this.notes = notes; }
 
+    // ==================== Additional Compatibility Methods ====================
+
+    /**
+     * @return Tax identification number (alias for taxId)
+     */
+    @Deprecated
+    public String getTaxIdentificationNumber() {
+        return taxId;
+    }
+
+    /**
+     * @return Aadhar number (reconstructed from last four if available)
+     */
+    @Deprecated
+    public String getAadharNumber() {
+        return aadharNumberLastFour != null ? "********" + aadharNumberLastFour : null;
+    }
+
+    /**
+     * @return SSN number (reconstructed from last four if available)
+     */
+    @Deprecated
+    public String getSsnNumber() {
+        return ssnLastFour != null ? "***-**-" + ssnLastFour : null;
+    }
+
+    /**
+     * @return Hire date (alias for joiningDate)
+     */
+    public LocalDate getHireDate() {
+        return originalHireDate != null ? originalHireDate : joiningDate;
+    }
+
+    /**
+     * Set hire date (sets both joiningDate and originalHireDate)
+     */
+    public void setHireDate(LocalDate hireDate) {
+        this.joiningDate = hireDate;
+        this.originalHireDate = hireDate;
+    }
+
+    /**
+     * Set start date (alias for joiningDate)
+     */
+    public void setStartDate(LocalDate startDate) {
+        this.joiningDate = startDate;
+    }
+
+    /**
+     * Set base salary (alias for basicSalary)
+     */
+    public void setBaseSalary(BigDecimal baseSalary) {
+        this.basicSalary = baseSalary;
+    }
+
+    /**
+     * Set work mode (alias for workArrangement)
+     */
+    public void setWorkMode(String workMode) {
+        this.workArrangement = workMode;
+    }
+
     // ==================== Helper Methods ====================
 
     public boolean isDeleted() {

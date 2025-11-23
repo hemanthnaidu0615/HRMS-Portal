@@ -97,6 +97,11 @@ public class EmployeeAddress {
     @Builder.Default
     private Boolean isCurrent = true;
 
+    // Status
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = true;
+
     // Audit Fields
     @Column(name = "created_at")
     private LocalDateTime createdAt;

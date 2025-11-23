@@ -163,6 +163,21 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         label: 'Dashboard',
         onClick: () => navigate('/employee/dashboard'),
       });
+
+      // Employee onboarding and documents
+      items.push({
+        key: '/employee/onboarding',
+        icon: <FileTextOutlined />,
+        label: 'My Onboarding',
+        onClick: () => navigate('/employee/onboarding'),
+      });
+
+      items.push({
+        key: '/employee/documents',
+        icon: <FileTextOutlined />,
+        label: 'My Documents',
+        onClick: () => navigate('/employee/documents'),
+      });
     }
 
     // Employee Management (permission-based)
@@ -224,6 +239,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         hasPermission('documents:view:department') ||
         hasPermission('documents:view:team')) {
       const docChildren = [];
+
+      // Document Management (org admin only)
+      if (roles.includes('orgadmin')) {
+        docChildren.push({
+          key: '/admin/documents/manage',
+          label: 'Document Management',
+          onClick: () => navigate('/admin/documents/manage'),
+        });
+      }
 
       docChildren.push({
         key: '/documents/org',
@@ -387,21 +411,53 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
           {/* User Menu */}
           <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
-            <Space style={{ cursor: 'pointer' }}>
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#15195c' }} />
-            {screens.sm && (
-              <Text
+            <Space
+              style={{
+                cursor: 'pointer',
+                padding: '4px 12px',
+                borderRadius: 8,
+                transition: 'background 0.3s',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+              className="user-menu-trigger"
+            >
+              <Avatar
+                icon={<UserOutlined />}
                 style={{
-                  color: '#fff',
-                  maxWidth: '150px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  backgroundColor: '#15195c',
+                  border: '2px solid rgba(255,255,255,0.3)'
                 }}
-              >
-                {user?.email?.split('@')[0]}
-              </Text>
-            )}
+                size="default"
+              />
+              {screens.sm && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <Text
+                    strong
+                    style={{
+                      color: '#fff',
+                      maxWidth: '150px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      fontSize: 14,
+                      lineHeight: '18px'
+                    }}
+                  >
+                    {user?.email?.split('@')[0]}
+                  </Text>
+                  <Text
+                    type="secondary"
+                    style={{
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: 12,
+                      lineHeight: '14px',
+                      marginTop: 2
+                    }}
+                  >
+                    {roles[0] || 'User'}
+                  </Text>
+                </div>
+              )}
             </Space>
           </Dropdown>
         </Space>

@@ -17,27 +17,27 @@ import java.util.UUID;
 @Repository
 public interface EmployeeIdentityDocumentRepository extends JpaRepository<EmployeeIdentityDocument, UUID> {
 
-    List<EmployeeIdentityDocument> findByEmployeeAndIsActiveTrue(Employee employee);
+    List<EmployeeIdentityDocument> findByEmployeeAndActiveTrue(Employee employee);
 
-    List<EmployeeIdentityDocument> findByEmployeeIdAndIsActiveTrue(UUID employeeId);
+    List<EmployeeIdentityDocument> findByEmployeeIdAndActiveTrue(UUID employeeId);
 
-    Optional<EmployeeIdentityDocument> findByEmployeeAndDocumentTypeAndIsActiveTrue(
+    Optional<EmployeeIdentityDocument> findByEmployeeAndDocumentTypeAndActiveTrue(
             Employee employee,
             IdentityDocumentType documentType
     );
 
     @Query("SELECT d FROM EmployeeIdentityDocument d WHERE d.employee.id = :employeeId " +
-           "AND d.documentType.documentCode = :documentCode AND d.isActive = true")
+           "AND d.documentType.documentTypeCode = :documentCode AND d.active = true")
     Optional<EmployeeIdentityDocument> findByEmployeeIdAndDocumentCode(
             @Param("employeeId") UUID employeeId,
             @Param("documentCode") String documentCode
     );
 
-    @Query("SELECT d FROM EmployeeIdentityDocument d WHERE d.isActive = true " +
+    @Query("SELECT d FROM EmployeeIdentityDocument d WHERE d.active = true " +
            "AND d.expiryDate IS NOT NULL AND d.expiryDate < :date")
     List<EmployeeIdentityDocument> findExpiredDocuments(@Param("date") LocalDate date);
 
-    @Query("SELECT d FROM EmployeeIdentityDocument d WHERE d.isActive = true " +
+    @Query("SELECT d FROM EmployeeIdentityDocument d WHERE d.active = true " +
            "AND d.expiryDate IS NOT NULL AND d.expiryDate BETWEEN :startDate AND :endDate")
     List<EmployeeIdentityDocument> findDocumentsExpiringSoon(
             @Param("startDate") LocalDate startDate,
@@ -45,17 +45,17 @@ public interface EmployeeIdentityDocumentRepository extends JpaRepository<Employ
     );
 
     @Query("SELECT d FROM EmployeeIdentityDocument d WHERE d.employee.id = :employeeId " +
-           "AND d.isActive = true AND d.verificationStatus = 'PENDING'")
+           "AND d.active = true AND d.verificationStatus = 'PENDING'")
     List<EmployeeIdentityDocument> findPendingVerificationByEmployeeId(@Param("employeeId") UUID employeeId);
 
     @Query("SELECT d FROM EmployeeIdentityDocument d WHERE d.organization.id = :orgId " +
-           "AND d.isActive = true AND d.verificationStatus = 'PENDING'")
+           "AND d.active = true AND d.verificationStatus = 'PENDING'")
     List<EmployeeIdentityDocument> findAllPendingVerificationByOrganization(@Param("orgId") UUID orgId);
 
-    long countByEmployeeAndIsActiveTrue(Employee employee);
+    long countByEmployeeAndActiveTrue(Employee employee);
 
     @Query("SELECT COUNT(d) FROM EmployeeIdentityDocument d WHERE d.employee.id = :employeeId " +
-           "AND d.isActive = true AND d.verificationStatus = 'VERIFIED'")
+           "AND d.active = true AND d.verificationStatus = 'VERIFIED'")
     long countVerifiedDocumentsByEmployeeId(@Param("employeeId") UUID employeeId);
 
     List<EmployeeIdentityDocument> findByOrganization(Organization organization);

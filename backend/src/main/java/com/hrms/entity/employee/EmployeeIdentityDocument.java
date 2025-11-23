@@ -96,11 +96,11 @@ public class EmployeeIdentityDocument {
     // Flags
     @Column(name = "is_primary_tax_id")
     @Builder.Default
-    private Boolean isPrimaryTaxId = false;
+    private Boolean primaryTaxId = false;
 
     @Column(name = "is_work_authorization")
     @Builder.Default
-    private Boolean isWorkAuthorization = false;
+    private Boolean workAuthorization = false;
 
     @Column(name = "used_for_i9")
     @Builder.Default
@@ -113,6 +113,11 @@ public class EmployeeIdentityDocument {
 
     @Column(name = "expiry_reminder_date")
     private LocalDateTime expiryReminderDate;
+
+    // Status
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean active = true;
 
     // Audit Fields
     @Column(name = "created_at")

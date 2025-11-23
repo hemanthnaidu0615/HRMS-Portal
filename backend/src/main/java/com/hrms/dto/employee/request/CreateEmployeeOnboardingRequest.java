@@ -74,6 +74,22 @@ public class CreateEmployeeOnboardingRequest {
     @Size(max = 100, message = "Preferred name must not exceed 100 characters")
     private String preferredName;
 
+    @Past(message = "Date of birth must be in the past")
+    private java.time.LocalDate dateOfBirth;
+
+    @Size(max = 20, message = "Gender must not exceed 20 characters")
+    private String gender;
+
+    @Size(max = 50, message = "Pronouns must not exceed 50 characters")
+    private String pronouns;
+
+    @Email(message = "Invalid personal email format")
+    @Size(max = 255, message = "Personal email must not exceed 255 characters")
+    private String personalEmail;
+
+    @Size(max = 50, message = "Personal phone must not exceed 50 characters")
+    private String personalPhone;
+
     @Pattern(regexp = "^(onsite|remote|hybrid)$", message = "Work arrangement must be onsite, remote, or hybrid")
     private String workArrangement;
 

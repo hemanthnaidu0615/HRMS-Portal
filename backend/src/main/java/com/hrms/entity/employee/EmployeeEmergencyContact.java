@@ -45,9 +45,18 @@ public class EmployeeEmergencyContact {
     @Column(name = "contact_name", nullable = false, length = 255)
     private String contactName;
 
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
     @Column(name = "relationship", nullable = false, length = 100)
     @Enumerated(EnumType.STRING)
     private Relationship relationship;
+
+    @Column(name = "other_relationship", length = 255)
+    private String otherRelationship;
 
     // Phone Numbers
     @Column(name = "primary_phone", nullable = false, length = 50)
@@ -88,6 +97,11 @@ public class EmployeeEmergencyContact {
 
     @Column(name = "speaks_languages", length = 255)
     private String speaksLanguages;
+
+    // Status
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = true;
 
     // Audit Fields
     @Column(name = "created_at")

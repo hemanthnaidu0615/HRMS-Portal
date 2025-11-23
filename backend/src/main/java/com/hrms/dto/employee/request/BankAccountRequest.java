@@ -15,8 +15,10 @@ import java.math.BigDecimal;
 public class BankAccountRequest {
 
     @Pattern(regexp = "^(SALARY|REIMBURSEMENT|BONUS|ALL)$", message = "Invalid account purpose")
+    @Builder.Default
     private String accountPurpose = "SALARY";
 
+    @Builder.Default
     private Boolean isPrimary = false;
 
     @NotBlank(message = "Bank name is required")
@@ -39,6 +41,7 @@ public class BankAccountRequest {
     private String accountNumber;
 
     @Pattern(regexp = "^(CHECKING|SAVINGS|CURRENT|SALARY)$", message = "Invalid account type")
+    @Builder.Default
     private String accountType = "CHECKING";
 
     // International
@@ -86,6 +89,7 @@ public class BankAccountRequest {
     // Country & Currency
     @NotBlank(message = "Bank country is required")
     @Size(max = 100, message = "Bank country must not exceed 100 characters")
+    @Builder.Default
     private String bankCountry = "United States";
 
     @Size(min = 2, max = 3, message = "Country code must be 2-3 characters")
@@ -94,6 +98,7 @@ public class BankAccountRequest {
     @NotBlank(message = "Currency is required")
     @Size(min = 3, max = 3, message = "Currency code must be 3 characters (ISO 4217)")
     @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be 3 uppercase letters")
+    @Builder.Default
     private String currency = "USD";
 
     // Salary Split

@@ -13,30 +13,30 @@ import java.util.UUID;
 @Repository
 public interface IdentityDocumentTypeRepository extends JpaRepository<IdentityDocumentType, UUID> {
 
-    Optional<IdentityDocumentType> findByDocumentCodeAndIsActiveTrue(String documentCode);
+    Optional<IdentityDocumentType> findByDocumentTypeCodeAndActiveTrue(String documentTypeCode);
 
-    List<IdentityDocumentType> findByCountryCodeAndIsActiveTrue(String countryCode);
+    List<IdentityDocumentType> findByCountryCodeAndActiveTrue(String countryCode);
 
-    List<IdentityDocumentType> findByIsUniversalTrueAndIsActiveTrue();
+    List<IdentityDocumentType> findByUniversalTrueAndActiveTrue();
 
-    List<IdentityDocumentType> findByCategoryAndIsActiveTrue(IdentityDocumentType.DocumentCategory category);
+    List<IdentityDocumentType> findByCategoryAndActiveTrue(IdentityDocumentType.DocumentCategory category);
 
-    @Query("SELECT d FROM IdentityDocumentType d WHERE d.isActive = true " +
-           "AND (d.countryCode = :countryCode OR d.isUniversal = true) " +
-           "ORDER BY d.isUniversal ASC, d.sortOrder ASC")
+    @Query("SELECT d FROM IdentityDocumentType d WHERE d.active = true " +
+           "AND (d.countryCode = :countryCode OR d.universal = true) " +
+           "ORDER BY d.universal ASC, d.sortOrder ASC")
     List<IdentityDocumentType> findByCountryCodeOrUniversal(@Param("countryCode") String countryCode);
 
-    @Query("SELECT d FROM IdentityDocumentType d WHERE d.isActive = true " +
-           "AND d.isRequiredForOnboarding = true " +
-           "AND (d.countryCode = :countryCode OR d.isUniversal = true)")
+    @Query("SELECT d FROM IdentityDocumentType d WHERE d.active = true " +
+           "AND d.requiredForOnboarding = true " +
+           "AND (d.countryCode = :countryCode OR d.universal = true)")
     List<IdentityDocumentType> findRequiredForOnboarding(@Param("countryCode") String countryCode);
 
-    @Query("SELECT d FROM IdentityDocumentType d WHERE d.isActive = true " +
-           "AND d.isRequiredForPayroll = true " +
-           "AND (d.countryCode = :countryCode OR d.isUniversal = true)")
+    @Query("SELECT d FROM IdentityDocumentType d WHERE d.active = true " +
+           "AND d.requiredForPayroll = true " +
+           "AND (d.countryCode = :countryCode OR d.universal = true)")
     List<IdentityDocumentType> findRequiredForPayroll(@Param("countryCode") String countryCode);
 
-    List<IdentityDocumentType> findByIsActiveTrue();
+    List<IdentityDocumentType> findByActiveTrue();
 
-    boolean existsByDocumentCodeAndIsActiveTrue(String documentCode);
+    boolean existsByDocumentTypeCodeAndActiveTrue(String documentTypeCode);
 }

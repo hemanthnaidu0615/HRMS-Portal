@@ -59,7 +59,7 @@ public class EmployeeIdentityDocumentService {
      * Get all active identity documents for an employee
      */
     public List<IdentityDocumentResponse> getDocumentsByEmployeeId(UUID employeeId) {
-        return documentRepository.findByEmployeeIdAndIsActiveTrue(employeeId)
+        return documentRepository.findByEmployeeIdAndActiveTrue(employeeId)
                 .stream()
                 .map(IdentityDocumentResponse::fromEntity)
                 .collect(Collectors.toList());
@@ -83,7 +83,7 @@ public class EmployeeIdentityDocumentService {
                 .orElseThrow(() -> ResourceNotFoundException.employee(employeeId));
 
         // Get document type
-        IdentityDocumentType documentType = documentTypeRepository.findByDocumentCodeAndIsActiveTrue(request.getDocumentCode())
+        IdentityDocumentType documentType = documentTypeRepository.findByDocumentTypeCodeAndActiveTrue(request.getDocumentCode())
                 .orElseThrow(() -> ResourceNotFoundException.documentType(request.getDocumentCode()));
 
         // Check if document type already exists for employee
@@ -110,7 +110,7 @@ public class EmployeeIdentityDocumentService {
                 .expiryDate(request.getExpiryDate())
                 .verificationStatus(EmployeeIdentityDocument.VerificationStatus.PENDING)
                 .createdBy(currentUser)
-                .isActive(true)
+                .active(true)
                 .build();
 
         EmployeeIdentityDocument saved = documentRepository.save(document);
@@ -194,7 +194,7 @@ public class EmployeeIdentityDocumentService {
         EmployeeIdentityDocument document = documentRepository.findById(documentId)
                 .orElseThrow(() -> ResourceNotFoundException.identityDocument(documentId));
 
-        document.setIsActive(false);
+        document.setActive(false);
         document.setUpdatedBy(currentUser);
         documentRepository.save(document);
 

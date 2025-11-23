@@ -18,6 +18,9 @@ public class IdentityDocumentRequest {
     @NotNull(message = "Document type is required")
     private UUID documentTypeId;
 
+    @Size(max = 50, message = "Document code must not exceed 50 characters")
+    private String documentCode;
+
     @NotBlank(message = "Document number is required")
     @Size(max = 100, message = "Document number must not exceed 100 characters")
     private String documentNumber;

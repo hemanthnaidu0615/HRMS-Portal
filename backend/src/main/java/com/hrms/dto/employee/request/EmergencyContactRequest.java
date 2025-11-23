@@ -22,10 +22,21 @@ public class EmergencyContactRequest {
     @Size(max = 255, message = "Contact name must not exceed 255 characters")
     private String contactName;
 
+    @NotBlank(message = "First name is required")
+    @Size(max = 100, message = "First name must not exceed 100 characters")
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    @Size(max = 100, message = "Last name must not exceed 100 characters")
+    private String lastName;
+
     @NotBlank(message = "Relationship is required")
     @Pattern(regexp = "^(SPOUSE|PARTNER|PARENT|MOTHER|FATHER|SIBLING|BROTHER|SISTER|CHILD|SON|DAUGHTER|GRANDPARENT|UNCLE|AUNT|COUSIN|NEPHEW|NIECE|FRIEND|COLLEAGUE|NEIGHBOR|GUARDIAN|OTHER)$",
              message = "Invalid relationship type")
     private String relationship;
+
+    @Size(max = 255, message = "Other relationship must not exceed 255 characters")
+    private String otherRelationship;
 
     @NotBlank(message = "Primary phone is required")
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]{7,20}$", message = "Invalid phone number format")
@@ -45,6 +56,9 @@ public class EmergencyContactRequest {
     @Size(max = 255, message = "Address must not exceed 255 characters")
     private String addressLine1;
 
+    @Size(max = 255, message = "Address line 2 must not exceed 255 characters")
+    private String addressLine2;
+
     @Size(max = 100, message = "City must not exceed 100 characters")
     private String city;
 
@@ -56,6 +70,9 @@ public class EmergencyContactRequest {
 
     @Size(max = 100, message = "Country must not exceed 100 characters")
     private String country;
+
+    @Size(min = 2, max = 3, message = "Country code must be 2-3 characters (ISO format)")
+    private String countryCode;
 
     @Size(max = 500, message = "Notes must not exceed 500 characters")
     private String notes;

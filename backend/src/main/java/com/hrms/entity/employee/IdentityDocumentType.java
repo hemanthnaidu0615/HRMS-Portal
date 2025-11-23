@@ -58,25 +58,37 @@ public class IdentityDocumentType {
     private Integer minLength;
 
     // Requirements
+    @Column(name = "is_required_for_onboarding")
+    @Builder.Default
+    private Boolean requiredForOnboarding = false;
+
     @Column(name = "is_required_for_payroll")
     @Builder.Default
-    private Boolean isRequiredForPayroll = false;
+    private Boolean requiredForPayroll = false;
 
     @Column(name = "is_required_for_tax")
     @Builder.Default
-    private Boolean isRequiredForTax = false;
+    private Boolean requiredForTax = false;
 
     @Column(name = "is_required_for_work_auth")
     @Builder.Default
-    private Boolean isRequiredForWorkAuth = false;
+    private Boolean requiredForWorkAuth = false;
 
     @Column(name = "is_government_issued")
     @Builder.Default
-    private Boolean isGovernmentIssued = true;
+    private Boolean governmentIssued = true;
 
     @Column(name = "has_expiry_date")
     @Builder.Default
     private Boolean hasExpiryDate = false;
+
+    @Column(name = "is_universal")
+    @Builder.Default
+    private Boolean universal = false;
+
+    @Column(name = "sort_order")
+    @Builder.Default
+    private Integer sortOrder = 0;
 
     // Category
     @Column(name = "category", nullable = false, length = 50)
@@ -86,11 +98,11 @@ public class IdentityDocumentType {
     // Status
     @Column(name = "is_active")
     @Builder.Default
-    private Boolean isActive = true;
+    private Boolean active = true;
 
     @Column(name = "is_system_type")
     @Builder.Default
-    private Boolean isSystemType = true; // false = custom org-defined
+    private Boolean systemType = true; // false = custom org-defined
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -98,6 +110,29 @@ public class IdentityDocumentType {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    // ==================== Helper Methods ====================
+
+    /**
+     * @return The document code
+     */
+    public String getDocumentCode() {
+        return documentTypeCode;
+    }
+
+    /**
+     * @return The display name
+     */
+    public String getDisplayName() {
+        return documentTypeName;
+    }
+
+    /**
+     * @return The validation pattern (regex)
+     */
+    public String getValidationPattern() {
+        return formatRegex;
     }
 
     // Document Categories
@@ -121,8 +156,8 @@ public class IdentityDocumentType {
             .formatRegex("^\\d{3}-?\\d{2}-?\\d{4}$")
             .formatExample("XXX-XX-XXXX")
             .category(DocumentCategory.TAX_ID)
-            .isRequiredForPayroll(true)
-            .isRequiredForTax(true)
+            .requiredForPayroll(true)
+            .requiredForTax(true)
             .hasExpiryDate(false)
             .build();
     }
@@ -136,8 +171,8 @@ public class IdentityDocumentType {
             .formatRegex("^[A-Z]{5}[0-9]{4}[A-Z]$")
             .formatExample("ABCDE1234F")
             .category(DocumentCategory.TAX_ID)
-            .isRequiredForPayroll(true)
-            .isRequiredForTax(true)
+            .requiredForPayroll(true)
+            .requiredForTax(true)
             .hasExpiryDate(false)
             .build();
     }
@@ -151,8 +186,8 @@ public class IdentityDocumentType {
             .formatRegex("^[A-Z]{2}[0-9]{6}[A-Z]$")
             .formatExample("AB123456C")
             .category(DocumentCategory.TAX_ID)
-            .isRequiredForPayroll(true)
-            .isRequiredForTax(true)
+            .requiredForPayroll(true)
+            .requiredForTax(true)
             .hasExpiryDate(false)
             .build();
     }

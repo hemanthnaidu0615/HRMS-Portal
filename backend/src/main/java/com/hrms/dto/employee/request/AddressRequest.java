@@ -46,4 +46,8 @@ public class AddressRequest {
 
     @Size(min = 2, max = 3, message = "Country code must be 2-3 characters (ISO format)")
     private String countryCode;
+
+    private java.time.LocalDate effectiveFrom;
+
+    private java.time.LocalDate effectiveTo;
 }

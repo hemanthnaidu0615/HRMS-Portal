@@ -334,7 +334,7 @@ public class BulkEmployeeImportService {
                 .addressLine1(row.getAddressLine1())
                 .addressLine2(row.getAddressLine2())
                 .city(row.getCity())
-                .state(row.getState())
+                .stateProvince(row.getState())
                 .country(row.getCountry() != null ? row.getCountry() : "United States")
                 .countryCode(row.getCountryCode() != null ? row.getCountryCode() : "USA")
                 .postalCode(row.getPostalCode())

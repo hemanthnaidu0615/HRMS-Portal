@@ -81,4 +81,14 @@ public interface PermissionRepository extends JpaRepository<Permission, UUID> {
         @Param("scope") String scope,
         @Param("orgId") UUID organizationId
     );
+
+    /**
+     * Check if permission exists
+     */
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Permission p WHERE p.resource = :resource AND p.action = :action AND p.scope = :scope AND p.organization IS NULL")
+    boolean existsByResourceAndActionAndScope(
+        @Param("resource") String resource,
+        @Param("action") String action,
+        @Param("scope") String scope
+    );
 }

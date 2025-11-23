@@ -56,8 +56,12 @@ public class PermissionInitializer implements CommandLineRunner {
             new String[]{"employees", "create", "organization", "Create new employees"},
             new String[]{"employees", "delete", "organization", "Delete employees"},
 
-            new String[]{"employees", "probation", "view", "View employee probation status"},
-            new String[]{"employees", "probation", "manage", "Manage probation periods (extend, complete, terminate)"},
+            new String[]{"probation", "view", "team", "View probation status of direct reports"},
+            new String[]{"probation", "view", "department", "View probation status of department employees"},
+            new String[]{"probation", "view", "organization", "View all employee probation status"},
+            new String[]{"probation", "manage", "team", "Manage probation periods for direct reports"},
+            new String[]{"probation", "manage", "department", "Manage probation periods for department"},
+            new String[]{"probation", "manage", "organization", "Manage all probation periods (extend, complete, terminate)"},
 
             // =====================================================
             // DOCUMENTS permissions
