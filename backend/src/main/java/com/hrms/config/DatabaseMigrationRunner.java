@@ -19,6 +19,16 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        try {
+            String dbProductName = jdbcTemplate.getDataSource().getConnection().getMetaData().getDatabaseProductName();
+            if ("H2".equalsIgnoreCase(dbProductName)) {
+                logger.info("Skipping database migrations for H2 database");
+                return;
+            }
+        } catch (Exception e) {
+            logger.warn("Could not determine database product name", e);
+        }
+
         logger.info("Running database migrations...");
 
         try {
@@ -27,6 +37,9 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
 
             // Add github_profile column if it doesn't exist
             addGithubProfileColumn();
+
+            // Fix email_logs constraint
+            fixEmailLogConstraint();
 
             logger.info("Database migrations completed successfully");
         } catch (Exception e) {
@@ -74,6 +87,20 @@ public class DatabaseMigrationRunner implements ApplicationRunner {
             }
         } catch (Exception e) {
             logger.error("Error adding github_profile column", e);
+        }
+    }
+
+    private void fixEmailLogConstraint() {
+        try {
+            logger.info("Checking for email_logs check constraint...");
+            String sql = "IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'chk_el_status') " +
+                         "BEGIN " +
+                         "    ALTER TABLE email_logs DROP CONSTRAINT chk_el_status; " +
+                         "END";
+            jdbcTemplate.execute(sql);
+            logger.info("Processed email_logs check constraint");
+        } catch (Exception e) {
+            logger.error("Error fixing email_logs constraint", e);
         }
     }
 }

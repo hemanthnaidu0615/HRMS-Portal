@@ -2,6 +2,7 @@ package com.hrms.controller;
 
 import com.hrms.dto.*;
 import com.hrms.entity.*;
+import com.hrms.entity.employee.*;
 import com.hrms.repository.DepartmentRepository;
 import com.hrms.repository.EmployeeRepository;
 import com.hrms.repository.PermissionGroupRepository;
@@ -653,7 +654,6 @@ public class EmployeeManagementController {
 
         return ResponseEntity.ok(Map.of("code", nextCode));
     }
-
     private EmployeeDetailResponse mapToDetail(Employee employee) {
         EmployeeDetailResponse response = new EmployeeDetailResponse();
 
@@ -679,33 +679,57 @@ public class EmployeeManagementController {
         // Contact Information
         response.setPersonalEmail(employee.getPersonalEmail());
         response.setPhoneNumber(employee.getPhoneNumber());
+        // Legacy fields
         response.setWorkPhone(employee.getWorkPhone());
         response.setAlternatePhone(employee.getAlternatePhone());
 
-        // Current Address
-        response.setCurrentAddressLine1(employee.getCurrentAddressLine1());
-        response.setCurrentAddressLine2(employee.getCurrentAddressLine2());
-        response.setCurrentCity(employee.getCurrentCity());
-        response.setCurrentState(employee.getCurrentState());
-        response.setCurrentCountry(employee.getCurrentCountry());
-        response.setCurrentPostalCode(employee.getCurrentPostalCode());
+        // --- Map Addresses ---
+        if (employee.getAddresses() != null) {
+            for (EmployeeAddress addr : employee.getAddresses()) {
+                if (EmployeeAddress.AddressType.CURRENT.equals(addr.getAddressType())) {
+                    response.setCurrentAddressLine1(addr.getAddressLine1());
+                    response.setCurrentAddressLine2(addr.getAddressLine2());
+                    response.setCurrentCity(addr.getCity());
+                    response.setCurrentState(addr.getStateProvince());
+                    response.setCurrentCountry(addr.getCountry());
+                    response.setCurrentPostalCode(addr.getPostalCode());
+                } else if (EmployeeAddress.AddressType.PERMANENT.equals(addr.getAddressType())) {
+                    response.setPermanentAddressLine1(addr.getAddressLine1());
+                    response.setPermanentAddressLine2(addr.getAddressLine2());
+                    response.setPermanentCity(addr.getCity());
+                    response.setPermanentState(addr.getStateProvince());
+                    response.setPermanentCountry(addr.getCountry());
+                    response.setPermanentPostalCode(addr.getPostalCode());
+                }
+            }
+        }
+        // Fallback to deprecated fields if lists are empty (backward compatibility)
+        if (response.getCurrentAddressLine1() == null) response.setCurrentAddressLine1(employee.getCurrentAddressLine1());
+        if (response.getPermanentAddressLine1() == null) response.setPermanentAddressLine1(employee.getPermanentAddressLine1());
 
-        // Permanent Address
-        response.setSameAsCurrentAddress(employee.getSameAsCurrentAddress());
-        response.setPermanentAddressLine1(employee.getPermanentAddressLine1());
-        response.setPermanentAddressLine2(employee.getPermanentAddressLine2());
-        response.setPermanentCity(employee.getPermanentCity());
-        response.setPermanentState(employee.getPermanentState());
-        response.setPermanentCountry(employee.getPermanentCountry());
-        response.setPermanentPostalCode(employee.getPermanentPostalCode());
 
-        // Emergency Contacts
-        response.setEmergencyContactName(employee.getEmergencyContactName());
-        response.setEmergencyContactRelationship(employee.getEmergencyContactRelationship());
-        response.setEmergencyContactPhone(employee.getEmergencyContactPhone());
-        response.setAlternateEmergencyContactName(employee.getAlternateEmergencyContactName());
-        response.setAlternateEmergencyContactRelationship(employee.getAlternateEmergencyContactRelationship());
-        response.setAlternateEmergencyContactPhone(employee.getAlternateEmergencyContactPhone());
+        // --- Map Emergency Contacts ---
+        if (employee.getEmergencyContacts() != null) {
+            for (EmployeeEmergencyContact contact : employee.getEmergencyContacts()) {
+                String rel = contact.getRelationship() != null ? contact.getRelationship().name() : null;
+                if (contact.getRelationship() == EmployeeEmergencyContact.Relationship.OTHER && contact.getOtherRelationship() != null) {
+                    rel = contact.getOtherRelationship();
+                }
+
+                if (Boolean.TRUE.equals(contact.getIsPrimary())) {
+                    response.setEmergencyContactName(contact.getContactName());
+                    response.setEmergencyContactRelationship(rel);
+                    response.setEmergencyContactPhone(contact.getPrimaryPhone());
+                } else {
+                    response.setAlternateEmergencyContactName(contact.getContactName());
+                    response.setAlternateEmergencyContactRelationship(rel);
+                    response.setAlternateEmergencyContactPhone(contact.getPrimaryPhone());
+                }
+            }
+        }
+        // Fallback
+        if (response.getEmergencyContactName() == null) response.setEmergencyContactName(employee.getEmergencyContactName());
+
 
         // Employment Details
         response.setJoiningDate(employee.getJoiningDate());
@@ -766,28 +790,47 @@ public class EmployeeManagementController {
 
         // Compensation
         response.setBasicSalary(employee.getBasicSalary());
-        response.setCurrency(employee.getCurrency());
+        response.setCurrency(employee.getSalaryCurrency());
         response.setPayFrequency(employee.getPayFrequency());
 
-        // Bank Details
-        response.setBankAccountNumber(employee.getBankAccountNumber());
-        response.setBankName(employee.getBankName());
-        response.setBankBranch(employee.getBankBranch());
-        response.setIfscCode(employee.getIfscCode());
-        response.setSwiftCode(employee.getSwiftCode());
+        // --- Map Bank Details ---
+        if (employee.getBankAccounts() != null) {
+            employee.getBankAccounts().stream()
+                .filter(b -> Boolean.TRUE.equals(b.getIsPrimary()))
+                .findFirst()
+                .ifPresent(bank -> {
+                    response.setBankAccountNumber(bank.getAccountNumber());
+                    response.setBankName(bank.getBankName());
+                    response.setBankBranch(bank.getBankBranch());
+                    response.setIfscCode(bank.getIfscCode());
+                    response.setSwiftCode(bank.getSwiftCode());
+                });
+        }
+        // Fallback
+        if (response.getBankAccountNumber() == null) response.setBankAccountNumber(employee.getBankAccountNumber());
 
-        // Tax & Legal
-        response.setTaxIdentificationNumber(employee.getTaxIdentificationNumber());
 
-        // India-Specific
-        response.setPanNumber(employee.getPanNumber());
-        response.setAadharNumber(employee.getAadharNumber());
-        response.setUanNumber(employee.getUanNumber());
+        // --- Map Identity Documents ---
+        if (employee.getIdentityDocuments() != null) {
+            for (EmployeeIdentityDocument doc : employee.getIdentityDocuments()) {
+                if (doc.getDocumentType() == null) continue;
+                
+                String code = doc.getDocumentType().getDocumentTypeCode();
+                if (code == null) continue;
 
-        // USA-Specific
-        response.setSsnNumber(employee.getSsnNumber());
-        response.setDriversLicenseNumber(employee.getDriversLicenseNumber());
-        response.setPassportNumber(employee.getPassportNumber());
+                switch (code.toUpperCase()) {
+                    case "SSN": response.setSsnNumber(doc.getDocumentNumber()); break;
+                    case "PAN": response.setPanNumber(doc.getDocumentNumber()); break;
+                    case "AADHAAR": response.setAadharNumber(doc.getDocumentNumber()); break;
+                    case "UAN": response.setUanNumber(doc.getDocumentNumber()); break;
+                    case "DL_USA": response.setDriversLicenseNumber(doc.getDocumentNumber()); break;
+                    case "PASSPORT": response.setPassportNumber(doc.getDocumentNumber()); break;
+                }
+            }
+        }
+        // Fallback
+        if (response.getPanNumber() == null) response.setPanNumber(employee.getPanNumber());
+
 
         // Resignation/Exit
         response.setResignationDate(employee.getResignationDate());
@@ -796,9 +839,9 @@ public class EmployeeManagementController {
         response.setExitNotes(employee.getExitNotes());
 
         // Additional Info
-        response.setLinkedInProfile(employee.getLinkedInProfile());
+        response.setLinkedInProfile(employee.getLinkedinProfile());
         response.setGithubProfile(employee.getGithubProfile());
-
+        
         // Audit Fields
         response.setCreatedAt(employee.getCreatedAt());
         if (employee.getCreatedBy() != null) {

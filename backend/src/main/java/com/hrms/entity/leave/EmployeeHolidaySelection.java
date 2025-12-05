@@ -34,7 +34,7 @@ public class EmployeeHolidaySelection {
     @JoinColumn(name = "holiday_id", nullable = false)
     private Holiday holiday;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "[year]", nullable = false)
     private Integer year;
 
     @Column(name = "is_selected")

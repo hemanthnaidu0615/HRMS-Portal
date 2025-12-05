@@ -1,30 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Tag, Button, Modal, Space, Typography, Alert, Spin, message, Tabs } from 'antd';
+import { Card, Table, Tag, Button, Modal, Space, Typography, Alert, Spin, message, Tabs, Input } from 'antd';
 import {
   FileTextOutlined, EyeOutlined, EditOutlined, CloseCircleOutlined,
   CheckCircleOutlined, ClockCircleOutlined, DownloadOutlined
 } from '@ant-design/icons';
 import { SignaturePad } from '../../components/SignaturePad';
-import axios from 'axios';
+import {
+  getMyDocuments,
+  signDocument,
+  declineDocument,
+  type DocumentToSign
+} from '../../api/documentSigningApi';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
-
-interface Document {
-  id: string;
-  documentName: string;
-  documentType: string;
-  status: string;
-  sentAt: string;
-  signedAt?: string;
-  expiryDate?: string;
-  description?: string;
-}
+const { TextArea } = Input;
 
 export const MyDocumentsPage = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<DocumentToSign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<DocumentToSign | null>(null);
   const [showSignModal, setShowSignModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
@@ -37,10 +32,8 @@ export const MyDocumentsPage = () => {
   const loadDocuments = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/documents/my-documents', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      setDocuments(response.data || []);
+      const data = await getMyDocuments();
+      setDocuments(data);
     } catch (err) {
       console.error('Failed to load documents:', err);
       message.error('Failed to load documents');
@@ -54,11 +47,7 @@ export const MyDocumentsPage = () => {
 
     try {
       setSigning(true);
-      await axios.post(
-        `/api/documents/${selectedDocument.id}/sign`,
-        { signatureData },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      await signDocument(selectedDocument.id, signatureData);
 
       message.success('Document signed successfully!');
       setShowSignModal(false);
@@ -78,11 +67,7 @@ export const MyDocumentsPage = () => {
     }
 
     try {
-      await axios.post(
-        `/api/documents/${selectedDocument.id}/decline`,
-        { reason: declineReason },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      await declineDocument(selectedDocument.id, declineReason);
 
       message.success('Document declined');
       setShowDeclineModal(false);
@@ -118,7 +103,7 @@ export const MyDocumentsPage = () => {
       title: 'Document Name',
       dataIndex: 'documentName',
       key: 'documentName',
-      render: (text: string, record: Document) => (
+      render: (text: string, record: DocumentToSign) => (
         <Space>
           <FileTextOutlined style={{ color: '#1890ff' }} />
           <div>
@@ -166,9 +151,9 @@ export const MyDocumentsPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: Document) => (
+      render: (_: any, record: DocumentToSign) => (
         <Space>
-          {(record.status === 'SENT' || record.status === 'VIEWED') && (
+          {(record.status === 'SENT' || record.status === 'VIEWED' || record.status === 'PENDING') && (
             <>
               <Button
                 type="primary"
@@ -194,7 +179,7 @@ export const MyDocumentsPage = () => {
               </Button>
             </>
           )}
-          {record.status === 'SIGNED' || record.status === 'COMPLETED' && (
+          {(record.status === 'SIGNED' || record.status === 'COMPLETED') && (
             <Button
               size="small"
               icon={<DownloadOutlined />}
@@ -208,9 +193,8 @@ export const MyDocumentsPage = () => {
     },
   ];
 
-  const pendingDocs = documents.filter(d => d.status === 'SENT' || d.status === 'VIEWED');
-  const signedDocs = documents.filter(d => d.status === 'SIGNED' || d.status === 'COMPLETED');
-  const otherDocs = documents.filter(d => !['SENT', 'VIEWED', 'SIGNED', 'COMPLETED'].includes(d.status));
+  const pendingDocs = documents.filter(d => ['SENT', 'VIEWED', 'PENDING'].includes(d.status));
+  const signedDocs = documents.filter(d => ['SIGNED', 'COMPLETED'].includes(d.status));
 
   return (
     <div style={{ padding: 24 }}>
@@ -341,18 +325,11 @@ export const MyDocumentsPage = () => {
             <Text strong style={{ display: 'block', marginBottom: 8 }}>
               Reason for declining (required):
             </Text>
-            <textarea
+            <TextArea
               value={declineReason}
               onChange={(e) => setDeclineReason(e.target.value)}
               placeholder="Please explain why you are declining this document..."
-              style={{
-                width: '100%',
-                minHeight: 100,
-                padding: 12,
-                border: '1px solid #d9d9d9',
-                borderRadius: 4,
-                fontSize: 14,
-              }}
+              style={{ minHeight: 100 }}
             />
           </div>
         </Space>

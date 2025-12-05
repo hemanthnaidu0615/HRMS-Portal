@@ -1,0 +1,1055 @@
+2025-11-30 01:11:11.079541+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table attendance_summaries (\000d\000a        id uuid not null,\000d\000a        absent_days integer,\000d\000a        average_check_in_time time(6),\000d\000a        average_check_out_time time(6),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        half_days integer,\000d\000a        holidays integer,\000d\000a        is_active boolean,\000d\000a        late_days integer,\000d\000a        leave_days integer,\000d\000a        [*]month integer not null,\000d\000a        overtime_hours numeric(10,2),\000d\000a        present_days integer,\000d\000a        total_hours_worked numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        working_days integer,\000d\000a        year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table attendance_summaries (
+        id uuid not null,
+        absent_days integer,
+        average_check_in_time time(6),
+        average_check_out_time time(6),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        half_days integer,
+        holidays integer,
+        is_active boolean,
+        late_days integer,
+        leave_days integer,
+        month integer not null,
+        overtime_hours numeric(10,2),
+        present_days integer,
+        total_hours_worked numeric(10,2),
+        updated_at timestamp(6),
+        working_days integer,
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:11:11.117369+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table employee_holiday_selections (\000d\000a        id uuid not null,\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        is_selected boolean,\000d\000a        selection_date date,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        holiday_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table employee_holiday_selections (
+        id uuid not null,
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        is_active boolean,
+        is_selected boolean,
+        selection_date date,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        holiday_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:11:11.137276+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table holidays (\000d\000a        id uuid not null,\000d\000a        applies_to varchar(50),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        description varchar(500),\000d\000a        holiday_date date not null,\000d\000a        holiday_type varchar(30),\000d\000a        is_active boolean,\000d\000a        is_mandatory boolean,\000d\000a        is_optional boolean,\000d\000a        name varchar(100) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        department_id uuid,\000d\000a        location_id uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table holidays (
+        id uuid not null,
+        applies_to varchar(50),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        description varchar(500),
+        holiday_date date not null,
+        holiday_type varchar(30),
+        is_active boolean,
+        is_mandatory boolean,
+        is_optional boolean,
+        name varchar(100) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        department_id uuid,
+        location_id uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:11:11.147748+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_balances (\000d\000a        id uuid not null,\000d\000a        available numeric(38,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        employee_id uuid,\000d\000a        is_active boolean,\000d\000a        leave_type_id uuid,\000d\000a        pending numeric(38,2),\000d\000a        total_quota numeric(38,2),\000d\000a        updated_at timestamp(6),\000d\000a        used numeric(38,2),\000d\000a        [*]year integer,\000d\000a        created_by uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_balances (
+        id uuid not null,
+        available numeric(38,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        employee_id uuid,
+        is_active boolean,
+        leave_type_id uuid,
+        pending numeric(38,2),
+        total_quota numeric(38,2),
+        updated_at timestamp(6),
+        used numeric(38,2),
+        year integer,
+        created_by uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:11:11.162114+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_encashment_requests (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        approver_remarks varchar(500),\000d\000a        created_at timestamp(6),\000d\000a        currency varchar(3),\000d\000a        days_approved numeric(5,2),\000d\000a        days_requested numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        paid_at timestamp(6),\000d\000a        paid_in_payroll_id uuid,\000d\000a        per_day_amount numeric(15,2),\000d\000a        reason varchar(500),\000d\000a        status varchar(20),\000d\000a        total_amount numeric(15,2),\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_encashment_requests (
+        id uuid not null,
+        approved_at timestamp(6),
+        approver_remarks varchar(500),
+        created_at timestamp(6),
+        currency varchar(3),
+        days_approved numeric(5,2),
+        days_requested numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        paid_at timestamp(6),
+        paid_in_payroll_id uuid,
+        per_day_amount numeric(15,2),
+        reason varchar(500),
+        status varchar(20),
+        total_amount numeric(15,2),
+        updated_at timestamp(6),
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:11:11.165548+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_transactions (\000d\000a        id uuid not null,\000d\000a        balance_after numeric(5,2),\000d\000a        balance_before numeric(5,2),\000d\000a        created_at timestamp(6),\000d\000a        days numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        reference_id uuid,\000d\000a        reference_type varchar(50),\000d\000a        remarks varchar(500),\000d\000a        transaction_date date not null,\000d\000a        transaction_type varchar(30) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_application_id uuid,\000d\000a        leave_balance_id uuid,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_transactions (
+        id uuid not null,
+        balance_after numeric(5,2),
+        balance_before numeric(5,2),
+        created_at timestamp(6),
+        days numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        reference_id uuid,
+        reference_type varchar(50),
+        remarks varchar(500),
+        transaction_date date not null,
+        transaction_type varchar(30) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_application_id uuid,
+        leave_balance_id uuid,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:11:11.195303+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table timesheet_summaries (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        billable_hours numeric(10,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        holiday_hours numeric(10,2),\000d\000a        is_active boolean,\000d\000a        leave_hours numeric(10,2),\000d\000a        [*]month integer not null,\000d\000a        non_billable_hours numeric(10,2),\000d\000a        overtime_hours numeric(10,2),\000d\000a        period_end date not null,\000d\000a        period_start date not null,\000d\000a        status varchar(20),\000d\000a        submitted_at timestamp(6),\000d\000a        total_hours numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        week_number integer,\000d\000a        year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table timesheet_summaries (
+        id uuid not null,
+        approved_at timestamp(6),
+        billable_hours numeric(10,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        holiday_hours numeric(10,2),
+        is_active boolean,
+        leave_hours numeric(10,2),
+        month integer not null,
+        non_billable_hours numeric(10,2),
+        overtime_hours numeric(10,2),
+        period_end date not null,
+        period_start date not null,
+        status varchar(20),
+        submitted_at timestamp(6),
+        total_hours numeric(10,2),
+        updated_at timestamp(6),
+        week_number integer,
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:11:19.302767+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Duplicate column name "DELETED_BY"; SQL statement:
+ALTER TABLE employees ADD deleted_by UNIQUEIDENTIFIER NULL [42121-224]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:514)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.table.Table.setColumns(Table.java:494)
+	at org.h2.table.TableBase.<init>(TableBase.java:73)
+	at org.h2.mvstore.db.MVTable.<init>(MVTable.java:139)
+	at org.h2.mvstore.db.Store.createTable(Store.java:216)
+	at org.h2.schema.Schema.createTable(Schema.java:797)
+	at org.h2.command.ddl.AlterTableAlterColumn.cloneTableStructure(AlterTableAlterColumn.java:458)
+	at org.h2.command.ddl.AlterTableAlterColumn.copyData(AlterTableAlterColumn.java:343)
+	at org.h2.command.ddl.AlterTableAlterColumn.update(AlterTableAlterColumn.java:244)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:256)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:262)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231)
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1ExecuteStatementCallback.doInStatement(JdbcTemplate.java:435)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:393)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:444)
+	at com.hrms.config.DatabaseMigrationRunner.addDeletedByColumn(DatabaseMigrationRunner.java:52)
+	at com.hrms.config.DatabaseMigrationRunner.run(DatabaseMigrationRunner.java:26)
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:777)
+	at org.springframework.boot.SpringApplication.lambda$callRunners$3(SpringApplication.java:767)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:765)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:330)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1342)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1331)
+	at com.hrms.HrmsApplication.main(HrmsApplication.java:10)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:91)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:53)
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:58)
+2025-11-30 01:11:19.307775+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Duplicate column name "GITHUB_PROFILE"; SQL statement:
+ALTER TABLE employees ADD github_profile VARCHAR(255) NULL [42121-224]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:514)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:223)
+	at org.h2.message.DbException.get(DbException.java:199)
+	at org.h2.table.Table.setColumns(Table.java:494)
+	at org.h2.table.TableBase.<init>(TableBase.java:73)
+	at org.h2.mvstore.db.MVTable.<init>(MVTable.java:139)
+	at org.h2.mvstore.db.Store.createTable(Store.java:216)
+	at org.h2.schema.Schema.createTable(Schema.java:797)
+	at org.h2.command.ddl.AlterTableAlterColumn.cloneTableStructure(AlterTableAlterColumn.java:458)
+	at org.h2.command.ddl.AlterTableAlterColumn.copyData(AlterTableAlterColumn.java:343)
+	at org.h2.command.ddl.AlterTableAlterColumn.update(AlterTableAlterColumn.java:244)
+	at org.h2.command.CommandContainer.update(CommandContainer.java:169)
+	at org.h2.command.Command.executeUpdate(Command.java:256)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:262)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231)
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94)
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1ExecuteStatementCallback.doInStatement(JdbcTemplate.java:435)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:393)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:444)
+	at com.hrms.config.DatabaseMigrationRunner.addGithubProfileColumn(DatabaseMigrationRunner.java:73)
+	at com.hrms.config.DatabaseMigrationRunner.run(DatabaseMigrationRunner.java:29)
+	at org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:777)
+	at org.springframework.boot.SpringApplication.lambda$callRunners$3(SpringApplication.java:767)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:765)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:330)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1342)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1331)
+	at com.hrms.HrmsApplication.main(HrmsApplication.java:10)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:91)
+	at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:53)
+	at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:58)
+2025-11-30 01:11:19.310150+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'chk_el_status') BEGIN     ALTER TABLE email_logs DROP CONSTRAINT chk_el_status; END"; SQL statement:
+IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'chk_el_status') BEGIN     ALTER TABLE email_logs DROP CONSTRAINT chk_el_status; END [42000-224]
+2025-11-30 01:13:10.707530+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table attendance_summaries (\000d\000a        id uuid not null,\000d\000a        absent_days integer,\000d\000a        average_check_in_time time(6),\000d\000a        average_check_out_time time(6),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        half_days integer,\000d\000a        holidays integer,\000d\000a        is_active boolean,\000d\000a        late_days integer,\000d\000a        leave_days integer,\000d\000a        [*]month integer not null,\000d\000a        overtime_hours numeric(10,2),\000d\000a        present_days integer,\000d\000a        total_hours_worked numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        working_days integer,\000d\000a        year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table attendance_summaries (
+        id uuid not null,
+        absent_days integer,
+        average_check_in_time time(6),
+        average_check_out_time time(6),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        half_days integer,
+        holidays integer,
+        is_active boolean,
+        late_days integer,
+        leave_days integer,
+        month integer not null,
+        overtime_hours numeric(10,2),
+        present_days integer,
+        total_hours_worked numeric(10,2),
+        updated_at timestamp(6),
+        working_days integer,
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:13:10.715592+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table employee_holiday_selections (\000d\000a        id uuid not null,\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        is_selected boolean,\000d\000a        selection_date date,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        holiday_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table employee_holiday_selections (
+        id uuid not null,
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        is_active boolean,
+        is_selected boolean,
+        selection_date date,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        holiday_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:13:10.718919+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table holidays (\000d\000a        id uuid not null,\000d\000a        applies_to varchar(50),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        description varchar(500),\000d\000a        holiday_date date not null,\000d\000a        holiday_type varchar(30),\000d\000a        is_active boolean,\000d\000a        is_mandatory boolean,\000d\000a        is_optional boolean,\000d\000a        name varchar(100) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        department_id uuid,\000d\000a        location_id uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table holidays (
+        id uuid not null,
+        applies_to varchar(50),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        description varchar(500),
+        holiday_date date not null,
+        holiday_type varchar(30),
+        is_active boolean,
+        is_mandatory boolean,
+        is_optional boolean,
+        name varchar(100) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        department_id uuid,
+        location_id uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:13:10.722308+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_balances (\000d\000a        id uuid not null,\000d\000a        available numeric(38,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        employee_id uuid,\000d\000a        is_active boolean,\000d\000a        leave_type_id uuid,\000d\000a        pending numeric(38,2),\000d\000a        total_quota numeric(38,2),\000d\000a        updated_at timestamp(6),\000d\000a        used numeric(38,2),\000d\000a        [*]year integer,\000d\000a        created_by uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_balances (
+        id uuid not null,
+        available numeric(38,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        employee_id uuid,
+        is_active boolean,
+        leave_type_id uuid,
+        pending numeric(38,2),
+        total_quota numeric(38,2),
+        updated_at timestamp(6),
+        used numeric(38,2),
+        year integer,
+        created_by uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:13:10.725678+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_encashment_requests (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        approver_remarks varchar(500),\000d\000a        created_at timestamp(6),\000d\000a        currency varchar(3),\000d\000a        days_approved numeric(5,2),\000d\000a        days_requested numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        paid_at timestamp(6),\000d\000a        paid_in_payroll_id uuid,\000d\000a        per_day_amount numeric(15,2),\000d\000a        reason varchar(500),\000d\000a        status varchar(20),\000d\000a        total_amount numeric(15,2),\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_encashment_requests (
+        id uuid not null,
+        approved_at timestamp(6),
+        approver_remarks varchar(500),
+        created_at timestamp(6),
+        currency varchar(3),
+        days_approved numeric(5,2),
+        days_requested numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        paid_at timestamp(6),
+        paid_in_payroll_id uuid,
+        per_day_amount numeric(15,2),
+        reason varchar(500),
+        status varchar(20),
+        total_amount numeric(15,2),
+        updated_at timestamp(6),
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:13:10.729223+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_transactions (\000d\000a        id uuid not null,\000d\000a        balance_after numeric(5,2),\000d\000a        balance_before numeric(5,2),\000d\000a        created_at timestamp(6),\000d\000a        days numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        reference_id uuid,\000d\000a        reference_type varchar(50),\000d\000a        remarks varchar(500),\000d\000a        transaction_date date not null,\000d\000a        transaction_type varchar(30) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_application_id uuid,\000d\000a        leave_balance_id uuid,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_transactions (
+        id uuid not null,
+        balance_after numeric(5,2),
+        balance_before numeric(5,2),
+        created_at timestamp(6),
+        days numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        reference_id uuid,
+        reference_type varchar(50),
+        remarks varchar(500),
+        transaction_date date not null,
+        transaction_type varchar(30) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_application_id uuid,
+        leave_balance_id uuid,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:13:10.734346+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table timesheet_summaries (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        billable_hours numeric(10,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        holiday_hours numeric(10,2),\000d\000a        is_active boolean,\000d\000a        leave_hours numeric(10,2),\000d\000a        [*]month integer not null,\000d\000a        non_billable_hours numeric(10,2),\000d\000a        overtime_hours numeric(10,2),\000d\000a        period_end date not null,\000d\000a        period_start date not null,\000d\000a        status varchar(20),\000d\000a        submitted_at timestamp(6),\000d\000a        total_hours numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        week_number integer,\000d\000a        year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table timesheet_summaries (
+        id uuid not null,
+        approved_at timestamp(6),
+        billable_hours numeric(10,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        holiday_hours numeric(10,2),
+        is_active boolean,
+        leave_hours numeric(10,2),
+        month integer not null,
+        non_billable_hours numeric(10,2),
+        overtime_hours numeric(10,2),
+        period_end date not null,
+        period_start date not null,
+        status varchar(20),
+        submitted_at timestamp(6),
+        total_hours numeric(10,2),
+        updated_at timestamp(6),
+        week_number integer,
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:15:11.570788+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table attendance_summaries (\000d\000a        id uuid not null,\000d\000a        absent_days integer,\000d\000a        average_check_in_time time(6),\000d\000a        average_check_out_time time(6),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        half_days integer,\000d\000a        holidays integer,\000d\000a        is_active boolean,\000d\000a        late_days integer,\000d\000a        leave_days integer,\000d\000a        [*]month integer not null,\000d\000a        overtime_hours numeric(10,2),\000d\000a        present_days integer,\000d\000a        total_hours_worked numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        working_days integer,\000d\000a        ""year"" integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table attendance_summaries (
+        id uuid not null,
+        absent_days integer,
+        average_check_in_time time(6),
+        average_check_out_time time(6),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        half_days integer,
+        holidays integer,
+        is_active boolean,
+        late_days integer,
+        leave_days integer,
+        month integer not null,
+        overtime_hours numeric(10,2),
+        present_days integer,
+        total_hours_worked numeric(10,2),
+        updated_at timestamp(6),
+        working_days integer,
+        "year" integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:15:11.583207+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table employee_holiday_selections (\000d\000a        id uuid not null,\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        is_selected boolean,\000d\000a        selection_date date,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        holiday_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table employee_holiday_selections (
+        id uuid not null,
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        is_active boolean,
+        is_selected boolean,
+        selection_date date,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        holiday_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:15:11.587304+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table holidays (\000d\000a        id uuid not null,\000d\000a        applies_to varchar(50),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        description varchar(500),\000d\000a        holiday_date date not null,\000d\000a        holiday_type varchar(30),\000d\000a        is_active boolean,\000d\000a        is_mandatory boolean,\000d\000a        is_optional boolean,\000d\000a        name varchar(100) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        department_id uuid,\000d\000a        location_id uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table holidays (
+        id uuid not null,
+        applies_to varchar(50),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        description varchar(500),
+        holiday_date date not null,
+        holiday_type varchar(30),
+        is_active boolean,
+        is_mandatory boolean,
+        is_optional boolean,
+        name varchar(100) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        department_id uuid,
+        location_id uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:15:11.590440+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_balances (\000d\000a        id uuid not null,\000d\000a        available numeric(38,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        employee_id uuid,\000d\000a        is_active boolean,\000d\000a        leave_type_id uuid,\000d\000a        pending numeric(38,2),\000d\000a        total_quota numeric(38,2),\000d\000a        updated_at timestamp(6),\000d\000a        used numeric(38,2),\000d\000a        [*]year integer,\000d\000a        created_by uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_balances (
+        id uuid not null,
+        available numeric(38,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        employee_id uuid,
+        is_active boolean,
+        leave_type_id uuid,
+        pending numeric(38,2),
+        total_quota numeric(38,2),
+        updated_at timestamp(6),
+        used numeric(38,2),
+        year integer,
+        created_by uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:15:11.591615+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_encashment_requests (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        approver_remarks varchar(500),\000d\000a        created_at timestamp(6),\000d\000a        currency varchar(3),\000d\000a        days_approved numeric(5,2),\000d\000a        days_requested numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        paid_at timestamp(6),\000d\000a        paid_in_payroll_id uuid,\000d\000a        per_day_amount numeric(15,2),\000d\000a        reason varchar(500),\000d\000a        status varchar(20),\000d\000a        total_amount numeric(15,2),\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_encashment_requests (
+        id uuid not null,
+        approved_at timestamp(6),
+        approver_remarks varchar(500),
+        created_at timestamp(6),
+        currency varchar(3),
+        days_approved numeric(5,2),
+        days_requested numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        paid_at timestamp(6),
+        paid_in_payroll_id uuid,
+        per_day_amount numeric(15,2),
+        reason varchar(500),
+        status varchar(20),
+        total_amount numeric(15,2),
+        updated_at timestamp(6),
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:15:11.595675+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_transactions (\000d\000a        id uuid not null,\000d\000a        balance_after numeric(5,2),\000d\000a        balance_before numeric(5,2),\000d\000a        created_at timestamp(6),\000d\000a        days numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        reference_id uuid,\000d\000a        reference_type varchar(50),\000d\000a        remarks varchar(500),\000d\000a        transaction_date date not null,\000d\000a        transaction_type varchar(30) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_application_id uuid,\000d\000a        leave_balance_id uuid,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_transactions (
+        id uuid not null,
+        balance_after numeric(5,2),
+        balance_before numeric(5,2),
+        created_at timestamp(6),
+        days numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        reference_id uuid,
+        reference_type varchar(50),
+        remarks varchar(500),
+        transaction_date date not null,
+        transaction_type varchar(30) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_application_id uuid,
+        leave_balance_id uuid,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:15:11.599719+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table timesheet_summaries (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        billable_hours numeric(10,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        holiday_hours numeric(10,2),\000d\000a        is_active boolean,\000d\000a        leave_hours numeric(10,2),\000d\000a        [*]month integer not null,\000d\000a        non_billable_hours numeric(10,2),\000d\000a        overtime_hours numeric(10,2),\000d\000a        period_end date not null,\000d\000a        period_start date not null,\000d\000a        status varchar(20),\000d\000a        submitted_at timestamp(6),\000d\000a        total_hours numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        week_number integer,\000d\000a        year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table timesheet_summaries (
+        id uuid not null,
+        approved_at timestamp(6),
+        billable_hours numeric(10,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        holiday_hours numeric(10,2),
+        is_active boolean,
+        leave_hours numeric(10,2),
+        month integer not null,
+        non_billable_hours numeric(10,2),
+        overtime_hours numeric(10,2),
+        period_end date not null,
+        period_start date not null,
+        status varchar(20),
+        submitted_at timestamp(6),
+        total_hours numeric(10,2),
+        updated_at timestamp(6),
+        week_number integer,
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:16:48.069112+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table attendance_summaries (\000d\000a        id uuid not null,\000d\000a        absent_days integer,\000d\000a        average_check_in_time time(6),\000d\000a        average_check_out_time time(6),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        half_days integer,\000d\000a        holidays integer,\000d\000a        is_active boolean,\000d\000a        late_days integer,\000d\000a        leave_days integer,\000d\000a        [*]month integer not null,\000d\000a        overtime_hours numeric(10,2),\000d\000a        present_days integer,\000d\000a        total_hours_worked numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        working_days integer,\000d\000a        ""year"" integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table attendance_summaries (
+        id uuid not null,
+        absent_days integer,
+        average_check_in_time time(6),
+        average_check_out_time time(6),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        half_days integer,
+        holidays integer,
+        is_active boolean,
+        late_days integer,
+        leave_days integer,
+        month integer not null,
+        overtime_hours numeric(10,2),
+        present_days integer,
+        total_hours_worked numeric(10,2),
+        updated_at timestamp(6),
+        working_days integer,
+        "year" integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:16:48.076927+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table employee_holiday_selections (\000d\000a        id uuid not null,\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        is_selected boolean,\000d\000a        selection_date date,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        holiday_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table employee_holiday_selections (
+        id uuid not null,
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        is_active boolean,
+        is_selected boolean,
+        selection_date date,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        holiday_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:16:48.080966+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table holidays (\000d\000a        id uuid not null,\000d\000a        applies_to varchar(50),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        description varchar(500),\000d\000a        holiday_date date not null,\000d\000a        holiday_type varchar(30),\000d\000a        is_active boolean,\000d\000a        is_mandatory boolean,\000d\000a        is_optional boolean,\000d\000a        name varchar(100) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        department_id uuid,\000d\000a        location_id uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table holidays (
+        id uuid not null,
+        applies_to varchar(50),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        description varchar(500),
+        holiday_date date not null,
+        holiday_type varchar(30),
+        is_active boolean,
+        is_mandatory boolean,
+        is_optional boolean,
+        name varchar(100) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        department_id uuid,
+        location_id uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:16:48.084477+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_balances (\000d\000a        id uuid not null,\000d\000a        available numeric(38,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        employee_id uuid,\000d\000a        is_active boolean,\000d\000a        leave_type_id uuid,\000d\000a        pending numeric(38,2),\000d\000a        total_quota numeric(38,2),\000d\000a        updated_at timestamp(6),\000d\000a        used numeric(38,2),\000d\000a        [*]year integer,\000d\000a        created_by uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_balances (
+        id uuid not null,
+        available numeric(38,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        employee_id uuid,
+        is_active boolean,
+        leave_type_id uuid,
+        pending numeric(38,2),
+        total_quota numeric(38,2),
+        updated_at timestamp(6),
+        used numeric(38,2),
+        year integer,
+        created_by uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:16:48.087212+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_encashment_requests (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        approver_remarks varchar(500),\000d\000a        created_at timestamp(6),\000d\000a        currency varchar(3),\000d\000a        days_approved numeric(5,2),\000d\000a        days_requested numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        paid_at timestamp(6),\000d\000a        paid_in_payroll_id uuid,\000d\000a        per_day_amount numeric(15,2),\000d\000a        reason varchar(500),\000d\000a        status varchar(20),\000d\000a        total_amount numeric(15,2),\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_encashment_requests (
+        id uuid not null,
+        approved_at timestamp(6),
+        approver_remarks varchar(500),
+        created_at timestamp(6),
+        currency varchar(3),
+        days_approved numeric(5,2),
+        days_requested numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        paid_at timestamp(6),
+        paid_in_payroll_id uuid,
+        per_day_amount numeric(15,2),
+        reason varchar(500),
+        status varchar(20),
+        total_amount numeric(15,2),
+        updated_at timestamp(6),
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:16:48.089232+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_transactions (\000d\000a        id uuid not null,\000d\000a        balance_after numeric(5,2),\000d\000a        balance_before numeric(5,2),\000d\000a        created_at timestamp(6),\000d\000a        days numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        reference_id uuid,\000d\000a        reference_type varchar(50),\000d\000a        remarks varchar(500),\000d\000a        transaction_date date not null,\000d\000a        transaction_type varchar(30) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_application_id uuid,\000d\000a        leave_balance_id uuid,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_transactions (
+        id uuid not null,
+        balance_after numeric(5,2),
+        balance_before numeric(5,2),
+        created_at timestamp(6),
+        days numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        reference_id uuid,
+        reference_type varchar(50),
+        remarks varchar(500),
+        transaction_date date not null,
+        transaction_type varchar(30) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_application_id uuid,
+        leave_balance_id uuid,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:16:48.093741+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table timesheet_summaries (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        billable_hours numeric(10,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        holiday_hours numeric(10,2),\000d\000a        is_active boolean,\000d\000a        leave_hours numeric(10,2),\000d\000a        [*]month integer not null,\000d\000a        non_billable_hours numeric(10,2),\000d\000a        overtime_hours numeric(10,2),\000d\000a        period_end date not null,\000d\000a        period_start date not null,\000d\000a        status varchar(20),\000d\000a        submitted_at timestamp(6),\000d\000a        total_hours numeric(10,2),\000d\000a        updated_at timestamp(6),\000d\000a        week_number integer,\000d\000a        ""year"" integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table timesheet_summaries (
+        id uuid not null,
+        approved_at timestamp(6),
+        billable_hours numeric(10,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        holiday_hours numeric(10,2),
+        is_active boolean,
+        leave_hours numeric(10,2),
+        month integer not null,
+        non_billable_hours numeric(10,2),
+        overtime_hours numeric(10,2),
+        period_end date not null,
+        period_start date not null,
+        status varchar(20),
+        submitted_at timestamp(6),
+        total_hours numeric(10,2),
+        updated_at timestamp(6),
+        week_number integer,
+        "year" integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:19:39.196255+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table employee_holiday_selections (\000d\000a        id uuid not null,\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        is_selected boolean,\000d\000a        selection_date date,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        holiday_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table employee_holiday_selections (
+        id uuid not null,
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        is_active boolean,
+        is_selected boolean,
+        selection_date date,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        holiday_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:19:39.209690+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table holidays (\000d\000a        id uuid not null,\000d\000a        applies_to varchar(50),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        description varchar(500),\000d\000a        holiday_date date not null,\000d\000a        holiday_type varchar(30),\000d\000a        is_active boolean,\000d\000a        is_mandatory boolean,\000d\000a        is_optional boolean,\000d\000a        name varchar(100) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        department_id uuid,\000d\000a        location_id uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table holidays (
+        id uuid not null,
+        applies_to varchar(50),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        description varchar(500),
+        holiday_date date not null,
+        holiday_type varchar(30),
+        is_active boolean,
+        is_mandatory boolean,
+        is_optional boolean,
+        name varchar(100) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        department_id uuid,
+        location_id uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:19:39.211103+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_balances (\000d\000a        id uuid not null,\000d\000a        available numeric(38,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        employee_id uuid,\000d\000a        is_active boolean,\000d\000a        leave_type_id uuid,\000d\000a        pending numeric(38,2),\000d\000a        total_quota numeric(38,2),\000d\000a        updated_at timestamp(6),\000d\000a        used numeric(38,2),\000d\000a        [*]year integer,\000d\000a        created_by uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_balances (
+        id uuid not null,
+        available numeric(38,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        employee_id uuid,
+        is_active boolean,
+        leave_type_id uuid,
+        pending numeric(38,2),
+        total_quota numeric(38,2),
+        updated_at timestamp(6),
+        used numeric(38,2),
+        year integer,
+        created_by uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:19:39.214677+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_encashment_requests (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        approver_remarks varchar(500),\000d\000a        created_at timestamp(6),\000d\000a        currency varchar(3),\000d\000a        days_approved numeric(5,2),\000d\000a        days_requested numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        paid_at timestamp(6),\000d\000a        paid_in_payroll_id uuid,\000d\000a        per_day_amount numeric(15,2),\000d\000a        reason varchar(500),\000d\000a        status varchar(20),\000d\000a        total_amount numeric(15,2),\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_encashment_requests (
+        id uuid not null,
+        approved_at timestamp(6),
+        approver_remarks varchar(500),
+        created_at timestamp(6),
+        currency varchar(3),
+        days_approved numeric(5,2),
+        days_requested numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        paid_at timestamp(6),
+        paid_in_payroll_id uuid,
+        per_day_amount numeric(15,2),
+        reason varchar(500),
+        status varchar(20),
+        total_amount numeric(15,2),
+        updated_at timestamp(6),
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:19:39.216773+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_transactions (\000d\000a        id uuid not null,\000d\000a        balance_after numeric(5,2),\000d\000a        balance_before numeric(5,2),\000d\000a        created_at timestamp(6),\000d\000a        days numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        reference_id uuid,\000d\000a        reference_type varchar(50),\000d\000a        remarks varchar(500),\000d\000a        transaction_date date not null,\000d\000a        transaction_type varchar(30) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_application_id uuid,\000d\000a        leave_balance_id uuid,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_transactions (
+        id uuid not null,
+        balance_after numeric(5,2),
+        balance_before numeric(5,2),
+        created_at timestamp(6),
+        days numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        reference_id uuid,
+        reference_type varchar(50),
+        remarks varchar(500),
+        transaction_date date not null,
+        transaction_type varchar(30) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_application_id uuid,
+        leave_balance_id uuid,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:21:22.806700+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table holidays (\000d\000a        id uuid not null,\000d\000a        applies_to varchar(50),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        description varchar(500),\000d\000a        holiday_date date not null,\000d\000a        holiday_type varchar(30),\000d\000a        is_active boolean,\000d\000a        is_mandatory boolean,\000d\000a        is_optional boolean,\000d\000a        name varchar(100) not null,\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        created_by uuid,\000d\000a        department_id uuid,\000d\000a        location_id uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table holidays (
+        id uuid not null,
+        applies_to varchar(50),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        description varchar(500),
+        holiday_date date not null,
+        holiday_type varchar(30),
+        is_active boolean,
+        is_mandatory boolean,
+        is_optional boolean,
+        name varchar(100) not null,
+        updated_at timestamp(6),
+        year integer not null,
+        created_by uuid,
+        department_id uuid,
+        location_id uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:21:22.815751+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_balances (\000d\000a        id uuid not null,\000d\000a        available numeric(38,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        employee_id uuid,\000d\000a        is_active boolean,\000d\000a        leave_type_id uuid,\000d\000a        pending numeric(38,2),\000d\000a        total_quota numeric(38,2),\000d\000a        updated_at timestamp(6),\000d\000a        used numeric(38,2),\000d\000a        [*]year integer,\000d\000a        created_by uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_balances (
+        id uuid not null,
+        available numeric(38,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        employee_id uuid,
+        is_active boolean,
+        leave_type_id uuid,
+        pending numeric(38,2),
+        total_quota numeric(38,2),
+        updated_at timestamp(6),
+        used numeric(38,2),
+        year integer,
+        created_by uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:21:22.819013+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_encashment_requests (\000d\000a        id uuid not null,\000d\000a        approved_at timestamp(6),\000d\000a        approver_remarks varchar(500),\000d\000a        created_at timestamp(6),\000d\000a        currency varchar(3),\000d\000a        days_approved numeric(5,2),\000d\000a        days_requested numeric(5,2) not null,\000d\000a        deleted_at timestamp(6),\000d\000a        is_active boolean,\000d\000a        paid_at timestamp(6),\000d\000a        paid_in_payroll_id uuid,\000d\000a        per_day_amount numeric(15,2),\000d\000a        reason varchar(500),\000d\000a        status varchar(20),\000d\000a        total_amount numeric(15,2),\000d\000a        updated_at timestamp(6),\000d\000a        [*]year integer not null,\000d\000a        approved_by uuid,\000d\000a        created_by uuid,\000d\000a        employee_id uuid not null,\000d\000a        leave_type_id uuid not null,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_encashment_requests (
+        id uuid not null,
+        approved_at timestamp(6),
+        approver_remarks varchar(500),
+        created_at timestamp(6),
+        currency varchar(3),
+        days_approved numeric(5,2),
+        days_requested numeric(5,2) not null,
+        deleted_at timestamp(6),
+        is_active boolean,
+        paid_at timestamp(6),
+        paid_in_payroll_id uuid,
+        per_day_amount numeric(15,2),
+        reason varchar(500),
+        status varchar(20),
+        total_amount numeric(15,2),
+        updated_at timestamp(6),
+        year integer not null,
+        approved_by uuid,
+        created_by uuid,
+        employee_id uuid not null,
+        leave_type_id uuid not null,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:21:22.885771+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "HOLIDAYS" not found; SQL statement:
+
+    alter table if exists employee_holiday_selections 
+       add constraint FKq5g3wewieh3iv8nr3wc4q42rk 
+       foreign key (holiday_id) 
+       references ho [42102-224]
+2025-11-30 01:21:22.911108+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "LEAVE_BALANCES" not found; SQL statement:
+
+    alter table if exists leave_transactions 
+       add constraint FKros9pktcdrlb5yeyovgqy3p96 
+       foreign key (leave_balance_id) 
+       references leave_ba [42102-224]
+2025-11-30 01:23:15.507552+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "\000d\000a    create table leave_balances (\000d\000a        id uuid not null,\000d\000a        available numeric(38,2),\000d\000a        created_at timestamp(6),\000d\000a        deleted_at timestamp(6),\000d\000a        employee_id uuid,\000d\000a        is_active boolean,\000d\000a        leave_type_id uuid,\000d\000a        pending numeric(38,2),\000d\000a        total_quota numeric(38,2),\000d\000a        updated_at timestamp(6),\000d\000a        used numeric(38,2),\000d\000a        [*]year integer,\000d\000a        created_by uuid,\000d\000a        organization_id uuid not null,\000d\000a        updated_by uuid,\000d\000a        primary key (id)\000d\000a    )"; expected "identifier"; SQL statement:
+
+    create table leave_balances (
+        id uuid not null,
+        available numeric(38,2),
+        created_at timestamp(6),
+        deleted_at timestamp(6),
+        employee_id uuid,
+        is_active boolean,
+        leave_type_id uuid,
+        pending numeric(38,2),
+        total_quota numeric(38,2),
+        updated_at timestamp(6),
+        used numeric(38,2),
+        year integer,
+        created_by uuid,
+        organization_id uuid not null,
+        updated_by uuid,
+        primary key (id)
+    ) [42001-224]
+2025-11-30 01:23:15.603487+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "LEAVE_BALANCES" not found; SQL statement:
+
+    alter table if exists leave_transactions 
+       add constraint FKros9pktcdrlb5yeyovgqy3p96 
+       foreign key (leave_balance_id) 
+       references leave_ba [42102-224]
+2025-11-30 01:28:22.656115+05:30 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLNonTransientException: The object is already closed [90007-224]
+2025-11-30 01:28:22.668231+05:30 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLNonTransientException: The object is already closed [90007-224]
+2025-11-30 01:28:22.674126+05:30 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLNonTransientException: The object is already closed [90007-224]
+2025-11-30 01:28:22.770871+05:30 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'chk_el_status') BEGIN     ALTER TABLE email_logs DROP CONSTRAINT chk_el_status; END"; SQL statement:
+IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'chk_el_status') BEGIN     ALTER TABLE email_logs DROP CONSTRAINT chk_el_status; END [42000-224]
+2025-11-30 01:35:05.764303+05:30 jdbc[4]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'chk_el_status') BEGIN     ALTER TABLE email_logs DROP CONSTRAINT chk_el_status; END"; SQL statement:
+IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'chk_el_status') BEGIN     ALTER TABLE email_logs DROP CONSTRAINT chk_el_status; END [42000-224]

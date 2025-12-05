@@ -57,7 +57,7 @@ public class LeaveTransaction {
     @Column(name = "balance_after", precision = 5, scale = 2)
     private BigDecimal balanceAfter;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "[year]", nullable = false)
     private Integer year;
 
     @Column(name = "remarks", length = 500)

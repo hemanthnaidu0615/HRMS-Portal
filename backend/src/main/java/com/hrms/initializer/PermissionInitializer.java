@@ -370,7 +370,7 @@ public class PermissionInitializer {
                         permission.setAction(def.action);
                         permission.setScope(def.scope);
                         permission.setDescription(def.description);
-                        permission.setFriendlyName(def.friendlyName);
+                        // permission.setFriendlyName(def.friendlyName); // Removed to match DB schema
                         permission.setOrganization(null); // Global permissions
 
                         permissionRepository.save(permission);

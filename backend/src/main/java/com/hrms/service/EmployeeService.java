@@ -2,12 +2,9 @@ package com.hrms.service;
 
 import com.hrms.dto.CreateEmployeeRequest;
 import com.hrms.entity.*;
-import com.hrms.repository.DepartmentRepository;
-import com.hrms.repository.EmployeeCodeSequenceRepository;
-import com.hrms.repository.EmployeeHistoryRepository;
-import com.hrms.repository.EmployeeRepository;
-import com.hrms.repository.PermissionGroupRepository;
-import com.hrms.repository.PositionRepository;
+import com.hrms.entity.employee.*;
+import com.hrms.repository.*;
+import com.hrms.repository.employee.IdentityDocumentTypeRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -27,19 +24,31 @@ public class EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
     private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
+    private final VendorRepository vendorRepository;
+    private final ClientRepository clientRepository;
+    private final ProjectRepository projectRepository;
+    private final IdentityDocumentTypeRepository identityDocumentTypeRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository,
                           EmployeeHistoryRepository employeeHistoryRepository,
                           PermissionGroupRepository permissionGroupRepository,
                           DepartmentRepository departmentRepository,
                           PositionRepository positionRepository,
-                          EmployeeCodeSequenceRepository employeeCodeSequenceRepository) {
+                          EmployeeCodeSequenceRepository employeeCodeSequenceRepository,
+                          VendorRepository vendorRepository,
+                          ClientRepository clientRepository,
+                          ProjectRepository projectRepository,
+                          IdentityDocumentTypeRepository identityDocumentTypeRepository) {
         this.employeeRepository = employeeRepository;
         this.employeeHistoryRepository = employeeHistoryRepository;
         this.permissionGroupRepository = permissionGroupRepository;
         this.departmentRepository = departmentRepository;
         this.positionRepository = positionRepository;
         this.employeeCodeSequenceRepository = employeeCodeSequenceRepository;
+        this.vendorRepository = vendorRepository;
+        this.clientRepository = clientRepository;
+        this.projectRepository = projectRepository;
+        this.identityDocumentTypeRepository = identityDocumentTypeRepository;
     }
 
     @Transactional
@@ -76,13 +85,20 @@ public class EmployeeService {
         Employee employee = new Employee(user, org);
 
         // Set personal details
-        if (request.getFirstName() != null) {
-            employee.setFirstName(request.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            employee.setLastName(request.getLastName());
-        }
+        employee.setFirstName(request.getFirstName());
+        employee.setLastName(request.getLastName());
+        employee.setMiddleName(request.getMiddleName());
+        employee.setDateOfBirth(request.getDateOfBirth());
+        employee.setGender(request.getGender());
+        employee.setNationality(request.getNationality());
+        employee.setMaritalStatus(request.getMaritalStatus());
+        employee.setBloodGroup(request.getBloodGroup());
 
+        // Set contact details
+        employee.setPersonalEmail(request.getPersonalEmail());
+        employee.setPhoneNumber(request.getPhoneNumber());
+        // Map legacy phone fields if needed, or just rely on new structure
+        
         // Set department if provided
         Department department = null;
         if (request.getDepartmentId() != null) {
@@ -95,8 +111,10 @@ public class EmployeeService {
         String employeeCode = generateEmployeeCode(org, department);
         employee.setEmployeeCode(employeeCode);
 
-        // Set default joining date to today if not set
-        if (employee.getJoiningDate() == null) {
+        // Set joining date
+        if (request.getJoiningDate() != null) {
+            employee.setJoiningDate(request.getJoiningDate());
+        } else {
             employee.setJoiningDate(LocalDate.now());
         }
 
@@ -118,15 +136,30 @@ public class EmployeeService {
         if (request.getEmploymentType() != null) {
             employee.setEmploymentType(request.getEmploymentType());
         }
-        if (request.getClientName() != null) {
-            employee.setClientName(request.getClientName());
+        if (request.getEmploymentStatus() != null) {
+            employee.setEmploymentStatus(request.getEmploymentStatus());
+        }
+
+        // Set Vendor/Client/Project
+        if (request.getVendorId() != null) {
+            Vendor vendor = vendorRepository.findById(request.getVendorId())
+                    .orElseThrow(() -> new RuntimeException("Vendor not found"));
+            employee.setVendor(vendor);
+        }
+        if (request.getClientId() != null) {
+            Client client = clientRepository.findById(request.getClientId())
+                    .orElseThrow(() -> new RuntimeException("Client not found"));
+            employee.setClient(client);
         }
         if (request.getProjectId() != null) {
-            employee.setProjectId(request.getProjectId());
+            Project project = projectRepository.findById(request.getProjectId())
+                    .orElseThrow(() -> new RuntimeException("Project not found"));
+            employee.setProject(project);
         }
-        if (request.getContractEndDate() != null) {
-            employee.setContractEndDate(request.getContractEndDate());
-        }
+
+        // Set contract details
+        employee.setContractStartDate(request.getContractStartDate());
+        employee.setContractEndDate(request.getContractEndDate());
 
         // Set probation details
         if (request.getIsProbation() != null && request.getIsProbation()) {
@@ -142,6 +175,127 @@ public class EmployeeService {
             employee.setProbationEndDate(request.getProbationEndDate());
             employee.setProbationStatus(request.getProbationStatus() != null ? request.getProbationStatus() : "active");
         }
+
+        // Set compensation
+        employee.setBasicSalary(request.getBasicSalary());
+        if (request.getCurrency() != null) employee.setSalaryCurrency(request.getCurrency());
+        if (request.getPayFrequency() != null) employee.setPayFrequency(request.getPayFrequency());
+
+        // Set social profiles
+        employee.setLinkedinProfile(request.getLinkedInProfile());
+        employee.setGithubProfile(request.getGithubProfile());
+
+        // --- Create Related Entities ---
+
+        // 1. Addresses
+        if (request.getCurrentAddressLine1() != null) {
+            EmployeeAddress currentAddr = new EmployeeAddress();
+            currentAddr.setEmployee(employee);
+            currentAddr.setOrganization(org);
+            currentAddr.setAddressType(EmployeeAddress.AddressType.CURRENT);
+            currentAddr.setIsPrimary(true);
+            currentAddr.setAddressLine1(request.getCurrentAddressLine1());
+            currentAddr.setAddressLine2(request.getCurrentAddressLine2());
+            currentAddr.setCity(request.getCurrentCity());
+            currentAddr.setStateProvince(request.getCurrentState());
+            currentAddr.setCountry(request.getCurrentCountry());
+            currentAddr.setPostalCode(request.getCurrentPostalCode());
+            employee.getAddresses().add(currentAddr);
+
+            if (Boolean.TRUE.equals(request.getSameAsCurrentAddress())) {
+                EmployeeAddress permAddr = new EmployeeAddress();
+                permAddr.setEmployee(employee);
+                permAddr.setOrganization(org);
+                permAddr.setAddressType(EmployeeAddress.AddressType.PERMANENT);
+                permAddr.setAddressLine1(request.getCurrentAddressLine1());
+                permAddr.setAddressLine2(request.getCurrentAddressLine2());
+                permAddr.setCity(request.getCurrentCity());
+                permAddr.setStateProvince(request.getCurrentState());
+                permAddr.setCountry(request.getCurrentCountry());
+                permAddr.setPostalCode(request.getCurrentPostalCode());
+                employee.getAddresses().add(permAddr);
+            } else if (request.getPermanentAddressLine1() != null) {
+                EmployeeAddress permAddr = new EmployeeAddress();
+                permAddr.setEmployee(employee);
+                permAddr.setOrganization(org);
+                permAddr.setAddressType(EmployeeAddress.AddressType.PERMANENT);
+                permAddr.setAddressLine1(request.getPermanentAddressLine1());
+                permAddr.setAddressLine2(request.getPermanentAddressLine2());
+                permAddr.setCity(request.getPermanentCity());
+                permAddr.setStateProvince(request.getPermanentState());
+                permAddr.setCountry(request.getPermanentCountry());
+                permAddr.setPostalCode(request.getPermanentPostalCode());
+                employee.getAddresses().add(permAddr);
+            }
+        }
+
+        // 2. Emergency Contacts
+        if (request.getEmergencyContactName() != null) {
+            EmployeeEmergencyContact contact = new EmployeeEmergencyContact();
+            contact.setEmployee(employee);
+            contact.setOrganization(org);
+            contact.setIsPrimary(true);
+            contact.setContactName(request.getEmergencyContactName());
+            
+            try {
+                if (request.getEmergencyContactRelationship() != null) {
+                    contact.setRelationship(EmployeeEmergencyContact.Relationship.valueOf(request.getEmergencyContactRelationship().toUpperCase()));
+                } else {
+                    contact.setRelationship(EmployeeEmergencyContact.Relationship.OTHER);
+                }
+            } catch (IllegalArgumentException e) {
+                contact.setRelationship(EmployeeEmergencyContact.Relationship.OTHER);
+                contact.setOtherRelationship(request.getEmergencyContactRelationship());
+            }
+            
+            contact.setPrimaryPhone(request.getEmergencyContactPhone());
+            employee.getEmergencyContacts().add(contact);
+        }
+        if (request.getAlternateEmergencyContactName() != null) {
+            EmployeeEmergencyContact contact = new EmployeeEmergencyContact();
+            contact.setEmployee(employee);
+            contact.setOrganization(org);
+            contact.setIsPrimary(false);
+            contact.setContactName(request.getAlternateEmergencyContactName());
+            
+            try {
+                if (request.getAlternateEmergencyContactRelationship() != null) {
+                    contact.setRelationship(EmployeeEmergencyContact.Relationship.valueOf(request.getAlternateEmergencyContactRelationship().toUpperCase()));
+                } else {
+                    contact.setRelationship(EmployeeEmergencyContact.Relationship.OTHER);
+                }
+            } catch (IllegalArgumentException e) {
+                contact.setRelationship(EmployeeEmergencyContact.Relationship.OTHER);
+                contact.setOtherRelationship(request.getAlternateEmergencyContactRelationship());
+            }
+
+            contact.setPrimaryPhone(request.getAlternateEmergencyContactPhone());
+            employee.getEmergencyContacts().add(contact);
+        }
+
+        // 3. Bank Accounts
+        if (request.getBankAccountNumber() != null) {
+            EmployeeBankAccount bank = new EmployeeBankAccount();
+            bank.setEmployee(employee);
+            bank.setOrganization(org);
+            bank.setIsPrimary(true);
+            bank.setAccountPurpose(EmployeeBankAccount.AccountPurpose.SALARY);
+            bank.setAccountNumber(request.getBankAccountNumber());
+            bank.setAccountHolderName(request.getAccountHolderName());
+            bank.setBankName(request.getBankName());
+            bank.setBankBranch(request.getBankBranch());
+            bank.setIfscCode(request.getIfscCode());
+            bank.setSwiftCode(request.getSwiftCode());
+            employee.getBankAccounts().add(bank);
+        }
+
+        // 4. Identity Documents
+        createIdentityDoc(employee, org, "SSN", request.getSsnNumber());
+        createIdentityDoc(employee, org, "PAN", request.getPanNumber());
+        createIdentityDoc(employee, org, "AADHAAR", request.getAadharNumber());
+        createIdentityDoc(employee, org, "UAN", request.getUanNumber());
+        createIdentityDoc(employee, org, "DL_USA", request.getDriversLicenseNumber()); // Assuming US DL for now
+        createIdentityDoc(employee, org, "PASSPORT", request.getPassportNumber());
 
         // Set permission groups if provided, otherwise use defaults
         if (request.getPermissionGroupIds() != null && !request.getPermissionGroupIds().isEmpty()) {
@@ -164,6 +318,21 @@ public class EmployeeService {
         }
 
         return employeeRepository.save(employee);
+    }
+
+    private void createIdentityDoc(Employee employee, Organization org, String docTypeCode, String docNumber) {
+        if (docNumber != null && !docNumber.isEmpty()) {
+            Optional<IdentityDocumentType> typeOpt = identityDocumentTypeRepository.findByDocumentTypeCodeAndActiveTrue(docTypeCode);
+            if (typeOpt.isPresent()) {
+                EmployeeIdentityDocument doc = new EmployeeIdentityDocument();
+                doc.setEmployee(employee);
+                doc.setOrganization(org);
+                doc.setDocumentType(typeOpt.get());
+                doc.setDocumentNumber(docNumber);
+                doc.setVerificationStatus(EmployeeIdentityDocument.VerificationStatus.PENDING);
+                employee.getIdentityDocuments().add(doc);
+            }
+        }
     }
 
     @Transactional

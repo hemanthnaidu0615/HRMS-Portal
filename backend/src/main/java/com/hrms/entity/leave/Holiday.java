@@ -44,7 +44,7 @@ public class Holiday {
     @Column(name = "is_optional")
     private Boolean isOptional = false;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "[year]", nullable = false)
     private Integer year;
 
     @Column(name = "applies_to", length = 50)

@@ -34,7 +34,7 @@ public class LeaveEncashmentRequest {
     @JoinColumn(name = "leave_type_id", nullable = false)
     private LeaveType leaveType;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "[year]", nullable = false)
     private Integer year;
 
     @Column(name = "days_requested", nullable = false, precision = 5, scale = 2)

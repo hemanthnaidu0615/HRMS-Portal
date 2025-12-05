@@ -53,7 +53,7 @@ public class LeaveBalance {
     @Column(name = "leave_type_id")
     private UUID leaveTypeId;
 
-    @Column(name = "year")
+    @Column(name = "[year]")
     private Integer year;
 
     @Column(name = "total_quota")

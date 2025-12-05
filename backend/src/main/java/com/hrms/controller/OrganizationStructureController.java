@@ -62,6 +62,11 @@ public class OrganizationStructureController {
         }
 
         Department department = new Department(organization, request.getName());
+        // Auto-generate code if not provided (simple strategy: first 3 chars of name + random suffix)
+        String code = request.getName().substring(0, Math.min(request.getName().length(), 3)).toUpperCase() 
+                      + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        department.setDepartmentCode(code);
+        
         Department saved = departmentRepository.save(department);
 
         return ResponseEntity.ok(new DepartmentResponse(saved.getId(), saved.getName()));
@@ -146,6 +151,11 @@ public class OrganizationStructureController {
         }
 
         Position position = new Position(organization, request.getName(), request.getSeniorityLevel());
+        // Auto-generate code if not provided
+        String code = request.getName().substring(0, Math.min(request.getName().length(), 3)).toUpperCase() 
+                      + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        position.setCode(code);
+        
         Position saved = positionRepository.save(position);
 
         return ResponseEntity.ok(new PositionResponse(saved.getId(), saved.getName(), saved.getSeniorityLevel()));

@@ -30,10 +30,10 @@ public class TimesheetSummary {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @Column(name = "year", nullable = false)
+    @Column(name = "[year]", nullable = false)
     private Integer year;
 
-    @Column(name = "month", nullable = false)
+    @Column(name = "[month]", nullable = false)
     private Integer month;
 
     @Column(name = "week_number")

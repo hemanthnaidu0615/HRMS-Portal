@@ -118,7 +118,7 @@ public class GlobalExceptionHandler {
             fieldErrors.put(fieldName, errorMessage);
         });
 
-        logger.warn("Validation failed for {} fields: {}", fieldErrors.size(), fieldErrors.keySet());
+        logger.warn("Validation failed for {} fields: {}", fieldErrors.size(), fieldErrors);
 
         return ResponseEntity
             .badRequest()

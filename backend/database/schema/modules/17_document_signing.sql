@@ -253,6 +253,7 @@ FROM employees e
 LEFT JOIN onboarding_document_checklists c ON e.id = c.employee_id
 WHERE e.deleted_at IS NULL
 GROUP BY e.id, e.first_name, e.last_name, e.organization_id;
+GO
 
 PRINT 'Module 17: Document Signing - Created Successfully';
 GO
